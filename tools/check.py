@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import subprocess
 import sys
+import tempfile
 import time
 
 
@@ -28,6 +29,10 @@ def main():
     env.pop("PYTHONPATH", None)
     env.pop("PYTHONHOME", None)
     env["PYTHONDONTWRITEBYTECODE"] = "1"
+    # 保留系统临时目录位置，只消除macOS /var等别名；不放宽SDK逐层拒绝链接的检查。
+    temporary_directory = str(Path(tempfile.gettempdir()).resolve())
+    for variable in ("TMPDIR", "TEMP", "TMP"):
+        env[variable] = temporary_directory
     excluded_tests = ["tests/test_contract_assets.py"] if args.contract_mode == "public" else []
     test_command = [
         sys.executable, "-m", "pytest", "tests", "-q", "-p", "no:cacheprovider",
@@ -67,6 +72,7 @@ def main():
     receipt = {
         "python": sys.version, "executable": sys.executable, "source": source, "gates": [],
         "contractMode": args.contract_mode, "excludedTestFiles": excluded_tests,
+        "temporaryDirectory": temporary_directory,
         "realServe": "not-run: requires a separately supplied authorized fixture",
     }
     failed = False

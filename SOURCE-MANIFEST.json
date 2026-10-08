@@ -17,8 +17,8 @@
     },
     {
       "path": ".github/workflows/publish.yml",
-      "bytes": 6620,
-      "sha256": "16c31c7081923bd70e7c640cfaff4848469cb0abc4c9052d85c5c4c844b19aa2"
+      "bytes": 7522,
+      "sha256": "47286ae4d76effb82f1f2e28f6c339752011fa61a1dc95c7112cca551996cdc7"
     },
     {
       "path": ".gitignore",
@@ -237,8 +237,8 @@
     },
     {
       "path": "doc/发行说明.md",
-      "bytes": 24243,
-      "sha256": "72df0fc753409d7d94a4d930b4fb251a87ff28d840abe23d31bbd1b6fac85936"
+      "bytes": 25029,
+      "sha256": "50d44cbe0213e68d775a842cb01461b606fe126a2b5ca42d66a90ce6e2624aab"
     },
     {
       "path": "integration/archive.py",
@@ -627,8 +627,8 @@
     },
     {
       "path": "tools/check.py",
-      "bytes": 4516,
-      "sha256": "924b8495fca14885aa929c489fff02e6739b6eae9b8af0e42f89ce7aa592d79c"
+      "bytes": 4856,
+      "sha256": "8c78c6af269274616d43bd5f260fb7bcbd303d1c93285b8c36a4e4ebd4dfc0dd"
     },
     {
       "path": "tools/contract_check.py",

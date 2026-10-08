@@ -7,6 +7,12 @@ on:
         description: Successful main CI run for this exact commit
         required: true
         type: string
+      package:
+        description: First release uses sdk, then demo after its pending publisher is registered
+        required: true
+        type: choice
+        default: both
+        options: [both, sdk, demo]
 
 permissions:
   contents: read
@@ -75,11 +81,15 @@ jobs:
           github-token: ${{ github.token }}
           run-id: ${{ inputs.ci_run_id }}
       - name: Check the release inventory and metadata
+        env:
+          RELEASE_PACKAGE: ${{ inputs.package }}
         run: |
           python3 - <<'PY'
           import email.parser
           import hashlib
+          import os
           from pathlib import Path
+          import shutil
           import tarfile
           import zipfile
 
@@ -124,11 +134,21 @@ jobs:
               if parsed['Name'] == 'tansr-sdk-demo' and 'tansr-sdk==0.1.0' not in parsed.get_all('Requires-Dist', []):
                   raise SystemExit('Demo must depend on the exact SDK release')
               print(path.name, hashlib.sha256(path.read_bytes()).hexdigest())
+          selection = os.environ['RELEASE_PACKAGE']
+          if selection not in ('both', 'sdk', 'demo'):
+              raise SystemExit('invalid package selection')
+          upload = Path('upload')
+          upload.mkdir(exist_ok=False)
+          for path in files:
+              selected_name = 'tansr-sdk-demo' if selection == 'demo' else 'tansr-sdk'
+              if selection == 'both' or expected[path.name] == selected_name:
+                  shutil.copyfile(path, upload / path.name)
+          print('Publishing original CI artifacts:', sorted(p.name for p in upload.iterdir()))
           PY
       - name: Publish both packages through PyPI Trusted Publishing
         uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
         with:
-          packages-dir: dist-release/
+          packages-dir: upload/
           verify-metadata: true
           skip-existing: false
           print-hash: true
