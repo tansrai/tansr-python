@@ -1,0 +1,2877 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://tansr.com/contracts/terminal-services-v1/2026-09-26.candidate-7",
+  "title": "RFC-SERVE-NET-1 终端服务合同候选（尚未冻结）",
+  "description": "终端能力候选：发现、受限执行状态、工具输出、typed后台tool.invoke profile、记忆管理与会话配置。只有真实安装和授权才可协商；旧SDK2引用定义保持同值。",
+  "definitions": {
+    "Id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._~-]*$"
+    },
+    "LegacyId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "description": "Existing opaque ID; no trimming, case folding or Unicode normalization. Do not mint authority from this string."
+    },
+    "Sequence": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,17}|[1-8][0-9]{18}|9[0-1][0-9]{17}|92[0-1][0-9]{16}|922[0-2][0-9]{15}|9223[0-2][0-9]{14}|92233[0-6][0-9]{13}|922337[0-1][0-9]{12}|92233720[0-2][0-9]{10}|922337203[0-5][0-9]{9}|9223372036[0-7][0-9]{8}|92233720368[0-4][0-9]{7}|922337203685[0-3][0-9]{6}|9223372036854[0-6][0-9]{5}|92233720368547[0-6][0-9]{4}|922337203685477[0-4][0-9]{3}|9223372036854775[0-7][0-9]{2}|922337203685477580[0-6]|9223372036854775807)$",
+      "maxLength": 19,
+      "description": "Canonical unsigned decimal 0..2^63-1. Never parse through IEEE754 Number."
+    },
+    "Digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "Scope": {
+      "type": "object",
+      "properties": {
+        "applicationScopeId": {
+          "$ref": "#/definitions/Id"
+        },
+        "endUserId": {
+          "$ref": "#/definitions/LegacyId"
+        },
+        "authorizationRevision": {
+          "$ref": "#/definitions/Sequence"
+        }
+      },
+      "required": [
+        "applicationScopeId",
+        "endUserId",
+        "authorizationRevision"
+      ],
+      "additionalProperties": false,
+      "$comment": "Response/host-adapter only. Client requests have no Scope field. Reauthenticate and authorize every operation; archive roles never imply approve or execute."
+    },
+    "ExecutionBinding": {
+      "type": "object",
+      "properties": {
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "revision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "target": {
+          "$ref": "#/definitions/ExecutionTarget"
+        }
+      },
+      "required": [
+        "bindingId",
+        "revision",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "ExecutionTarget": {
+      "type": "object",
+      "properties": {
+        "executorId": {
+          "$ref": "#/definitions/Id"
+        },
+        "connectionId": {
+          "$ref": "#/definitions/Id"
+        },
+        "connectionRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "workspaceId": {
+          "$ref": "#/definitions/Id"
+        },
+        "workspaceRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "interpreter": {
+          "$ref": "#/definitions/ExecutionInterpreter"
+        }
+      },
+      "required": [
+        "executorId",
+        "connectionId",
+        "connectionRevision",
+        "workspaceId",
+        "workspaceRevision"
+      ],
+      "additionalProperties": false
+    },
+    "ExecutionInterpreter": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "revision": {
+          "$ref": "#/definitions/Id"
+        },
+        "hostShell": {
+          "enum": [
+            "posix",
+            "powershell"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "revision",
+        "hostShell"
+      ],
+      "additionalProperties": false
+    },
+    "Contract": {
+      "const": "terminal-services-v1"
+    },
+    "SchemaRevision": {
+      "const": "2026-09-26.candidate-7"
+    },
+    "SessionContract": {
+      "enum": [
+        "sdk1",
+        "sdk2-offload-v1"
+      ]
+    },
+    "Feature": {
+      "enum": [
+        "execution-stream-v1",
+        "execution-background-v1",
+        "memory-lifecycle-v1",
+        "session-configuration-v1"
+      ]
+    },
+    "SessionReference": {
+      "type": "object",
+      "properties": {
+        "sessionContract": {
+          "$ref": "#/definitions/SessionContract"
+        },
+        "sessionId": {
+          "$ref": "#/definitions/LegacyId"
+        }
+      },
+      "required": [
+        "sessionContract",
+        "sessionId"
+      ],
+      "additionalProperties": false
+    },
+    "FeatureAvailability": {
+      "type": "object",
+      "properties": {
+        "feature": {
+          "$ref": "#/definitions/Feature"
+        },
+        "supported": {
+          "type": "boolean"
+        },
+        "installed": {
+          "type": "boolean"
+        },
+        "authorization": {
+          "enum": [
+            "allowed",
+            "denied",
+            "unconfirmed"
+          ]
+        },
+        "device": {
+          "enum": [
+            "available",
+            "unavailable",
+            "not-required",
+            "unconfirmed"
+          ]
+        }
+      },
+      "required": [
+        "feature",
+        "supported",
+        "installed",
+        "authorization",
+        "device"
+      ],
+      "additionalProperties": false
+    },
+    "Limits": {
+      "type": "object",
+      "properties": {
+        "maxControlBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 262144
+        },
+        "maxBlockBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16384
+        },
+        "maxBatchBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "maxPendingBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2097152
+        },
+        "maxRetainedBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 8388608
+        }
+      },
+      "required": [
+        "maxControlBytes",
+        "maxBlockBytes",
+        "maxBatchBytes",
+        "maxPendingBytes",
+        "maxRetainedBytes"
+      ],
+      "additionalProperties": false
+    },
+    "CapabilitiesResponse": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "schemaRevision": {
+          "$ref": "#/definitions/SchemaRevision"
+        },
+        "schemaSha256": {
+          "$ref": "#/definitions/Digest"
+        },
+        "sessionContracts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/SessionContract"
+          },
+          "minItems": 1,
+          "maxItems": 2,
+          "uniqueItems": true
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FeatureAvailability"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "limits": {
+          "$ref": "#/definitions/Limits"
+        }
+      },
+      "required": [
+        "contract",
+        "schemaRevision",
+        "schemaSha256",
+        "sessionContracts",
+        "features",
+        "limits"
+      ],
+      "additionalProperties": false
+    },
+    "BindingRequest": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "requestId": {
+          "$ref": "#/definitions/Id"
+        },
+        "session": {
+          "$ref": "#/definitions/SessionReference"
+        },
+        "executionBinding": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ExecutionBinding"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "required": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Feature"
+          },
+          "minItems": 0,
+          "maxItems": 4,
+          "uniqueItems": true
+        },
+        "optional": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Feature"
+          },
+          "minItems": 0,
+          "maxItems": 4,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "contract",
+        "requestId",
+        "session",
+        "executionBinding",
+        "required",
+        "optional"
+      ],
+      "additionalProperties": false
+    },
+    "BindingResponse": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "requestId": {
+          "$ref": "#/definitions/Id"
+        },
+        "session": {
+          "$ref": "#/definitions/SessionReference"
+        },
+        "scope": {
+          "$ref": "#/definitions/Scope"
+        },
+        "executionBinding": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ExecutionBinding"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "accepted": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Feature"
+          },
+          "minItems": 0,
+          "maxItems": 4,
+          "uniqueItems": true
+        },
+        "unavailable": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/FeatureAvailability"
+          },
+          "minItems": 0,
+          "maxItems": 4
+        },
+        "outputAuthority": {
+          "enum": [
+            "session-events",
+            "tool-output"
+          ]
+        },
+        "limits": {
+          "$ref": "#/definitions/Limits"
+        }
+      },
+      "required": [
+        "contract",
+        "requestId",
+        "session",
+        "scope",
+        "executionBinding",
+        "accepted",
+        "unavailable",
+        "outputAuthority",
+        "limits"
+      ],
+      "additionalProperties": false
+    },
+    "OperationReference": {
+      "type": "object",
+      "properties": {
+        "operationId": {
+          "$ref": "#/definitions/Id"
+        },
+        "requestDigest": {
+          "$ref": "#/definitions/Digest"
+        }
+      },
+      "required": [
+        "operationId",
+        "requestDigest"
+      ],
+      "additionalProperties": false
+    },
+    "OutputBlock": {
+      "type": "object",
+      "properties": {
+        "seq": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "byteOffset": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "channel": {
+          "enum": [
+            "stdout",
+            "stderr"
+          ]
+        },
+        "encoding": {
+          "enum": [
+            "utf-8",
+            "binary"
+          ]
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16384
+        },
+        "payloadDigest": {
+          "$ref": "#/definitions/Digest"
+        },
+        "base64": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 21848,
+          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+        }
+      },
+      "required": [
+        "seq",
+        "byteOffset",
+        "channel",
+        "encoding",
+        "byteLength",
+        "payloadDigest",
+        "base64"
+      ],
+      "additionalProperties": false
+    },
+    "OutputSeal": {
+      "type": "object",
+      "properties": {
+        "lastSeq": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Sequence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "totalBytes": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "payloadDigest": {
+          "$ref": "#/definitions/Digest"
+        },
+        "truncated": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "lastSeq",
+        "totalBytes",
+        "payloadDigest",
+        "truncated"
+      ],
+      "additionalProperties": false
+    },
+    "OutputBatchRequest": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "session": {
+          "$ref": "#/definitions/SessionReference"
+        },
+        "operation": {
+          "$ref": "#/definitions/OperationReference"
+        },
+        "executorId": {
+          "$ref": "#/definitions/Id"
+        },
+        "connectionId": {
+          "$ref": "#/definitions/Id"
+        },
+        "blocks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/OutputBlock"
+          },
+          "minItems": 0,
+          "maxItems": 32
+        },
+        "seal": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/OutputSeal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "session",
+        "operation",
+        "executorId",
+        "connectionId",
+        "blocks",
+        "seal"
+      ],
+      "additionalProperties": false
+    },
+    "OutputStatus": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "operation": {
+          "$ref": "#/definitions/OperationReference"
+        },
+        "state": {
+          "enum": [
+            "available",
+            "receiving",
+            "complete",
+            "truncated",
+            "gap",
+            "unavailable"
+          ]
+        },
+        "acceptedThrough": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Sequence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "durableThrough": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Sequence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "retainedFrom": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Sequence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "nextByteOffset": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Sequence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "seal": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/OutputSeal"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "operation",
+        "state",
+        "acceptedThrough",
+        "durableThrough",
+        "retainedFrom",
+        "nextByteOffset",
+        "seal"
+      ],
+      "additionalProperties": false
+    },
+    "OutputEvent": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "type": {
+              "const": "output.block"
+            },
+            "operation": {
+              "$ref": "#/definitions/OperationReference"
+            },
+            "block": {
+              "$ref": "#/definitions/OutputBlock"
+            }
+          },
+          "required": [
+            "contract",
+            "type",
+            "operation",
+            "block"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "type": {
+              "const": "output.status"
+            },
+            "status": {
+              "$ref": "#/definitions/OutputStatus"
+            }
+          },
+          "required": [
+            "contract",
+            "type",
+            "status"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ExecutorEvent": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "eventId": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "type": {
+          "enum": [
+            "operations-available",
+            "operation-cancelled",
+            "reconcile-required"
+          ]
+        },
+        "executorId": {
+          "$ref": "#/definitions/Id"
+        },
+        "connectionId": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/OperationReference"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "eventId",
+        "type",
+        "executorId",
+        "connectionId",
+        "operation"
+      ],
+      "additionalProperties": false
+    },
+    "OutputCorrelation": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "session": {
+          "$ref": "#/definitions/SessionReference"
+        },
+        "toolCallId": {
+          "$ref": "#/definitions/LegacyId"
+        },
+        "operation": {
+          "$ref": "#/definitions/OperationReference"
+        },
+        "outputAuthority": {
+          "enum": [
+            "session-events",
+            "tool-output"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "session",
+        "toolCallId",
+        "operation",
+        "outputAuthority"
+      ],
+      "additionalProperties": false
+    },
+    "ErrorCode": {
+      "enum": [
+        "invalid_request",
+        "protocol_version_mismatch",
+        "unauthorized",
+        "forbidden",
+        "not_found",
+        "unsupported_capability",
+        "capability_unconfirmed",
+        "source_unavailable",
+        "stale_generation",
+        "binding_conflict",
+        "revision_conflict",
+        "busy",
+        "capacity_exceeded",
+        "payload_too_large",
+        "output_gap",
+        "integrity_mismatch",
+        "commit_unknown",
+        "context_transition_required",
+        "request_conflict",
+        "request_limit"
+      ]
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "requestId": {
+          "$ref": "#/definitions/Id"
+        },
+        "code": {
+          "$ref": "#/definitions/ErrorCode"
+        },
+        "status": {
+          "enum": [
+            400,
+            401,
+            403,
+            404,
+            409,
+            413,
+            429,
+            503
+          ]
+        },
+        "retryAction": {
+          "enum": [
+            "none",
+            "discover",
+            "refresh",
+            "reconcile",
+            "backoff"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "requestId",
+        "code",
+        "status",
+        "retryAction"
+      ],
+      "additionalProperties": false
+    },
+    "ConfigurationRevision": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "Thinking": {
+      "type": "object",
+      "properties": {
+        "budget": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "SessionConfiguration": {
+      "type": "object",
+      "properties": {
+        "revision": {
+          "$ref": "#/definitions/ConfigurationRevision"
+        },
+        "model": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "thinking": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Thinking"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "revision",
+        "model",
+        "thinking"
+      ],
+      "additionalProperties": false
+    },
+    "ConfigurationChanges": {
+      "type": "object",
+      "properties": {
+        "model": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "thinking": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Thinking"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "ConfigurationRequest": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "requestId": {
+          "$ref": "#/definitions/Id"
+        },
+        "session": {
+          "$ref": "#/definitions/SessionReference"
+        },
+        "expectedRevision": {
+          "$ref": "#/definitions/ConfigurationRevision"
+        },
+        "changes": {
+          "$ref": "#/definitions/ConfigurationChanges"
+        }
+      },
+      "required": [
+        "contract",
+        "requestId",
+        "session",
+        "expectedRevision",
+        "changes"
+      ],
+      "additionalProperties": false
+    },
+    "ConfigurationResponse": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "session": {
+          "$ref": "#/definitions/SessionReference"
+        },
+        "configuration": {
+          "$ref": "#/definitions/SessionConfiguration"
+        }
+      },
+      "required": [
+        "contract",
+        "session",
+        "configuration"
+      ],
+      "additionalProperties": false
+    },
+    "ConfigurationCommitResponse": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "requestId": {
+          "$ref": "#/definitions/Id"
+        },
+        "session": {
+          "$ref": "#/definitions/SessionReference"
+        },
+        "status": {
+          "enum": [
+            "changed",
+            "replayed"
+          ]
+        },
+        "configuration": {
+          "$ref": "#/definitions/SessionConfiguration"
+        }
+      },
+      "required": [
+        "contract",
+        "requestId",
+        "session",
+        "status",
+        "configuration"
+      ],
+      "additionalProperties": false
+    },
+    "ExecutionStatus": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "operation": {
+          "$ref": "#/definitions/ExecutionOperation"
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "completed",
+            "failed",
+            "unknown"
+          ]
+        },
+        "receipt": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ExecutionReceiptRequest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "protocol",
+        "operation",
+        "status",
+        "receipt"
+      ],
+      "additionalProperties": false
+    },
+    "ExecutionOperation": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "operationId": {
+          "$ref": "#/definitions/Id"
+        },
+        "sessionId": {
+          "$ref": "#/definitions/LegacyId"
+        },
+        "scope": {
+          "$ref": "#/definitions/Scope"
+        },
+        "binding": {
+          "$ref": "#/definitions/ExecutionBinding"
+        },
+        "toolName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "request": {
+          "$ref": "#/definitions/ResourceRequest"
+        },
+        "digest": {
+          "$ref": "#/definitions/Digest"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "protocol",
+        "operationId",
+        "sessionId",
+        "scope",
+        "binding",
+        "toolName",
+        "request",
+        "digest",
+        "expiresAt"
+      ],
+      "additionalProperties": false
+    },
+    "ResourceRequest": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "fs.inspect"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "maxLength": 4096
+                },
+                "followLinks": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "path",
+                "followLinks"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "fs.read"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "maxLength": 4096
+                },
+                "offset": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "length": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 65536
+                }
+              },
+              "required": [
+                "path",
+                "offset",
+                "length"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "fs.write"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "maxLength": 4096
+                },
+                "expectedHash": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/Digest"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "bytesBase64": {
+                  "type": "string",
+                  "maxLength": 174764,
+                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                }
+              },
+              "required": [
+                "path",
+                "expectedHash",
+                "bytesBase64"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "fs.mkdir"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "maxLength": 4096
+                }
+              },
+              "required": [
+                "path"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "fs.list"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "maxLength": 4096
+                }
+              },
+              "required": [
+                "path"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "process.exec"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "command": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32768
+                },
+                "cwd": {
+                  "type": "string",
+                  "maxLength": 4096
+                },
+                "timeoutMs": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 120000
+                },
+                "maxOutputBytes": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 65536
+                },
+                "interpreter": {
+                  "$ref": "#/definitions/ExecutionInterpreter"
+                }
+              },
+              "required": [
+                "command",
+                "cwd",
+                "timeoutMs",
+                "maxOutputBytes",
+                "interpreter"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "tool.invoke"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "definitionDigest": {
+                  "$ref": "#/definitions/Digest"
+                },
+                "argsJson": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32768
+                }
+              },
+              "required": [
+                "name",
+                "definitionDigest",
+                "argsJson"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ExecutionReceiptRequest": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "executorId": {
+          "$ref": "#/definitions/Id"
+        },
+        "connectionId": {
+          "$ref": "#/definitions/Id"
+        },
+        "operationId": {
+          "$ref": "#/definitions/Id"
+        },
+        "digest": {
+          "$ref": "#/definitions/Digest"
+        },
+        "status": {
+          "enum": [
+            "completed",
+            "failed",
+            "unknown"
+          ]
+        },
+        "result": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ResourceResult"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errorCode": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "protocol",
+        "executorId",
+        "connectionId",
+        "operationId",
+        "digest",
+        "status",
+        "result",
+        "errorCode"
+      ],
+      "additionalProperties": false
+    },
+    "ResourceResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "fs.inspect"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "file",
+                    "directory",
+                    "symlink"
+                  ]
+                },
+                "size": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "mtimeMs": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32,
+                  "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+                },
+                "realpath": {
+                  "type": "string",
+                  "maxLength": 4096
+                }
+              },
+              "required": [
+                "kind",
+                "size",
+                "mtimeMs",
+                "realpath"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "fs.read"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "bytesBase64": {
+                  "type": "string",
+                  "maxLength": 87384,
+                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                }
+              },
+              "required": [
+                "bytesBase64"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "fs.write"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "hash": {
+                  "$ref": "#/definitions/Digest"
+                }
+              },
+              "required": [
+                "hash"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "fs.mkdir"
+            },
+            "args": {
+              "type": "object",
+              "properties": {},
+              "required": [],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "fs.list"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "entries": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      },
+                      "kind": {
+                        "enum": [
+                          "file",
+                          "directory",
+                          "symlink"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "kind"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "maxItems": 501
+                }
+              },
+              "required": [
+                "entries"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "process.exec"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "stdout": {
+                  "type": "string",
+                  "maxLength": 65536
+                },
+                "stderr": {
+                  "type": "string",
+                  "maxLength": 65536
+                },
+                "exitCode": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 11,
+                      "pattern": "^(0|[1-9][0-9]*|-[1-9][0-9]*)$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "signalName": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 32
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "durationMs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "timedOut": {
+                  "type": "boolean"
+                },
+                "aborted": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "stdout",
+                "stderr",
+                "exitCode",
+                "signalName",
+                "durationMs",
+                "timedOut",
+                "aborted"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "tool.invoke"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "resultJson": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32768
+                }
+              },
+              "required": [
+                "resultJson"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ExecutionState": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "session": {
+          "$ref": "#/definitions/SessionReference"
+        },
+        "execution": {
+          "$ref": "#/definitions/ExecutionStatus"
+        }
+      },
+      "required": [
+        "contract",
+        "session",
+        "execution"
+      ],
+      "additionalProperties": false
+    },
+    "BackgroundIdentity": {
+      "type": "object",
+      "properties": {
+        "taskId": {
+          "$ref": "#/definitions/Id"
+        },
+        "operationId": {
+          "$ref": "#/definitions/Id"
+        },
+        "requestDigest": {
+          "$ref": "#/definitions/Digest"
+        },
+        "runtimeInstanceId": {
+          "$ref": "#/definitions/Id"
+        },
+        "processInstanceId": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "taskId",
+        "operationId",
+        "requestDigest",
+        "runtimeInstanceId",
+        "processInstanceId"
+      ],
+      "additionalProperties": false
+    },
+    "ArtifactReference": {
+      "type": "object",
+      "properties": {
+        "artifactId": {
+          "$ref": "#/definitions/Id"
+        },
+        "operationId": {
+          "$ref": "#/definitions/Id"
+        },
+        "requestDigest": {
+          "$ref": "#/definitions/Digest"
+        }
+      },
+      "required": [
+        "artifactId",
+        "operationId",
+        "requestDigest"
+      ],
+      "additionalProperties": false
+    },
+    "BackgroundRequest": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "action": {
+              "const": "launch"
+            },
+            "command": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 8192
+            },
+            "cwd": {
+              "type": "string",
+              "maxLength": 4096
+            },
+            "mode": {
+              "enum": [
+                "background",
+                "foreground-handoff"
+              ]
+            },
+            "timeoutMs": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 86400000
+            },
+            "foregroundTimeoutMs": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 120000
+            }
+          },
+          "required": [
+            "contract",
+            "action",
+            "command",
+            "cwd",
+            "mode",
+            "timeoutMs"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "action": {
+              "const": "query"
+            },
+            "identity": {
+              "$ref": "#/definitions/BackgroundIdentity"
+            }
+          },
+          "required": [
+            "contract",
+            "action",
+            "identity"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "action": {
+              "const": "cancel"
+            },
+            "identity": {
+              "$ref": "#/definitions/BackgroundIdentity"
+            }
+          },
+          "required": [
+            "contract",
+            "action",
+            "identity"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "action": {
+              "const": "outputRead"
+            },
+            "identity": {
+              "$ref": "#/definitions/BackgroundIdentity"
+            },
+            "artifact": {
+              "$ref": "#/definitions/ArtifactReference"
+            },
+            "offset": {
+              "$ref": "#/definitions/Sequence"
+            },
+            "length": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16384
+            }
+          },
+          "required": [
+            "contract",
+            "action",
+            "identity",
+            "artifact",
+            "offset",
+            "length"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "action": {
+              "const": "artifactDelete"
+            },
+            "identity": {
+              "$ref": "#/definitions/BackgroundIdentity"
+            },
+            "artifact": {
+              "$ref": "#/definitions/ArtifactReference"
+            }
+          },
+          "required": [
+            "contract",
+            "action",
+            "identity",
+            "artifact"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "BackgroundTaskState": {
+      "type": "object",
+      "properties": {
+        "identity": {
+          "$ref": "#/definitions/BackgroundIdentity"
+        },
+        "artifact": {
+          "$ref": "#/definitions/ArtifactReference"
+        },
+        "state": {
+          "enum": [
+            "running",
+            "completed",
+            "failed",
+            "cancelled",
+            "unknown"
+          ]
+        },
+        "exitCode": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "signalName": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "totalBytes": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Sequence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "truncated": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "identity",
+        "artifact",
+        "state",
+        "exitCode",
+        "signalName",
+        "totalBytes",
+        "truncated"
+      ],
+      "additionalProperties": false
+    },
+    "BackgroundResponse": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "action": {
+              "const": "launch"
+            },
+            "task": {
+              "$ref": "#/definitions/BackgroundTaskState"
+            }
+          },
+          "required": [
+            "contract",
+            "action",
+            "task"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "action": {
+              "const": "query"
+            },
+            "task": {
+              "$ref": "#/definitions/BackgroundTaskState"
+            }
+          },
+          "required": [
+            "contract",
+            "action",
+            "task"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "action": {
+              "const": "cancel"
+            },
+            "task": {
+              "$ref": "#/definitions/BackgroundTaskState"
+            }
+          },
+          "required": [
+            "contract",
+            "action",
+            "task"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "action": {
+              "const": "outputRead"
+            },
+            "identity": {
+              "$ref": "#/definitions/BackgroundIdentity"
+            },
+            "artifact": {
+              "$ref": "#/definitions/ArtifactReference"
+            },
+            "offset": {
+              "$ref": "#/definitions/Sequence"
+            },
+            "base64": {
+              "type": "string",
+              "maxLength": 21848,
+              "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+            },
+            "byteLength": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16384
+            },
+            "payloadDigest": {
+              "$ref": "#/definitions/Digest"
+            },
+            "nextOffset": {
+              "$ref": "#/definitions/Sequence"
+            },
+            "complete": {
+              "type": "boolean"
+            },
+            "gap": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "contract",
+            "action",
+            "identity",
+            "artifact",
+            "offset",
+            "base64",
+            "byteLength",
+            "payloadDigest",
+            "nextOffset",
+            "complete",
+            "gap"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "action": {
+              "const": "artifactDelete"
+            },
+            "identity": {
+              "$ref": "#/definitions/BackgroundIdentity"
+            },
+            "artifact": {
+              "$ref": "#/definitions/ArtifactReference"
+            },
+            "status": {
+              "enum": [
+                "deleted",
+                "already_deleted"
+              ]
+            }
+          },
+          "required": [
+            "contract",
+            "action",
+            "identity",
+            "artifact",
+            "status"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "MemoryIdentity": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "enum": [
+            "server-managed",
+            "client-managed",
+            "developer-managed"
+          ]
+        },
+        "domain": {
+          "$ref": "#/definitions/MemoryIdentifier"
+        },
+        "sourceId": {
+          "$ref": "#/definitions/MemoryIdentifier"
+        },
+        "sourceGeneration": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "applicationScopeId": {
+          "$ref": "#/definitions/Id"
+        },
+        "endUserId": {
+          "$ref": "#/definitions/LegacyId"
+        }
+      },
+      "required": [
+        "kind",
+        "domain",
+        "sourceId",
+        "sourceGeneration",
+        "applicationScopeId",
+        "endUserId"
+      ],
+      "additionalProperties": false
+    },
+    "MemoryCommand": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "pin"
+            },
+            "text": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            }
+          },
+          "required": [
+            "kind",
+            "text"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "remember"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "forget"
+            },
+            "topic": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            }
+          },
+          "required": [
+            "kind",
+            "topic"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "MemoryCommandRequest": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "session": {
+          "$ref": "#/definitions/SessionReference"
+        },
+        "requestId": {
+          "$ref": "#/definitions/MemoryIdentifier"
+        },
+        "operationId": {
+          "$ref": "#/definitions/MemoryIdentifier"
+        },
+        "sourceId": {
+          "$ref": "#/definitions/MemoryIdentifier"
+        },
+        "sourceGeneration": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "expectedRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "command": {
+          "$ref": "#/definitions/MemoryCommand"
+        }
+      },
+      "required": [
+        "contract",
+        "session",
+        "requestId",
+        "operationId",
+        "sourceId",
+        "sourceGeneration",
+        "expectedRevision",
+        "command"
+      ],
+      "additionalProperties": false
+    },
+    "MemoryReceipt": {
+      "type": "object",
+      "properties": {
+        "requestId": {
+          "$ref": "#/definitions/MemoryIdentifier"
+        },
+        "operationId": {
+          "$ref": "#/definitions/MemoryIdentifier"
+        },
+        "sourceId": {
+          "$ref": "#/definitions/MemoryIdentifier"
+        },
+        "sourceGeneration": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "expectedRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "unknown",
+            "committed",
+            "failed"
+          ]
+        },
+        "publishedRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "errorCode": {
+          "enum": [
+            "operation_failed",
+            "commit_unknown"
+          ]
+        },
+        "executionComplete": {
+          "type": "boolean"
+        },
+        "durable": {
+          "type": "boolean"
+        },
+        "consumed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "requestId",
+        "operationId",
+        "sourceId",
+        "sourceGeneration",
+        "expectedRevision",
+        "status",
+        "executionComplete",
+        "durable",
+        "consumed"
+      ],
+      "additionalProperties": false
+    },
+    "MemoryState": {
+      "type": "object",
+      "properties": {
+        "identity": {
+          "$ref": "#/definitions/MemoryIdentity"
+        },
+        "revision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "deletionGeneration": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "available": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "identity",
+        "revision",
+        "deletionGeneration",
+        "available"
+      ],
+      "additionalProperties": false
+    },
+    "MemoryStateResponse": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "session": {
+          "$ref": "#/definitions/SessionReference"
+        },
+        "memory": {
+          "$ref": "#/definitions/MemoryState"
+        }
+      },
+      "required": [
+        "contract",
+        "session",
+        "memory"
+      ],
+      "additionalProperties": false
+    },
+    "MemoryReceiptResponse": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "session": {
+          "$ref": "#/definitions/SessionReference"
+        },
+        "receipt": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/MemoryReceipt"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "session",
+        "receipt"
+      ],
+      "additionalProperties": false
+    },
+    "MemoryIdentifier": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+    },
+    "MemoryPublicationEtag": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[^\\u0000-\\u001f\\u007f]+$"
+    },
+    "MemoryPublicationHead": {
+      "type": "object",
+      "properties": {
+        "etag": {
+          "$ref": "#/definitions/MemoryPublicationEtag"
+        },
+        "byteLength": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4194304
+        },
+        "sha256": {
+          "$ref": "#/definitions/Digest"
+        }
+      },
+      "required": [
+        "etag",
+        "byteLength",
+        "sha256"
+      ],
+      "additionalProperties": false
+    },
+    "MemoryPublicationTransfer": {
+      "type": "object",
+      "properties": {
+        "transferId": {
+          "$ref": "#/definitions/Id"
+        },
+        "status": {
+          "enum": [
+            "staging",
+            "committed",
+            "conflict",
+            "unknown"
+          ]
+        },
+        "receivedBytes": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4194304
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "etag": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/MemoryPublicationEtag"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "transferId",
+        "status",
+        "receivedBytes",
+        "etag"
+      ],
+      "additionalProperties": false
+    },
+    "MemoryPublicationRequest": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "sourceId": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            },
+            "sourceGeneration": {
+              "$ref": "#/definitions/Sequence"
+            },
+            "domainKey": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            },
+            "action": {
+              "const": "head"
+            }
+          },
+          "required": [
+            "contract",
+            "sourceId",
+            "sourceGeneration",
+            "domainKey",
+            "action"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "sourceId": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            },
+            "sourceGeneration": {
+              "$ref": "#/definitions/Sequence"
+            },
+            "domainKey": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            },
+            "action": {
+              "const": "read"
+            },
+            "etag": {
+              "$ref": "#/definitions/MemoryPublicationEtag"
+            },
+            "offset": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4194304
+            },
+            "length": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12288
+            }
+          },
+          "required": [
+            "contract",
+            "sourceId",
+            "sourceGeneration",
+            "domainKey",
+            "action",
+            "etag",
+            "offset",
+            "length"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "sourceId": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            },
+            "sourceGeneration": {
+              "$ref": "#/definitions/Sequence"
+            },
+            "domainKey": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            },
+            "action": {
+              "const": "begin"
+            },
+            "transferId": {
+              "$ref": "#/definitions/Id"
+            },
+            "expectedEtag": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/MemoryPublicationEtag"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "byteLength": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 4194304
+            },
+            "sha256": {
+              "$ref": "#/definitions/Digest"
+            }
+          },
+          "required": [
+            "contract",
+            "sourceId",
+            "sourceGeneration",
+            "domainKey",
+            "action",
+            "transferId",
+            "expectedEtag",
+            "byteLength",
+            "sha256"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "sourceId": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            },
+            "sourceGeneration": {
+              "$ref": "#/definitions/Sequence"
+            },
+            "domainKey": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            },
+            "action": {
+              "const": "chunk"
+            },
+            "transferId": {
+              "$ref": "#/definitions/Id"
+            },
+            "offset": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4194304
+            },
+            "base64": {
+              "type": "string",
+              "maxLength": 16384,
+              "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+            },
+            "byteLength": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 12288
+            },
+            "payloadDigest": {
+              "$ref": "#/definitions/Digest"
+            }
+          },
+          "required": [
+            "contract",
+            "sourceId",
+            "sourceGeneration",
+            "domainKey",
+            "action",
+            "transferId",
+            "offset",
+            "base64",
+            "byteLength",
+            "payloadDigest"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "sourceId": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            },
+            "sourceGeneration": {
+              "$ref": "#/definitions/Sequence"
+            },
+            "domainKey": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            },
+            "action": {
+              "const": "commit"
+            },
+            "transferId": {
+              "$ref": "#/definitions/Id"
+            }
+          },
+          "required": [
+            "contract",
+            "sourceId",
+            "sourceGeneration",
+            "domainKey",
+            "action",
+            "transferId"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "sourceId": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            },
+            "sourceGeneration": {
+              "$ref": "#/definitions/Sequence"
+            },
+            "domainKey": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            },
+            "action": {
+              "const": "query"
+            },
+            "transferId": {
+              "$ref": "#/definitions/Id"
+            }
+          },
+          "required": [
+            "contract",
+            "sourceId",
+            "sourceGeneration",
+            "domainKey",
+            "action",
+            "transferId"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "description": "可信记忆域专用传输 profile，沿原 tool.invoke 日记及认证绑定，不进入模型工具表；最多4MiB、分块12KiB，禁止映射为任意终端路径。"
+    },
+    "MemoryPublicationResponse": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "sourceId": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            },
+            "sourceGeneration": {
+              "$ref": "#/definitions/Sequence"
+            },
+            "domainKey": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            },
+            "action": {
+              "const": "head"
+            },
+            "publication": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/MemoryPublicationHead"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "contract",
+            "sourceId",
+            "sourceGeneration",
+            "domainKey",
+            "action",
+            "publication"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "sourceId": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            },
+            "sourceGeneration": {
+              "$ref": "#/definitions/Sequence"
+            },
+            "domainKey": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            },
+            "action": {
+              "const": "read"
+            },
+            "etag": {
+              "$ref": "#/definitions/MemoryPublicationEtag"
+            },
+            "offset": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4194304
+            },
+            "base64": {
+              "type": "string",
+              "maxLength": 16384,
+              "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+            },
+            "byteLength": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 12288
+            },
+            "payloadDigest": {
+              "$ref": "#/definitions/Digest"
+            },
+            "nextOffset": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4194304
+            },
+            "complete": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "contract",
+            "sourceId",
+            "sourceGeneration",
+            "domainKey",
+            "action",
+            "etag",
+            "offset",
+            "base64",
+            "byteLength",
+            "payloadDigest",
+            "nextOffset",
+            "complete"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "sourceId": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            },
+            "sourceGeneration": {
+              "$ref": "#/definitions/Sequence"
+            },
+            "domainKey": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            },
+            "action": {
+              "const": "begin"
+            },
+            "transfer": {
+              "$ref": "#/definitions/MemoryPublicationTransfer"
+            }
+          },
+          "required": [
+            "contract",
+            "sourceId",
+            "sourceGeneration",
+            "domainKey",
+            "action",
+            "transfer"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "sourceId": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            },
+            "sourceGeneration": {
+              "$ref": "#/definitions/Sequence"
+            },
+            "domainKey": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            },
+            "action": {
+              "const": "chunk"
+            },
+            "transfer": {
+              "$ref": "#/definitions/MemoryPublicationTransfer"
+            }
+          },
+          "required": [
+            "contract",
+            "sourceId",
+            "sourceGeneration",
+            "domainKey",
+            "action",
+            "transfer"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "sourceId": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            },
+            "sourceGeneration": {
+              "$ref": "#/definitions/Sequence"
+            },
+            "domainKey": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            },
+            "action": {
+              "const": "commit"
+            },
+            "transfer": {
+              "$ref": "#/definitions/MemoryPublicationTransfer"
+            }
+          },
+          "required": [
+            "contract",
+            "sourceId",
+            "sourceGeneration",
+            "domainKey",
+            "action",
+            "transfer"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "sourceId": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            },
+            "sourceGeneration": {
+              "$ref": "#/definitions/Sequence"
+            },
+            "domainKey": {
+              "$ref": "#/definitions/MemoryIdentifier"
+            },
+            "action": {
+              "const": "query"
+            },
+            "transfer": {
+              "$ref": "#/definitions/MemoryPublicationTransfer"
+            }
+          },
+          "required": [
+            "contract",
+            "sourceId",
+            "sourceGeneration",
+            "domainKey",
+            "action",
+            "transfer"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "description": "传输体只承担 publication CAS；不在终端重写记忆算法。CAS和committed回执须同一耐久事务。unknown不得自动重建原transfer。"
+    }
+  }
+}

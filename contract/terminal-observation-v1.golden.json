@@ -1,0 +1,736 @@
+{
+  "description": "结构/标量金样；原SDK2/candidate7不变；跨字段与真实授权/资源仍由行为测试证明。",
+  "schemaSha256": "b6668463458e78b2cfe23baa72d9d9ac6263a248467dd8aeb60387fc2f67c28a",
+  "positive": [
+    {
+      "id": "resources-active",
+      "definition": "ResourcesResponse",
+      "value": {
+        "contract": "terminal-observation-v1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "session-1"
+        },
+        "epochStartSeq": "9007199254740993",
+        "state": "active",
+        "closeRequested": false,
+        "executionEnded": false,
+        "errorCode": null
+      }
+    },
+    {
+      "id": "resources-accepted",
+      "definition": "ResourcesResponse",
+      "value": {
+        "contract": "terminal-observation-v1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "session-1"
+        },
+        "epochStartSeq": "9007199254740993",
+        "state": "accepted",
+        "closeRequested": true,
+        "executionEnded": false,
+        "errorCode": null
+      }
+    },
+    {
+      "id": "resources-draining",
+      "definition": "ResourcesResponse",
+      "value": {
+        "contract": "terminal-observation-v1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "session-1"
+        },
+        "epochStartSeq": "9007199254740993",
+        "state": "draining",
+        "closeRequested": true,
+        "executionEnded": true,
+        "errorCode": null
+      }
+    },
+    {
+      "id": "resources-completed",
+      "definition": "ResourcesResponse",
+      "value": {
+        "contract": "terminal-observation-v1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "session-1"
+        },
+        "epochStartSeq": "9007199254740993",
+        "state": "completed",
+        "closeRequested": true,
+        "executionEnded": true,
+        "errorCode": null
+      }
+    },
+    {
+      "id": "resources-failed",
+      "definition": "ResourcesResponse",
+      "value": {
+        "contract": "terminal-observation-v1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "session-1"
+        },
+        "epochStartSeq": "9007199254740993",
+        "state": "failed",
+        "closeRequested": true,
+        "executionEnded": false,
+        "errorCode": "close_failed"
+      }
+    },
+    {
+      "id": "resources-unknown",
+      "definition": "ResourcesResponse",
+      "value": {
+        "contract": "terminal-observation-v1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "session-1"
+        },
+        "epochStartSeq": "9007199254740993",
+        "state": "unknown",
+        "closeRequested": false,
+        "executionEnded": true,
+        "errorCode": "settlement_unavailable"
+      }
+    },
+    {
+      "id": "correlations-one",
+      "definition": "CorrelationsResponse",
+      "value": {
+        "contract": "terminal-observation-v1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "session-1"
+        },
+        "correlations": [
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          }
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "correlations-none-observed",
+      "definition": "CorrelationsResponse",
+      "value": {
+        "contract": "terminal-observation-v1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "session-1"
+        },
+        "correlations": [],
+        "truncated": false
+      }
+    },
+    {
+      "id": "correlations-same-call-distinct-operation",
+      "definition": "CorrelationsResponse",
+      "value": {
+        "contract": "terminal-observation-v1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "session-1"
+        },
+        "correlations": [
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-2",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          }
+        ],
+        "truncated": false
+      }
+    },
+    {
+      "id": "error-not-found",
+      "definition": "ErrorResponse",
+      "value": {
+        "contract": "terminal-observation-v1",
+        "requestId": "request-1",
+        "code": "not_found",
+        "status": 404,
+        "retryAction": "none"
+      }
+    }
+  ],
+  "negative": [
+    {
+      "id": "extra-field",
+      "definition": "ResourcesResponse",
+      "value": {
+        "contract": "terminal-observation-v1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "session-1"
+        },
+        "epochStartSeq": "9007199254740993",
+        "state": "active",
+        "closeRequested": false,
+        "executionEnded": false,
+        "errorCode": null,
+        "secret": "synthetic"
+      }
+    },
+    {
+      "id": "unknown-state",
+      "definition": "ResourcesResponse",
+      "value": {
+        "contract": "terminal-observation-v1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "session-1"
+        },
+        "epochStartSeq": "9007199254740993",
+        "state": "idle",
+        "closeRequested": false,
+        "executionEnded": false,
+        "errorCode": null
+      }
+    },
+    {
+      "id": "wrong-contract",
+      "definition": "ResourcesResponse",
+      "value": {
+        "contract": "terminal-services-v1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "session-1"
+        },
+        "epochStartSeq": "9007199254740993",
+        "state": "active",
+        "closeRequested": false,
+        "executionEnded": false,
+        "errorCode": null
+      }
+    },
+    {
+      "id": "numeric-epoch",
+      "definition": "ResourcesResponse",
+      "value": {
+        "contract": "terminal-observation-v1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "session-1"
+        },
+        "epochStartSeq": 42,
+        "state": "active",
+        "closeRequested": false,
+        "executionEnded": false,
+        "errorCode": null
+      }
+    },
+    {
+      "id": "coerced-boolean",
+      "definition": "ResourcesResponse",
+      "value": {
+        "contract": "terminal-observation-v1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "session-1"
+        },
+        "epochStartSeq": "9007199254740993",
+        "state": "active",
+        "closeRequested": "false",
+        "executionEnded": false,
+        "errorCode": null
+      }
+    },
+    {
+      "id": "correlations-over-limit",
+      "definition": "CorrelationsResponse",
+      "value": {
+        "contract": "terminal-observation-v1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "session-1"
+        },
+        "correlations": [
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          },
+          {
+            "contract": "terminal-services-v1",
+            "session": {
+              "sessionContract": "sdk1",
+              "sessionId": "session-1"
+            },
+            "toolCallId": "call-1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "outputAuthority": "tool-output"
+          }
+        ],
+        "truncated": true
+      }
+    },
+    {
+      "id": "fabricated-authority",
+      "definition": "OutputCorrelation",
+      "value": {
+        "contract": "terminal-services-v1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "session-1"
+        },
+        "toolCallId": "call-1",
+        "operation": {
+          "operationId": "op-1",
+          "requestDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "outputAuthority": "both"
+      }
+    }
+  ]
+}

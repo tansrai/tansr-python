@@ -1,0 +1,78 @@
+{
+  "task": "SDK2-01b",
+  "protocol": "sdk2-ext-v1",
+  "scope": "Unreleased control/metadata byte goldens; never redefine SDK1 IR bytes.",
+  "metadata": [
+    {
+      "id": "unicode-slash-percent-combining",
+      "value": { "z": "é", "a": "é", "path": "a/b%2F", "emoji": "汉😀", "n": 0 },
+      "utf8": "{\"a\":\"é\",\"emoji\":\"汉😀\",\"n\":0,\"path\":\"a/b%2F\",\"z\":\"é\"}"
+    },
+    {
+      "id": "controls-and-quote",
+      "value": { "controls": "\b\t\n\f\r\u0001\"\\", "slash": "/" },
+      "utf8": "{\"controls\":\"\\b\\t\\n\\f\\r\\u0001\\\"\\\\\",\"slash\":\"/\"}"
+    },
+    {
+      "id": "safe-integers-and-ordered-array",
+      "value": { "value": 9007199254740991, "items": [3, 0, 1], "bool": true, "none": null },
+      "utf8": "{\"bool\":true,\"items\":[3,0,1],\"none\":null,\"value\":9007199254740991}"
+    }
+  ],
+  "get": [
+    { "operation": "capabilities", "dto": {}, "target": "/v3/sdk2/capabilities" },
+    {
+      "operation": "bindingTarget",
+      "dto": { "protocol": "sdk2-ext-v1", "sessionId": "legacy opaque/会话%2F" },
+      "target": "/v3/sdk2/sessions/legacy%20opaque%2F%E4%BC%9A%E8%AF%9D%252F/binding-target?protocol=sdk2-ext-v1"
+    },
+    {
+      "operation": "archiveRecords",
+      "dto": { "protocol": "sdk2-ext-v1", "bindingId": "b-1", "generations": { "historyEpoch": "history/汉", "deletionGeneration": "0", "projectionRevision": "9007199254740993" }, "afterSequence": null, "limit": 128, "maxBytes": 1048576 },
+      "target": "/v3/sdk2/bindings/b-1/archive/records?protocol=sdk2-ext-v1&historyEpoch=history%2F%E6%B1%89&deletionGeneration=0&projectionRevision=9007199254740993&limit=128&maxBytes=1048576"
+    },
+    {
+      "operation": "archiveArtifact",
+      "dto": { "protocol": "sdk2-ext-v1", "bindingId": "b-1", "artifactId": "a-1", "generations": { "historyEpoch": "h-1", "deletionGeneration": "0", "projectionRevision": "1" }, "offset": 0, "maxBytes": 262144 },
+      "target": "/v3/sdk2/bindings/b-1/archive/artifacts/a-1?protocol=sdk2-ext-v1&historyEpoch=h-1&deletionGeneration=0&projectionRevision=1&offset=0&maxBytes=262144"
+    },
+    {
+      "operation": "operationBySession",
+      "dto": { "protocol": "sdk2-ext-v1", "operation": "binding-create", "sessionId": "a/b%2F+汉", "request": { "operationEpoch": "ep-1", "requestId": "req-1" } },
+      "target": "/v3/sdk2/operations?protocol=sdk2-ext-v1&operation=binding-create&sessionId=a%2Fb%252F%2B%E6%B1%89&operationEpoch=ep-1&requestId=req-1"
+    },
+    {
+      "operation": "operationByBinding",
+      "dto": { "protocol": "sdk2-ext-v1", "operation": "binding-close", "bindingId": "b-1", "request": { "operationEpoch": "ep-1", "requestId": "req-1" } },
+      "target": "/v3/sdk2/operations?protocol=sdk2-ext-v1&operation=binding-close&bindingId=b-1&operationEpoch=ep-1&requestId=req-1"
+    },
+    {
+      "operation": "materialStatus",
+      "dto": { "protocol": "sdk2-ext-v1", "bindingId": "b-1", "materialRequestId": "m-1" },
+      "target": "/v3/sdk2/bindings/b-1/materials/m-1?protocol=sdk2-ext-v1"
+    },
+    {
+      "operation": "materialUploadStatus",
+      "dto": { "protocol": "sdk2-ext-v1", "bindingId": "b-1", "materialRequestId": "m-1", "artifactId": "a-1" },
+      "target": "/v3/sdk2/bindings/b-1/materials/m-1/uploads/a-1?protocol=sdk2-ext-v1"
+    }
+  ],
+  "pathIds": [
+    { "id": "a/b", "segment": "a%2Fb" },
+    { "id": "汉😀", "segment": "%E6%B1%89%F0%9F%98%80" },
+    { "id": "%2F", "segment": "%252F" },
+    { "id": "100%+", "segment": "100%25%2B" },
+    { "id": "é", "segment": "%C3%A9" },
+    { "id": "é", "segment": "e%CC%81" }
+  ],
+  "invalidPathSegments": ["", "%", "%2", "%GG", "%C0%AF", "%ED%A0%80", "a/b"],
+  "invalidMetadata": [
+    "{\"n\":-0}", "{\"n\":-1}", "{\"n\":1e3}", "{\"n\":1e+3}", "{\"n\":1.0}", "{\"n\":01}", "{\"n\":9007199254740992}",
+    "{\"a\":1,\"a\":2}", "{\"a\":1,\"\\u0061\":2}", "{\"s\":\"\\ud800\"}", "{\"s\":\"\\udc00\"}", "{\"汉\":1}", "{\"n\":NaN}"
+  ],
+  "opaqueIr": "[{\"role\":\"assistant\",\"blocks\":[{\"t\":\"tool_call\",\"id\":\"call-1\",\"name\":\"example\",\"args\":{\"ratio\":1e-7,\"negativeZero\":-0,\"text\":\"a\\/b 汉😀\"}}]}]",
+  "sse": {
+    "frame": { "protocol": "sdk2-ext-v1", "bindingId": "b-1", "eventId": "event-1", "cursor": "cursor-1", "revision": "1", "generations": { "historyEpoch": "h-1", "deletionGeneration": "0", "projectionRevision": "1" }, "eventType": "archive.records-available", "payload": { "publishedThroughSequence": "1" } },
+    "utf8": "id: cursor-1\nevent: archive.records-available\ndata: {\"bindingId\":\"b-1\",\"cursor\":\"cursor-1\",\"eventId\":\"event-1\",\"eventType\":\"archive.records-available\",\"generations\":{\"deletionGeneration\":\"0\",\"historyEpoch\":\"h-1\",\"projectionRevision\":\"1\"},\"payload\":{\"publishedThroughSequence\":\"1\"},\"protocol\":\"sdk2-ext-v1\",\"revision\":\"1\"}\n\n"
+  }
+}

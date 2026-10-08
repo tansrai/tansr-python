@@ -1,0 +1,7 @@
+{
+  "format": "tansr-python-contract-distribution-v1",
+  "scope": "public",
+  "sourceLockSha256": "61fdcd48fca1629e99bca9c963937209ecac3abddee7fb133c870a01f25efdfe",
+  "sourceLockFileCount": 39,
+  "contractFileCount": 20
+}

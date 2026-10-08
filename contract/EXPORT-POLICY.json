@@ -1,0 +1,29 @@
+{
+  "format": "tansr-python-contract-export-policy-v1",
+  "sourceCommit": "83c64b2c519623a79994c942a5132300eb8174d4",
+  "sourceLockSha256": "61fdcd48fca1629e99bca9c963937209ecac3abddee7fb133c870a01f25efdfe",
+  "status": "approved",
+  "files": [
+    "api-error-map.json",
+    "api-manifest.json",
+    "archive-sync-v1.schema.json",
+    "canonical-cross-vectors.json",
+    "sdk2-archive-recovery-v1.golden.json",
+    "sdk2-archive-recovery-v1.schema.json",
+    "sdk2-cache-core-v1.schema.json",
+    "sdk2-cache-v1.schema.json",
+    "sdk2-ext-v1.schema.json",
+    "sdk2-wire-v1.json",
+    "terminal-observation-v1.golden.json",
+    "terminal-observation-v1.schema.json",
+    "terminal-profile-v1.golden.json",
+    "terminal-profile-v1.schema.json",
+    "terminal-services-v1.golden.json",
+    "terminal-services-v1.schema.json",
+    "terminal-shell-sandbox-v1.golden.json",
+    "terminal-shell-sandbox-v1.schema.json",
+    "unified-v1.golden.json",
+    "unified-v1.schema.json"
+  ],
+  "authorization": "2026-10-09: User explicitly approved MIT licensing and public release of Python SDK and Demo to tansrai/tansr-python and PyPI tansr-sdk/tansr-sdk-demo. Only the 20 listed public contract assets are exported; internal reference sources, SQL, Git history and private Serve fixtures remain excluded."
+}

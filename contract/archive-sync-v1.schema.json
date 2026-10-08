@@ -1,0 +1,184 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "archive-sync-v1 additive contract",
+  "description": "独立 archive-sync-v1 HTTP 面（doc/rfc/SDK2-档案同步与保留扩展.md；实现 packages/server/src/sdk2/archive-sync.ts）。单入口 POST /v3/sdk2/archive-sync/:id（/api/archive/sync/:id），请求与响应共用信封 { format, identity, method, value | error }。运行时另核：请求体 ≤ 绑定 maxRequestBytes（≤ 94371840）+ 65536；响应体 ≤ 绑定 maxResponseBytes（≤ 1572864），信封整体 ≤ 1638400 bytes；JSON 为规范控制编码（键 ASCII 升序、无空白、整数 ≥ 0、字符串 UTF-8 可往返），解码后重编码须逐字节相等。HTTP 状态：200 成功；403 context_changed / identity_mismatch；429 capacity_exceeded；400 invalid_input；其余错误码 409。本族不在统一错误矩阵四族内，经 /api 门面时错误信封原样透传。",
+  "oneOf": [
+    {
+      "$ref": "#/definitions/Request"
+    },
+    {
+      "$ref": "#/definitions/Response"
+    },
+    {
+      "$ref": "#/definitions/ErrorResponse"
+    }
+  ],
+  "definitions": {
+    "Format": {
+      "const": "archive-sync-v1"
+    },
+    "Id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._~-]*$"
+    },
+    "Sequence": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,18})$",
+      "description": "十进制序列 < 9223372036854775807，运行时检查上界。"
+    },
+    "Scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["applicationScopeId", "endUserId"],
+      "properties": {
+        "applicationScopeId": { "$ref": "#/definitions/Id" },
+        "endUserId": { "$ref": "#/definitions/Id" }
+      },
+      "description": "身份两键恒由服务端 authenticate 派生后与绑定固定身份比对；authorizationRevision 不进信封。"
+    },
+    "Generations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["historyEpoch", "deletionGeneration", "projectionRevision"],
+      "properties": {
+        "historyEpoch": { "$ref": "#/definitions/Sequence" },
+        "deletionGeneration": { "$ref": "#/definitions/Sequence" },
+        "projectionRevision": { "$ref": "#/definitions/Sequence" }
+      }
+    },
+    "Target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sessionId", "generations"],
+      "properties": {
+        "sessionId": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "generations": { "$ref": "#/definitions/Generations" }
+      }
+    },
+    "Identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scope", "bindingId"],
+      "properties": {
+        "scope": { "$ref": "#/definitions/Scope" },
+        "bindingId": { "$ref": "#/definitions/Id" },
+        "target": { "$ref": "#/definitions/Target" },
+        "sourceId": { "$ref": "#/definitions/Id" },
+        "sourceGeneration": { "$ref": "#/definitions/Id" }
+      },
+      "description": "接收器固定身份（api-client Sdk2ReceiverIdentity 五键；服务端绑定身份至少含 scope / bindingId）。请求 identity 的规范编码须与路径 :id 解析出的绑定身份逐字节相等（identity_mismatch）；只读共享许可的 owner 须含全部五键。"
+    },
+    "Method": {
+      "type": "string",
+      "enum": [
+        "receive",
+        "confirm",
+        "pending",
+        "head",
+        "coverage",
+        "identity",
+        "operation",
+        "records",
+        "body-chunk",
+        "sync-page",
+        "retention",
+        "retention-page",
+        "apply-retention",
+        "reconcile"
+      ],
+      "description": "方法词表 = archive-sync.ts `methods`（generate-manifest.mjs --check 核两者同集）。value 形随方法由 Sdk2SyncArchiveStore 各方法的入参 / 出参决定，不在本 schema 内逐一定形。"
+    },
+    "ReadMethod": {
+      "type": "string",
+      "enum": [
+        "head",
+        "coverage",
+        "identity",
+        "records",
+        "body-chunk",
+        "sync-page",
+        "retention",
+        "retention-page"
+      ],
+      "description": "只读共享许可（resolveReadOnly）下允许的方法子集 = archive-sync.ts `readMethods`；其余方法在共享许可下答 403 context_changed。"
+    },
+    "ErrorCode": {
+      "type": "string",
+      "enum": [
+        "invalid_input",
+        "identity_mismatch",
+        "integrity_mismatch",
+        "capacity_exceeded",
+        "pending_ack",
+        "receipt_mismatch",
+        "context_changed",
+        "reentrant",
+        "closed",
+        "storage_error",
+        "reconciliation_required"
+      ],
+      "description": "错误码词表 = archive-sync.ts `codes`；dispatch 抛出的 code 不在词表内一律归 storage_error。"
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["format", "identity", "method", "value"],
+      "properties": {
+        "format": { "$ref": "#/definitions/Format" },
+        "identity": { "$ref": "#/definitions/Identity" },
+        "method": { "$ref": "#/definitions/Method" },
+        "value": {
+          "description": "方法入参（规范控制编码；receive 可达 2097152 + 4·ceil(maxBatchBytes / 3) bytes，其余 ≤ 1572864 bytes）。"
+        }
+      },
+      "description": "POST 体；content-type 须为 application/json。"
+    },
+    "Response": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["format", "identity", "method", "value"],
+      "properties": {
+        "format": { "$ref": "#/definitions/Format" },
+        "identity": { "$ref": "#/definitions/Identity" },
+        "method": { "$ref": "#/definitions/Method" },
+        "value": {
+          "description": "方法出参，≤ 绑定 maxResponseBytes。"
+        }
+      },
+      "description": "200 响应；identity / method 回显请求值，客户端须核对后再消费 value。"
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["format", "identity", "method", "error"],
+      "properties": {
+        "format": { "$ref": "#/definitions/Format" },
+        "identity": {
+          "anyOf": [
+            { "$ref": "#/definitions/Identity" },
+            { "type": "null" }
+          ],
+          "description": "绑定解析前失败（准入 / 鉴权 / 路径）时为 null。"
+        },
+        "method": {
+          "anyOf": [
+            { "$ref": "#/definitions/Method" },
+            { "const": "unknown" }
+          ],
+          "description": "方法解析前失败时为 unknown。"
+        },
+        "error": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["code"],
+          "properties": {
+            "code": { "$ref": "#/definitions/ErrorCode" }
+          }
+        }
+      },
+      "description": "≥ 400 响应；无 message / requestId / retryAction 位（平铺四族信封之外的独立形）。"
+    }
+  }
+}

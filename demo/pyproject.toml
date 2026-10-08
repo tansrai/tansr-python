@@ -1,0 +1,44 @@
+[build-system]
+requires = [
+  "setuptools==68.0.0; python_version < '3.8'",
+  "setuptools==75.3.2; python_version == '3.8'",
+  "setuptools==80.9.0; python_version == '3.9'",
+  "setuptools==84.0.0; python_version >= '3.10'",
+  "wheel==0.42.0; python_version < '3.8'",
+  "wheel==0.45.1; python_version == '3.8'",
+  "wheel==0.48.0; python_version >= '3.9'",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "tansr-sdk-demo"
+version = "0.1.0"
+description = "Three native Python examples for the Tansr Serve SDK"
+readme = "README.md"
+requires-python = ">=3.7,!=3.9.0,!=3.9.1"
+license = {file = "LICENSE"}
+authors = [{name = "Tansr"}]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Typing :: Typed",
+]
+dependencies = ["tansr-sdk==0.1.0"]
+
+[project.urls]
+Repository = "https://github.com/tansrai/tansr-python"
+Documentation = "https://github.com/tansrai/tansr-python/blob/main/demo/README.md"
+Issues = "https://github.com/tansrai/tansr-python/issues"
+
+[project.scripts]
+tansr-py-chat = "tansr_demo.chat:main"
+tansr-py-tools = "tansr_demo.tools:main"
+tansr-py-archive = "tansr_demo.archive:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+tansr_demo = ["py.typed"]

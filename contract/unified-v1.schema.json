@@ -1,0 +1,2921 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://tansr.com/contracts/unified-v1/2026-10-01.draft",
+  "title": "Tansr Unified API Contract unified-v1 — 门面自有形、统一信封与统一头(schema 草案 drafted;依据 RFC-UAPI-1 v1.0-rc 会签稿与方案 §0 D7)",
+  "description": "定义 unified-v1 的公共层:统一 manifest(GET /api/manifest)、部署级能力视图(GET /api/capabilities)、会话级能力闭合围栏(GET /api/sessions/:id/capabilities)、门面自有错误信封、阶段三域错误统一信封、统一事件包络与请求 / 响应头词表。事实源:doc/rfc/RFC-UAPI-1-统一信封与canonical单模块.md(§1 信封与头、§1.4 围栏、§1.5 事件包络、§2 错误矩阵、§3 字段消歧)与开发方案 §3.2 / §3.5 / §3.6。不改任何现有合同族的字段与 wire 字节;领域 payload 由各族子合同约束。HTTP 处理器按具名定义校验,不按根 anyOf。",
+  "$comment": "与既有合同族同律:全部对象 additionalProperties:false(RequestHeaders / ResponseHeaders 校验的是统一头词表的投影);Id / Sequence / Digest 逐字复制自 terminal-services-v1。围栏 operations 采显式属性 + required(77 条恒全覆盖、无未知操作名,便于代码生成出固定键类型),不用 propertyNames 枚举。身份字段(applicationScopeId / endUserId / authorizationRevision)恒由服务端派生,任何请求形不含身份字段(RFC-SDK2-1 §9.1;方案 §2.3)。",
+  "anyOf": [
+    {
+      "$ref": "#/definitions/Manifest"
+    },
+    {
+      "$ref": "#/definitions/Capabilities"
+    },
+    {
+      "$ref": "#/definitions/CapabilityClosure"
+    },
+    {
+      "$ref": "#/definitions/FacadeError"
+    },
+    {
+      "$ref": "#/definitions/UnifiedError"
+    },
+    {
+      "$ref": "#/definitions/EventEnvelope"
+    },
+    {
+      "$ref": "#/definitions/RequestHeaders"
+    },
+    {
+      "$ref": "#/definitions/ResponseHeaders"
+    }
+  ],
+  "definitions": {
+    "Id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._~-]*$",
+      "description": "复制自 terminal-services-v1 / sdk2-ext-v1 的 Id。"
+    },
+    "Sequence": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,17}|[1-8][0-9]{18}|9[0-1][0-9]{17}|92[0-1][0-9]{16}|922[0-2][0-9]{15}|9223[0-2][0-9]{14}|92233[0-6][0-9]{13}|922337[0-1][0-9]{12}|92233720[0-2][0-9]{10}|922337203[0-5][0-9]{9}|9223372036[0-7][0-9]{8}|92233720368[0-4][0-9]{7}|922337203685[0-3][0-9]{6}|9223372036854[0-6][0-9]{5}|92233720368547[0-6][0-9]{4}|922337203685477[0-4][0-9]{3}|9223372036854775[0-7][0-9]{2}|922337203685477580[0-6]|9223372036854775807)$",
+      "maxLength": 19,
+      "description": "Canonical unsigned decimal 0..2^63-1(复制自 terminal-services-v1)。Never parse through IEEE754 Number。"
+    },
+    "Digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$",
+      "description": "sha256 小写 hex 64 位(复制自 terminal-services-v1)。"
+    },
+    "Contract": {
+      "const": "unified-v1",
+      "description": "统一合同修订标识(RFC §1.1 tansr-contract;方案 §3.7 contractRevision)。"
+    },
+    "Domain": {
+      "type": "string",
+      "enum": [
+        "discovery",
+        "session",
+        "execution",
+        "archive",
+        "archive-sync",
+        "cache",
+        "terminal",
+        "terminal-observation",
+        "terminal-profile"
+      ],
+      "description": "受理域词表 = 响应头 tansr-domain(RFC §1.1);discovery 为门面自有。与 route-table.ts ApiDomain 同集。"
+    },
+    "ClosureDomain": {
+      "type": "string",
+      "enum": [
+        "session",
+        "execution",
+        "archive",
+        "archive-sync",
+        "cache",
+        "terminal",
+        "terminal-observation",
+        "terminal-profile"
+      ],
+      "description": "围栏 / 部署级能力视图的域词表 = Domain 去 discovery(closure.ts CLOSURE_DOMAINS)。"
+    },
+    "FamilyId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
+      "description": "合同族 id(manifest families[].id,如 agent-session-v1 / sdk2-ext-v1 / unified-v1)。"
+    },
+    "FamilyStatus": {
+      "type": "string",
+      "enum": [
+        "frozen",
+        "final",
+        "additive",
+        "candidate",
+        "drafted"
+      ],
+      "description": "合同族状态(generate-manifest.mjs FAMILIES.status 词表)。"
+    },
+    "SessionFamily": {
+      "type": "string",
+      "enum": [
+        "sdk1",
+        "sdk2-offload-v1"
+      ],
+      "description": "会话族(请求头 tansr-session-family 取值;RFC §1.2;方案 §3.3 / D6 第 9 项按 B)。"
+    },
+    "RepoPath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^[^\\s\\\\]+$",
+      "description": "仓内相对路径(正斜杠,无空白);只作文档 / 登记,不是可导航 URL。"
+    },
+    "SchemaHash": {
+      "type": "string",
+      "pattern": "^(sha256:[a-f0-9]{64}|none)$",
+      "description": "受理域合同族源 schema 指纹:sha256:<hex> 或 none(族未登记)(RFC §1.1 tansr-schema-hash)。"
+    },
+    "Sha256Prefixed": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$",
+      "description": "恒有值的指纹形(discovery 聚合 schemaHash)。"
+    },
+    "TraceId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]{1,128}$",
+      "description": "观测关联 id = 响应头 x-request-id(采纳合法入站 x-request-id / traceparent trace-id / 自铸 UUID;observability/request-context.ts REQUEST_ID_PATTERN)。与业务 requestId 分离(RFC §1.3 / §3)。"
+    },
+    "IdempotencyKey": {
+      "type": "string",
+      "pattern": "^[\\x21-\\x7E]{1,128}$",
+      "description": "客户端幂等键(Idempotency-Key 头 / 各域体内 request.requestId;RFC §1.2:ASCII 1–128)。"
+    },
+    "KeyPath": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Za-z][A-Za-z0-9]*$",
+        "maxLength": 64
+      },
+      "minItems": 1,
+      "maxItems": 8,
+      "description": "JSON 体内键路径(自根起逐级对象键;revision 7:ManifestFamily.requestIdPath / ManifestOperation.etagPath / expectedRevision.path)。"
+    },
+    "UnifiedCode": {
+      "type": "string",
+      "enum": [
+        "invalid_request",
+        "protocol_mismatch",
+        "unauthorized",
+        "forbidden",
+        "not_found",
+        "method_not_allowed",
+        "gone",
+        "conflict",
+        "stale_generation",
+        "gap",
+        "capability_unavailable",
+        "capacity_exceeded",
+        "payload_too_large",
+        "upstream_unavailable",
+        "result_unknown",
+        "rejected",
+        "internal_error",
+        "precondition_failed",
+        "not_canonical"
+      ],
+      "description": "统一错误码 19 = 17 四族映射码(事实源 packages/server/contract/api-error-map.json unifiedCodes,顺序同表)+ precondition_failed(412,门面 / If-Match 前置)+ not_canonical(400,严格 canonical 入口拒收)(方案 §0 D7;RFC-UAPI-1 v1.0-rc §2.2、§6 第 5 项)。"
+    },
+    "FacadeCode": {
+      "type": "string",
+      "enum": [
+        "unauthorized",
+        "not_found",
+        "method_not_allowed",
+        "invalid_request",
+        "capability_unavailable",
+        "capacity_exceeded",
+        "precondition_failed",
+        "upstream_unavailable"
+      ],
+      "description": "门面自有码 8(facade.ts ApiFacadeErrorCode;方案 §3.2 第 2 条 + upstream_unavailable;手册 §16.5 门面自有码表)。/api 请求侧三头拒绝(request-headers.ts)不属本词表:其信封携 requestId / detail.domainCode,形同域错误,按 UnifiedError 校验(revision 7 落定,不扩 8 → 12)。"
+    },
+    "RetryAction": {
+      "type": "string",
+      "enum": [
+        "none",
+        "same-request",
+        "query-status",
+        "rebind",
+        "refresh",
+        "rediscover"
+      ],
+      "description": "统一 retryAction 6(RFC §2.3;api-error-map.json retryActions)。"
+    },
+    "DomainRetryAction": {
+      "type": "string",
+      "enum": [
+        "none",
+        "query-status",
+        "rebind",
+        "same-request",
+        "refresh-projection",
+        "backoff",
+        "discover",
+        "reconcile",
+        "refresh"
+      ],
+      "description": "各族原 retryAction 词表并集(RFC §2.1;保留于 UnifiedError.detail.domainRetryAction,不删任何域动作)。"
+    },
+    "DomainCode": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 64,
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "原族错误码形(RFC §2.2:统一信封 detail.domainCode 保留原码)。"
+    },
+    "OperationState": {
+      "type": "string",
+      "enum": [
+        "enabled",
+        "disabled",
+        "unavailable"
+      ],
+      "description": "围栏三态(RFC §1.4;方案 §3.6):unavailable = 域未装配或对本会话无能力源(404);disabled = 有能力源但当前不放行(403);enabled = 围栏内。"
+    },
+    "ClosureOperationName": {
+      "type": "string",
+      "enum": [
+        "session.create",
+        "session.list",
+        "session.get",
+        "session.close",
+        "session.message.send",
+        "session.events.observe",
+        "session.interrupt",
+        "session.history.read",
+        "session.tool.result",
+        "session.permission.decide",
+        "session.question.answer",
+        "session.compact",
+        "session.checkpoint.list",
+        "session.checkpoint.create",
+        "session.checkpoint.import",
+        "session.checkpoint.restore",
+        "session.checkpoint.export",
+        "session.checkpoint.delete",
+        "session.cwd.set",
+        "session.audio.transcribe",
+        "session.audio.speak",
+        "session.input.capabilities",
+        "session.input.submit",
+        "session.input.status",
+        "approval.credential.submit",
+        "execution.initialize",
+        "execution.capabilities",
+        "execution.boundary",
+        "execution.binding.create",
+        "execution.status",
+        "executor.register",
+        "executor.heartbeat",
+        "executor.operations.poll",
+        "executor.receipt.submit",
+        "archive.capabilities",
+        "archive.binding.target",
+        "archive.binding.create",
+        "archive.binding.get",
+        "archive.binding.close",
+        "archive.status",
+        "archive.events.observe",
+        "archive.records.read",
+        "archive.artifact.read",
+        "archive.ack.commit",
+        "archive.ack.rebase",
+        "archive.operation.query",
+        "archive.sync",
+        "material.response.submit",
+        "material.status",
+        "material.upload.status",
+        "material.upload.chunk",
+        "cache.capabilities",
+        "cache.binding.open",
+        "cache.binding.get",
+        "cache.binding.renew",
+        "cache.binding.rebind",
+        "cache.binding.rotate",
+        "cache.binding.close",
+        "cache.operation.query",
+        "cache.diagnostics",
+        "cache.core.diagnostics",
+        "terminal.capabilities",
+        "terminal.binding.create",
+        "terminal.executor.events.observe",
+        "terminal.output.batch",
+        "terminal.execution.state",
+        "terminal.output.observe",
+        "terminal.output.status",
+        "terminal.configuration.read",
+        "terminal.configuration.commit",
+        "terminal.memory.read",
+        "terminal.memory.command",
+        "terminal.memory.receipt",
+        "terminal.observation.resources",
+        "terminal.observation.correlations",
+        "terminal.profile.catalog",
+        "terminal.profile.usage"
+      ],
+      "description": "围栏操作名 77 = manifest 操作目录去 4 条部署级发现读(discovery.* 与 session.capabilities);事实源 closure.ts CLOSURE_OPERATIONS,目录序。"
+    },
+    "OperationName": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 128,
+      "pattern": "^[a-z]+(\\.[a-z][a-z0-9]*)+$",
+      "description": "manifest 操作目录名形制(用户拍板 D2 点分风格;generate-manifest.mjs OPERATION_NAME_PATTERN)。"
+    },
+    "ApiPathTemplate": {
+      "type": "string",
+      "pattern": "^/api(/(:[A-Za-z]+|[A-Za-z0-9._~-]+))+$",
+      "maxLength": 256,
+      "description": "/api 路由模板(:id / :targetId / :uploadId / :ticketId 占位;方案 §3.3 路由表)。票据段统一层命名 ticketId(方案 §0 D7 ③;RFC §3):/v2 ⑩⑪ wire 仍为 requestId,manifest 操作目录已用 :ticketId,观测模板占位改名由主线再生。"
+    },
+    "ApiEntryTemplate": {
+      "type": "string",
+      "pattern": "^/api(/(:[A-Za-z]+|[A-Za-z0-9._~-]+|\\*\\*))*$",
+      "maxLength": 256,
+      "description": "族入口模板(可含 /** 通配;manifest families[].apiEntries,只作文档)。"
+    },
+    "LegacyPathTemplate": {
+      "type": "string",
+      "pattern": "^/v[123](/(:[A-Za-z]+|[A-Za-z0-9._~-]+|\\*\\*))+$",
+      "maxLength": 256,
+      "description": "内部适配路径模板(/v2、/v3/*;用户拍板 D3:保留为内部入口一个版本周期)。/v1 仅 approval.credential.submit 的 /v1/approvals/:id/credential(T-K11 审批回执,计划 §四 32;generate-manifest.mjs validateOperations 单点放行)。"
+    },
+    "SchemaRef": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+#[A-Za-z][A-Za-z0-9]*$",
+      "maxLength": 192,
+      "description": "操作请求 / 响应 schema 引用 <族 id>#<定义名>(generate-manifest.mjs SCHEMA_REF_PATTERN)。"
+    },
+    "Cursor": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "description": "不透明游标(RFC §1.5 cursorSet 五位之一的取值形;各位只在自身合同条件满足后推进,不得互换)。"
+    },
+    "ArchiveCoverage": {
+      "type": "object",
+      "properties": {
+        "fromSequence": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "throughSequence": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "headDigest": {
+          "$ref": "#/definitions/Digest"
+        }
+      },
+      "required": [
+        "fromSequence",
+        "throughSequence",
+        "headDigest"
+      ],
+      "additionalProperties": false,
+      "description": "档案覆盖区间(复制自 sdk2-ext-v1 Coverage:闭区间 from<=through,headDigest 为宿主链承诺)。cursorSet.archiveCoverage 在 wire 上的对象形;SSE 游标恒不是档案覆盖。"
+    },
+    "TerminalStatus": {
+      "enum": [
+        null,
+        "accepted",
+        "completed",
+        "aborted",
+        "unknown"
+      ],
+      "description": "RFC §1.5:null = 非终态事件;accepted 只表示受理;unknown 按 result_unknown 处置(只许 query-status / rebind)。"
+    },
+    "EventType": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[a-z][a-z0-9_-]*(\\.[a-z][a-z0-9_-]*)*$",
+      "description": "事件类型(小写点分,段内允许 _ 与 -:如 msg.text.delta / material.request / archive.records-available / operation-cancelled);未知 type 的原事件仍原样入 raw,SDK 类型层暴露 UnknownEvent(RFC §1.5)。"
+    },
+    "HttpStatus": {
+      "type": "integer",
+      "enum": [
+        400,
+        401,
+        403,
+        404,
+        405,
+        408,
+        409,
+        410,
+        412,
+        413,
+        422,
+        429,
+        500,
+        503
+      ],
+      "description": "统一信封可出线的 HTTP 状态集(RFC §1.2 408 deadline、412 If-Match / 围栏前置;§2.2 各码缺省与备选)。"
+    },
+    "LimitRange": {
+      "type": "object",
+      "properties": {
+        "min": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "default": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "min",
+        "max",
+        "default"
+      ],
+      "additionalProperties": false,
+      "description": "manifest capabilities[].value(kind = limit):SDK2 限值 TS 区间 × schema default(方案 §3.5;generate-manifest.mjs computeCapabilities ①)。"
+    },
+    "ClientLock": {
+      "type": "object",
+      "properties": {
+        "client": {
+          "type": "string",
+          "enum": [
+            "node",
+            "csharp",
+            "go",
+            "android",
+            "ios",
+            "harmony"
+          ],
+          "description": "各端(方案 §3.5:TypeScript、C#、Go、Android、iOS、鸿蒙)。"
+        },
+        "repo": {
+          "type": "string",
+          "pattern": "^tansr-[a-z]+$",
+          "maxLength": 64
+        },
+        "file": {
+          "$ref": "#/definitions/RepoPath"
+        },
+        "lock": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "description": "登记值:64 hex 指纹或标签(source / generated / hand-written / absent / …);其它仓的锁定文件不在本仓,--check 只据登记值算 drift。"
+        },
+        "observed": {
+          "type": "string",
+          "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$"
+        },
+        "drift": {
+          "type": "boolean",
+          "description": "true = 该端锁定指纹落后主线(如实登记,不代签)。"
+        }
+      },
+      "required": [
+        "client",
+        "repo",
+        "lock",
+        "observed",
+        "drift"
+      ],
+      "additionalProperties": false
+    },
+    "ManifestFamily": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/FamilyId"
+        },
+        "domains": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Domain"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "status": {
+          "$ref": "#/definitions/FamilyStatus"
+        },
+        "rfc": {
+          "$ref": "#/definitions/RepoPath"
+        },
+        "source": {
+          "$ref": "#/definitions/RepoPath"
+        },
+        "sha256": {
+          "$ref": "#/definitions/Digest"
+        },
+        "golden": {
+          "type": "object",
+          "propertyNames": {
+            "$ref": "#/definitions/RepoPath"
+          },
+          "additionalProperties": {
+            "$ref": "#/definitions/Digest"
+          },
+          "description": "golden 文件路径 → 实测 SHA256。"
+        },
+        "generated": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RepoPath"
+          },
+          "uniqueItems": true
+        },
+        "legacyEntries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/LegacyPathTemplate"
+          },
+          "uniqueItems": true
+        },
+        "apiEntries": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ApiEntryTemplate"
+          },
+          "uniqueItems": true
+        },
+        "clients": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ClientLock"
+          }
+        },
+        "requestIdPath": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/KeyPath"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "体内客户端幂等键位(RFC §1.2 / §3:Idempotency-Key 头映射到域 requestId 的键路径;sdk2 / recovery / cache 族 request.requestId,terminal 三面顶层 requestId);null = 该族体内无此位(agent-session-v1 以墓碑窗去重、archive-sync-v1 请求形未登记、门面自有 / 无 /api 操作的族)。revision 7 加法字段(U7-HDR 三头接线事实源并入 manifest;generate-manifest.mjs FAMILY_REQUEST_ID_PATHS)。"
+        },
+        "sessionManifestRevision": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "仅 agent-session-v1:packages/sdk/contract/MANIFEST.json revision。"
+        },
+        "sessionManifestSha256": {
+          "$ref": "#/definitions/Digest"
+        }
+      },
+      "required": [
+        "id",
+        "domains",
+        "status",
+        "rfc",
+        "source",
+        "sha256",
+        "golden",
+        "generated",
+        "legacyEntries",
+        "apiEntries",
+        "clients",
+        "requestIdPath"
+      ],
+      "additionalProperties": false,
+      "description": "合同族登记项(方案 §3.5:id / domains / status / rfc / source / sha256 / golden / generated / legacyEntries / apiEntries / clients;revision 7 起 + requestIdPath;generate-manifest.mjs FAMILIES → computeFacts)。"
+    },
+    "ManifestOperation": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "$ref": "#/definitions/OperationName"
+        },
+        "domain": {
+          "$ref": "#/definitions/Domain"
+        },
+        "family": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/FamilyId"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "method": {
+          "type": "string",
+          "enum": [
+            "GET",
+            "POST",
+            "DELETE"
+          ]
+        },
+        "apiPath": {
+          "$ref": "#/definitions/ApiPathTemplate"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ApiPathTemplate"
+          },
+          "uniqueItems": true,
+          "description": "会话作用域别名模板(方案 §3.3;route-table API_SESSION_ALIAS_TEMPLATES 同源)。"
+        },
+        "legacyPath": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LegacyPathTemplate"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "legacyOffloadPath": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^/v3/sdk2/",
+              "maxLength": 256
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "会话 / 执行域的显式卸载族同形路径。"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "read",
+            "write",
+            "stream"
+          ]
+        },
+        "sse": {
+          "type": "boolean"
+        },
+        "request": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/SchemaRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "response": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/SchemaRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "query": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Za-z][A-Za-z0-9]*$",
+            "maxLength": 64
+          },
+          "uniqueItems": true
+        },
+        "notes": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2048
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "etagPath": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/KeyPath"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "2xx JSON 响应体内资源版本的键路径(门面据此派生强校验器 ETag: \"<revision>\";RFC §1.2);null = 该操作的响应不是有版本资源的表示,不伪造 ETag。revision 7 加法字段(generate-manifest.mjs VERSIONED_RESOURCES;request-headers.ts 只读 manifest)。"
+        },
+        "expectedRevision": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "$ref": "#/definitions/KeyPath"
+                },
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "sequence",
+                    "integer"
+                  ],
+                  "description": "sequence = 十进制序列字符串(sdk2 / cache / 记忆 revision);integer = 非负安全整数(终端配置 revision)。"
+                }
+              },
+              "required": [
+                "path",
+                "kind"
+              ],
+              "additionalProperties": false
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "写请求体内 expectedRevision 的键路径与类型(If-Match: \"<revision>\" 映射目标;体内缺席填入、在场且不等 → 412 precondition_failed;RFC §1.2);null = 该操作不接受 If-Match(出现即 400 if_match_not_applicable)。只允许登记在 kind: write 操作上。revision 7 加法字段。"
+        }
+      },
+      "required": [
+        "name",
+        "domain",
+        "family",
+        "method",
+        "apiPath",
+        "aliases",
+        "legacyPath",
+        "legacyOffloadPath",
+        "kind",
+        "sse",
+        "request",
+        "response",
+        "query",
+        "notes",
+        "etagPath",
+        "expectedRevision"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "domain": {
+                "const": "discovery"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "family": {
+                "type": "null"
+              },
+              "legacyPath": {
+                "type": "null"
+              },
+              "legacyOffloadPath": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "family": {
+                "$ref": "#/definitions/FamilyId"
+              },
+              "legacyPath": {
+                "$ref": "#/definitions/LegacyPathTemplate"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "sse": {
+                "const": true
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "kind": {
+                "const": "stream"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "read",
+                  "write"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "method": {
+                "const": "GET"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "read",
+                  "stream"
+                ]
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "kind": {
+                "const": "write"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "enum": [
+                  "read",
+                  "stream"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "expectedRevision": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ],
+      "description": "操作目录项(方案 §3.5 manifest v2;generate-manifest.mjs operation()):门面自有操作 family / legacyPath 恒 null;kind 由 method / sse 推导;revision 7 起 + etagPath / expectedRevision(If-Match 仅写操作 → 读 / 流操作 expectedRevision 恒 null)。"
+    },
+    "ManifestCapability": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 128,
+          "pattern": "^[a-z]+(\\.[A-Za-z0-9][A-Za-z0-9-]*)+$"
+        },
+        "domain": {
+          "$ref": "#/definitions/ClosureDomain"
+        },
+        "family": {
+          "$ref": "#/definitions/FamilyId"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "limit",
+            "feature",
+            "capability"
+          ]
+        },
+        "source": {
+          "type": "string",
+          "pattern": "^[^#\\s]+#[A-Za-z_][A-Za-z0-9_]*$",
+          "maxLength": 256
+        },
+        "value": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/LimitRange"
+            },
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "domain",
+        "family",
+        "kind",
+        "source",
+        "value"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kind": {
+                "const": "limit"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "value": {
+                "$ref": "#/definitions/LimitRange"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "value": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      ],
+      "description": "能力项(方案 §3.5:只登记机器可派生的限值 / feature / 能力名;权限、计量、撤销不编造)。"
+    },
+    "PlatformApiReference": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/FamilyId"
+        },
+        "doc": {
+          "$ref": "#/definitions/RepoPath"
+        },
+        "host": {
+          "type": "string",
+          "pattern": "^tansr-[a-z]+$",
+          "maxLength": 64
+        },
+        "entries": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^/",
+            "maxLength": 256
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "vendored": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/RepoPath"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "doc",
+        "host",
+        "entries",
+        "vendored"
+      ],
+      "additionalProperties": false,
+      "description": "平台 API 能力族引用(用户拍板 D1:tansr-api 路由不进 /api dispatcher,只以引用登记)。"
+    },
+    "InstalledDomains": {
+      "type": "object",
+      "properties": {
+        "session": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/SessionFamily"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "首选会话族;null = 未装配会话面。"
+        },
+        "execution": {
+          "type": "boolean"
+        },
+        "archive": {
+          "type": "boolean"
+        },
+        "archive-sync": {
+          "type": "boolean"
+        },
+        "cache": {
+          "type": "boolean"
+        },
+        "terminal": {
+          "type": "boolean"
+        },
+        "terminal-observation": {
+          "type": "boolean"
+        },
+        "terminal-profile": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "session",
+        "execution",
+        "archive",
+        "archive-sync",
+        "cache",
+        "terminal",
+        "terminal-observation",
+        "terminal-profile"
+      ],
+      "additionalProperties": false,
+      "description": "本部署已装配的域(facade.ts ApiInstalledDomains;由实际构造出的 handler 推导,不读配置猜测)。"
+    },
+    "Manifest": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "tansr-api-manifest-v1"
+        },
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "任一族 SHA / 状态 / 入口、操作目录、能力项变化 → +1(加法亦 +1;方案 §3.7)。"
+        },
+        "schemaHash": {
+          "$ref": "#/definitions/Digest"
+        },
+        "families": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ManifestFamily"
+          },
+          "minItems": 1
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ManifestOperation"
+          },
+          "minItems": 1
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ManifestCapability"
+          }
+        },
+        "platformApi": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PlatformApiReference"
+          }
+        },
+        "runtime": {
+          "type": "object",
+          "properties": {
+            "installed": {
+              "$ref": "#/definitions/InstalledDomains"
+            }
+          },
+          "required": [
+            "installed"
+          ],
+          "additionalProperties": false,
+          "description": "仅运行时 GET /api/manifest 附带(facade.ts manifestBody);仓内 api-manifest.json 无此段。"
+        }
+      },
+      "required": [
+        "format",
+        "contract",
+        "revision",
+        "schemaHash",
+        "families",
+        "operations",
+        "capabilities",
+        "platformApi"
+      ],
+      "additionalProperties": false,
+      "description": "Capability Manifest(方案 §3.5;RFC §1.1 tansr-manifest-revision 的来源)。仓内产物 packages/server/contract/api-manifest.json 与 GET /api/manifest 响应体(多 runtime.installed)均须通过。"
+    },
+    "DomainCapability": {
+      "type": "object",
+      "properties": {
+        "installed": {
+          "type": "boolean",
+          "description": "本部署装配了该域没有——不是“你有权用”(方案 §3.6;手册 §16.3)。"
+        },
+        "contract": {
+          "$ref": "#/definitions/FamilyId"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "frozen",
+            "final",
+            "additive",
+            "candidate",
+            "drafted",
+            "unregistered"
+          ]
+        },
+        "schemaHash": {
+          "$ref": "#/definitions/SchemaHash"
+        }
+      },
+      "required": [
+        "installed",
+        "contract",
+        "status",
+        "schemaHash"
+      ],
+      "additionalProperties": false,
+      "description": "部署级域视图(facade.ts capabilitiesBody)。additionalProperties:false 即禁止任何 URL 导航字段(entry / capabilities;RFC-SDK2-1 §10.5;计划 §四 9)。"
+    },
+    "SessionDomainCapability": {
+      "type": "object",
+      "properties": {
+        "installed": {
+          "type": "boolean"
+        },
+        "family": {
+          "type": "object",
+          "properties": {
+            "preferred": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/SessionFamily"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "缺省会话族(未携 tansr-session-family 时生效)。"
+            },
+            "available": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/SessionFamily"
+              },
+              "uniqueItems": true,
+              "maxItems": 2,
+              "description": "本部署实际装配的族。"
+            }
+          },
+          "required": [
+            "preferred",
+            "available"
+          ],
+          "additionalProperties": false
+        },
+        "contract": {
+          "$ref": "#/definitions/FamilyId"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "frozen",
+            "final",
+            "additive",
+            "candidate",
+            "drafted",
+            "unregistered"
+          ]
+        },
+        "schemaHash": {
+          "$ref": "#/definitions/SchemaHash"
+        }
+      },
+      "required": [
+        "installed",
+        "family",
+        "contract",
+        "status",
+        "schemaHash"
+      ],
+      "additionalProperties": false,
+      "description": "session 域另含 family{preferred, available[]}(方案 §3.3 / D6 第 9 项按 B)。"
+    },
+    "Capabilities": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "manifestRevision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "schemaHash": {
+          "$ref": "#/definitions/Sha256Prefixed"
+        },
+        "domains": {
+          "type": "object",
+          "properties": {
+            "session": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/SessionDomainCapability"
+                },
+                {
+                  "properties": {
+                    "contract": {
+                      "const": "agent-session-v1"
+                    }
+                  }
+                }
+              ]
+            },
+            "execution": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/DomainCapability"
+                },
+                {
+                  "properties": {
+                    "contract": {
+                      "const": "sdk2-ext-v1"
+                    }
+                  }
+                }
+              ]
+            },
+            "archive": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/DomainCapability"
+                },
+                {
+                  "properties": {
+                    "contract": {
+                      "const": "sdk2-ext-v1"
+                    }
+                  }
+                }
+              ]
+            },
+            "archive-sync": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/DomainCapability"
+                },
+                {
+                  "properties": {
+                    "contract": {
+                      "const": "archive-sync-v1"
+                    }
+                  }
+                }
+              ]
+            },
+            "cache": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/DomainCapability"
+                },
+                {
+                  "properties": {
+                    "contract": {
+                      "const": "sdk2-cache-v1"
+                    }
+                  }
+                }
+              ]
+            },
+            "terminal": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/DomainCapability"
+                },
+                {
+                  "properties": {
+                    "contract": {
+                      "const": "terminal-services-v1"
+                    }
+                  }
+                }
+              ]
+            },
+            "terminal-observation": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/DomainCapability"
+                },
+                {
+                  "properties": {
+                    "contract": {
+                      "const": "terminal-observation-v1"
+                    }
+                  }
+                }
+              ]
+            },
+            "terminal-profile": {
+              "allOf": [
+                {
+                  "$ref": "#/definitions/DomainCapability"
+                },
+                {
+                  "properties": {
+                    "contract": {
+                      "const": "terminal-profile-v1"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "required": [
+            "session",
+            "execution",
+            "archive",
+            "archive-sync",
+            "cache",
+            "terminal",
+            "terminal-observation",
+            "terminal-profile"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "contract",
+        "manifestRevision",
+        "schemaHash",
+        "domains"
+      ],
+      "additionalProperties": false,
+      "description": "GET /api/capabilities 部署级发现(方案 §3.3 / §3.5;facade.ts capabilitiesBody):域可用性、合同族与修订指纹、会话族 preferred / available。不含任何 URL 导航字段——SDK 恒用 manifest 生成的固定路径(RFC-SDK2-1 §10.5)。各域 contract 为 route-table.ts API_DOMAIN_FAMILY 常量。"
+    },
+    "ClosureDomainState": {
+      "type": "object",
+      "properties": {
+        "installed": {
+          "type": "boolean"
+        },
+        "revision": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "该域自报代际(执行 = executionBoundary.revision、档案 = operationEpoch.id、终端 = schemaRevision、会话 = 族、缓存 = protocol;其余 null)(RFC §1.4)。"
+        }
+      },
+      "required": [
+        "installed",
+        "revision"
+      ],
+      "additionalProperties": false
+    },
+    "CapabilityClosure": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "closureId": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/Digest"
+            }
+          ],
+          "description": "sha256(UTF8(\"tansr.unified.closure.v1\") ‖ 0x00 ‖ canonical({ authorizationRevision, domains, operations }))(RFC §1.4 / §4.2);不含时间,同输入同 id;响应头 tansr-closure-id 同值。"
+        },
+        "authorizationRevision": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Sequence"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "授权代际(执行宿主 readPolicy().authorizationRevision;RFC §3 分名 authorizationRevision(Sequence));无策略源 = null。"
+        },
+        "domains": {
+          "type": "object",
+          "properties": {
+            "session": {
+              "$ref": "#/definitions/ClosureDomainState"
+            },
+            "execution": {
+              "$ref": "#/definitions/ClosureDomainState"
+            },
+            "archive": {
+              "$ref": "#/definitions/ClosureDomainState"
+            },
+            "archive-sync": {
+              "$ref": "#/definitions/ClosureDomainState"
+            },
+            "cache": {
+              "$ref": "#/definitions/ClosureDomainState"
+            },
+            "terminal": {
+              "$ref": "#/definitions/ClosureDomainState"
+            },
+            "terminal-observation": {
+              "$ref": "#/definitions/ClosureDomainState"
+            },
+            "terminal-profile": {
+              "$ref": "#/definitions/ClosureDomainState"
+            }
+          },
+          "required": [
+            "session",
+            "execution",
+            "archive",
+            "archive-sync",
+            "cache",
+            "terminal",
+            "terminal-observation",
+            "terminal-profile"
+          ],
+          "additionalProperties": false
+        },
+        "operations": {
+          "type": "object",
+          "properties": {
+            "session.create": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "session.list": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "session.get": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "session.close": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "session.message.send": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "session.events.observe": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "session.interrupt": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "session.history.read": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "session.tool.result": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "session.permission.decide": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "session.question.answer": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "session.compact": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "session.checkpoint.list": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "session.checkpoint.create": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "session.checkpoint.import": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "session.checkpoint.restore": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "session.checkpoint.export": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "session.checkpoint.delete": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "session.cwd.set": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "session.audio.transcribe": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "session.audio.speak": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "session.input.capabilities": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "session.input.submit": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "session.input.status": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "approval.credential.submit": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "execution.initialize": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "execution.capabilities": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "execution.boundary": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "execution.binding.create": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "execution.status": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "executor.register": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "executor.heartbeat": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "executor.operations.poll": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "executor.receipt.submit": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "archive.capabilities": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "archive.binding.target": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "archive.binding.create": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "archive.binding.get": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "archive.binding.close": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "archive.status": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "archive.events.observe": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "archive.records.read": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "archive.artifact.read": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "archive.ack.commit": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "archive.ack.rebase": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "archive.operation.query": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "archive.sync": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "material.response.submit": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "material.status": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "material.upload.status": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "material.upload.chunk": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "cache.capabilities": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "cache.binding.open": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "cache.binding.get": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "cache.binding.renew": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "cache.binding.rebind": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "cache.binding.rotate": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "cache.binding.close": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "cache.operation.query": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "cache.diagnostics": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "cache.core.diagnostics": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "terminal.capabilities": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "terminal.binding.create": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "terminal.executor.events.observe": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "terminal.output.batch": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "terminal.execution.state": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "terminal.output.observe": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "terminal.output.status": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "terminal.configuration.read": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "terminal.configuration.commit": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "terminal.memory.read": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "terminal.memory.command": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "terminal.memory.receipt": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "terminal.observation.resources": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "terminal.observation.correlations": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "terminal.profile.catalog": {
+              "$ref": "#/definitions/OperationState"
+            },
+            "terminal.profile.usage": {
+              "$ref": "#/definitions/OperationState"
+            }
+          },
+          "required": [
+            "session.create",
+            "session.list",
+            "session.get",
+            "session.close",
+            "session.message.send",
+            "session.events.observe",
+            "session.interrupt",
+            "session.history.read",
+            "session.tool.result",
+            "session.permission.decide",
+            "session.question.answer",
+            "session.compact",
+            "session.checkpoint.list",
+            "session.checkpoint.create",
+            "session.checkpoint.import",
+            "session.checkpoint.restore",
+            "session.checkpoint.export",
+            "session.checkpoint.delete",
+            "session.cwd.set",
+            "session.audio.transcribe",
+            "session.audio.speak",
+            "session.input.capabilities",
+            "session.input.submit",
+            "session.input.status",
+            "approval.credential.submit",
+            "execution.initialize",
+            "execution.capabilities",
+            "execution.boundary",
+            "execution.binding.create",
+            "execution.status",
+            "executor.register",
+            "executor.heartbeat",
+            "executor.operations.poll",
+            "executor.receipt.submit",
+            "archive.capabilities",
+            "archive.binding.target",
+            "archive.binding.create",
+            "archive.binding.get",
+            "archive.binding.close",
+            "archive.status",
+            "archive.events.observe",
+            "archive.records.read",
+            "archive.artifact.read",
+            "archive.ack.commit",
+            "archive.ack.rebase",
+            "archive.operation.query",
+            "archive.sync",
+            "material.response.submit",
+            "material.status",
+            "material.upload.status",
+            "material.upload.chunk",
+            "cache.capabilities",
+            "cache.binding.open",
+            "cache.binding.get",
+            "cache.binding.renew",
+            "cache.binding.rebind",
+            "cache.binding.rotate",
+            "cache.binding.close",
+            "cache.operation.query",
+            "cache.diagnostics",
+            "cache.core.diagnostics",
+            "terminal.capabilities",
+            "terminal.binding.create",
+            "terminal.executor.events.observe",
+            "terminal.output.batch",
+            "terminal.execution.state",
+            "terminal.output.observe",
+            "terminal.output.status",
+            "terminal.configuration.read",
+            "terminal.configuration.commit",
+            "terminal.memory.read",
+            "terminal.memory.command",
+            "terminal.memory.receipt",
+            "terminal.observation.resources",
+            "terminal.observation.correlations",
+            "terminal.profile.catalog",
+            "terminal.profile.usage"
+          ],
+          "additionalProperties": false,
+          "description": "77 条操作 → 三态(closure.ts CLOSURE_OPERATIONS 目录序;显式属性 + required 保证恒全覆盖、无未知操作名)。"
+        }
+      },
+      "required": [
+        "contract",
+        "closureId",
+        "authorizationRevision",
+        "domains",
+        "operations"
+      ],
+      "additionalProperties": false,
+      "description": "GET /api/sessions/:id/capabilities 会话级能力闭合围栏(RFC §1.4;方案 §3.6;closure.ts CapabilityClosure)。联邦各域既有围栏事实,不新造授权引擎;写操作携 tansr-closure-id 作前置(412 precondition_failed / closure_stale)。"
+    },
+    "FacadeErrorDetail": {
+      "type": "object",
+      "properties": {
+        "reason": {
+          "type": "string",
+          "enum": [
+            "not_installed",
+            "outside_closure"
+          ],
+          "description": "not_installed = 域 / 会话族未装配或已装配域对该资源无人受理;outside_closure = 围栏复核越界(RFC §1.4)。"
+        },
+        "header": {
+          "type": "string",
+          "enum": [
+            "tansr-session-family",
+            "tansr-closure-id",
+            "tansr-event-envelope"
+          ],
+          "description": "触发该错误的请求头名(tansr-event-envelope:协商词表外 → 400 invalid_request,event-envelope.ts;U3-ALIGN 联合断言补入)。"
+        },
+        "domainCode": {
+          "type": "string",
+          "enum": [
+            "closure_stale"
+          ],
+          "description": "precondition_failed 的域码(RFC §2.2 门面自有码段)。"
+        },
+        "closureId": {
+          "$ref": "#/definitions/Digest"
+        },
+        "operation": {
+          "$ref": "#/definitions/ClosureOperationName"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "disabled",
+            "unavailable"
+          ],
+          "description": "越围栏时该操作的三态(disabled → 403,unavailable → 404)。"
+        }
+      },
+      "additionalProperties": true,
+      "description": "开放对象;只含机器可读原因字段,登记已知键(facade.ts sendFacadeError 各调用点)。"
+    },
+    "FacadeError": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "traceId": {
+          "$ref": "#/definitions/TraceId"
+        },
+        "requestId": {
+          "type": "null",
+          "description": "恒 null:门面自有错误无请求体,没有客户端幂等键(RFC §1.3 / §3)。"
+        },
+        "code": {
+          "$ref": "#/definitions/FacadeCode"
+        },
+        "status": {
+          "type": "integer",
+          "enum": [
+            400,
+            401,
+            403,
+            404,
+            405,
+            412,
+            503
+          ]
+        },
+        "retryAction": {
+          "$ref": "#/definitions/RetryAction"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024,
+          "description": "不含路径、凭据、endUserId、sessionId。"
+        },
+        "detail": {
+          "$ref": "#/definitions/FacadeErrorDetail"
+        }
+      },
+      "required": [
+        "contract",
+        "traceId",
+        "requestId",
+        "code",
+        "status",
+        "retryAction",
+        "message"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "unauthorized"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  401
+                ]
+              },
+              "retryAction": {
+                "const": "none"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "not_found"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  404
+                ]
+              },
+              "retryAction": {
+                "const": "none"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "method_not_allowed"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  405
+                ]
+              },
+              "retryAction": {
+                "const": "none"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "invalid_request"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  400
+                ]
+              },
+              "retryAction": {
+                "const": "none"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "capability_unavailable"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  404,
+                  403
+                ]
+              },
+              "retryAction": {
+                "const": "none"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "capacity_exceeded"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  503
+                ]
+              },
+              "retryAction": {
+                "const": "same-request"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "precondition_failed"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  412
+                ]
+              },
+              "retryAction": {
+                "const": "rediscover"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "upstream_unavailable"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  503
+                ]
+              },
+              "retryAction": {
+                "const": "same-request"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "precondition_failed"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "detail"
+            ],
+            "properties": {
+              "detail": {
+                "required": [
+                  "domainCode",
+                  "closureId"
+                ],
+                "properties": {
+                  "domainCode": {
+                    "const": "closure_stale"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": 403
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "detail"
+            ],
+            "properties": {
+              "detail": {
+                "required": [
+                  "reason",
+                  "operation",
+                  "state",
+                  "closureId"
+                ],
+                "properties": {
+                  "reason": {
+                    "const": "outside_closure"
+                  },
+                  "state": {
+                    "const": "disabled"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "required": [
+              "detail"
+            ],
+            "properties": {
+              "status": {
+                "const": 404
+              },
+              "detail": {
+                "required": [
+                  "reason"
+                ],
+                "properties": {
+                  "reason": {
+                    "const": "outside_closure"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "detail": {
+                "required": [
+                  "operation",
+                  "state",
+                  "closureId"
+                ],
+                "properties": {
+                  "state": {
+                    "const": "unavailable"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "description": "门面自有错误信封(RFC §1.3;方案 §3.2 第 2 条;facade.ts sendFacadeError):{ contract, traceId, requestId:null, code, status, retryAction, message, detail? }。码 ↔ 状态 ↔ retryAction 绑定 = facade.ts ERROR_STATUS / ERROR_RETRY;capability_unavailable 越围栏时 403(RFC §1.4)。"
+    },
+    "UnifiedErrorDetail": {
+      "type": "object",
+      "properties": {
+        "domain": {
+          "$ref": "#/definitions/Domain"
+        },
+        "family": {
+          "$ref": "#/definitions/FamilyId"
+        },
+        "domainCode": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/DomainCode"
+            }
+          ],
+          "description": "原族码(RFC §2.2)。"
+        },
+        "domainStatus": {
+          "type": "integer",
+          "minimum": 100,
+          "maximum": 599,
+          "description": "原族 wire 状态(RFC §2.2:统一缺省出线、原状态留此)。"
+        },
+        "domainRetryAction": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/DomainRetryAction"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "原族 retryAction(RFC §2.2 / §2.3);原族信封无动作位(/v2 agent-session-v1 族)→ null(error-envelope.ts 真实产物;U3-ALIGN 联合断言补入)。"
+        },
+        "fallback": {
+          "type": "string",
+          "enum": [
+            "none",
+            "legacy-cold"
+          ],
+          "description": "cache 族 fallback 只保留于此,不进统一层(RFC §2.2 / §5:统一合同禁止静默降级)。"
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "not_installed",
+            "outside_closure",
+            "idempotency_key_invalid",
+            "idempotency_key_not_applicable",
+            "idempotency_key_reused",
+            "idempotency_key_mismatch",
+            "receipt_not_retained",
+            "receipt_window_full",
+            "if_match_invalid",
+            "if_match_not_applicable",
+            "if_match_body_mismatch",
+            "if_match_stale",
+            "deadline_invalid",
+            "deadline_exceeded",
+            "header_body_limit",
+            "header_body_not_canonical",
+            "header_processing_failed"
+          ],
+          "description": "机器可读细因。not_installed / outside_closure 为围栏与装配(RFC §1.4);其余 15 项为 /api 请求侧三头接线(RFC §1.2;方案 §0 D27 零新码,request-headers.ts;revision 7 登记):Idempotency-Key 形 / 适用 / 同键异义 / 体内 requestId 不等 / 原回执未保留 / 回执窗全在飞,If-Match 形 / 适用 / 体内 expectedRevision 不等 / 域版本陈旧(412 refresh),deadline 形 / 已过期(408),三头体处理超帽(413)/ 重编失败 / 处理异常。"
+        },
+        "header": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$",
+          "maxLength": 64,
+          "description": "触发该错误的请求头名(Idempotency-Key / If-Match / deadline / tansr-*;RFC §1.2)。"
+        },
+        "limitBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "header_body_limit 的体帽(字节;RFC §1.2 三头体处理上限)。"
+        },
+        "closureId": {
+          "$ref": "#/definitions/Digest"
+        },
+        "operation": {
+          "$ref": "#/definitions/ClosureOperationName"
+        },
+        "state": {
+          "$ref": "#/definitions/OperationState"
+        }
+      },
+      "additionalProperties": true,
+      "description": "开放对象;登记已知键。domainCode / domainStatus / domainRetryAction / fallback 为 RFC §2.2 保留位。"
+    },
+    "UnifiedError": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "traceId": {
+          "$ref": "#/definitions/TraceId"
+        },
+        "requestId": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/IdempotencyKey"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "客户端幂等键(Idempotency-Key 头或体内 request.requestId);请求无键 = null(RFC §1.3 / §3)。"
+        },
+        "code": {
+          "$ref": "#/definitions/UnifiedCode"
+        },
+        "status": {
+          "$ref": "#/definitions/HttpStatus"
+        },
+        "retryAction": {
+          "$ref": "#/definitions/RetryAction"
+        },
+        "retryAfterMs": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "same-request 在场时须等待;上限由 manifest 约束(RFC §1.2 / §2.3)。"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "detail": {
+          "$ref": "#/definitions/UnifiedErrorDetail"
+        }
+      },
+      "required": [
+        "contract",
+        "traceId",
+        "requestId",
+        "code",
+        "status",
+        "retryAction",
+        "message"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "invalid_request"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  400,
+                  408,
+                  422
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "protocol_mismatch"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  400
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "unauthorized"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  401
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "forbidden"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  403
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "not_found"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  404
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "method_not_allowed"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  405
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "gone"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  410
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "conflict"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  409,
+                  412
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "stale_generation"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  409
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "gap"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  409,
+                  410
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "capability_unavailable"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  404,
+                  403
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "capacity_exceeded"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  429,
+                  503
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "payload_too_large"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  413
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "upstream_unavailable"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  503
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "result_unknown"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  503
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "rejected"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  422
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "internal_error"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  500
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "precondition_failed"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  412
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "not_canonical"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [
+                  400
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "result_unknown"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "retryAction": {
+                "enum": [
+                  "query-status",
+                  "rebind"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "precondition_failed"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "retryAction": {
+                "enum": [
+                  "rediscover",
+                  "refresh"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "not_canonical"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "retryAction": {
+                "enum": [
+                  "none"
+                ]
+              }
+            }
+          }
+        }
+      ],
+      "description": "阶段三域错误统一信封(RFC-UAPI-1 v1.0-rc §2.2 / §2.3;方案 §0 D7、§4 第 2 条):code 取 19 统一码(17 四族映射码 + precondition_failed + not_canonical),HTTP 取该码缺省(表首值)或 RFC 表列备选;原族码 / 状态 / 动作保留于 detail;result_unknown 恒只许 query-status / rebind(不得换键重放);precondition_failed 恒 412,retryAction 为 rediscover(围栏陈旧 closure_stale)或 refresh(If-Match 资源版本陈旧 if_match_stale / if_match_body_mismatch,revision 7;RFC §1.2);not_canonical 恒 400 / none(严格 canonical 入口拒收)。/api 请求侧三头拒绝(request-headers.ts:invalid_request / conflict / precondition_failed / payload_too_large / result_unknown / internal_error,携 requestId = Idempotency-Key 或 null)按本定义校验,不扩 FacadeCode(U7-HDR 报告 §8.2 建议;revision 7 落定)。"
+    },
+    "CursorSet": {
+      "type": "object",
+      "properties": {
+        "eventCursor": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Cursor"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "事件流位置(SSE Last-Event-ID 续订)。"
+        },
+        "archiveCoverage": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Cursor"
+            },
+            {
+              "$ref": "#/definitions/ArchiveCoverage"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "档案已覆盖序列(ACK coverage):wire 上为 archive.status.payload.acknowledgedCoverage 的 Coverage 对象(sdk2-ext-v1 Coverage,含 headDigest);不透明游标串形保留给其它域合同。"
+        },
+        "outputWatermark": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Cursor"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "终端输出水位(afterSeq)。"
+        },
+        "materialConsumed": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Cursor"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "材料已被核心消费(≠ received)。"
+        },
+        "ackReceipt": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Cursor"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "ACK 回执。"
+        }
+      },
+      "required": [
+        "eventCursor",
+        "archiveCoverage",
+        "outputWatermark",
+        "materialConsumed",
+        "ackReceipt"
+      ],
+      "additionalProperties": false,
+      "description": "RFC §1.5:五位分离,不得互换为普通字符串;各位只在自身合同条件满足后推进(SSE EOF、HTTP 202、连接成功均不推进)。"
+    },
+    "EventEnvelope": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "eventId": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Cursor"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "本帧 SSE id:(缺席 null;服务端原样透传,不改写、不合成)。与 cursorSet.eventCursor 同源:前者是帧身份,后者是 Last-Event-ID 续订游标位。"
+        },
+        "domain": {
+          "$ref": "#/definitions/Domain"
+        },
+        "type": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/EventType"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "description": "事件类型 = SSE event: 字段,缺席取 raw.type / raw.eventType;服务端无法判定 → null(视为未知事件,原文在 raw)。"
+        },
+        "cursorSet": {
+          "$ref": "#/definitions/CursorSet"
+        },
+        "terminalStatus": {
+          "$ref": "#/definitions/TerminalStatus"
+        },
+        "raw": {
+          "type": "object",
+          "description": "原事件对象(RFC §1.5 D18):每帧恒为原 data: 的 JSON 对象原样(服务端不 parse→stringify 往返),按 type 解析;未知 type 仍原样入 raw(对抗单 A12)。不再有 payload 位。"
+        }
+      },
+      "required": [
+        "contract",
+        "eventId",
+        "domain",
+        "type",
+        "cursorSet",
+        "terminalStatus",
+        "raw"
+      ],
+      "additionalProperties": false,
+      "description": "统一事件包络(RFC §1.5;方案 §0 D18 定形 7 键 { contract, eventId, domain, type, cursorSet, terminalStatus, raw },键序即 wire 序;阶段三实施,仅新 SDK ./api 子入口经 tansr-event-envelope: unified-v1 协商后消费;旧 SSE 帧字节不变)。控制信封严格(七键之外 / 缺键 → invalid_envelope);不出 seq(位置由 cursorSet.eventCursor 表达)、不出 payload(raw 恒为原事件对象)。"
+    },
+    "RequestHeaders": {
+      "type": "object",
+      "properties": {
+        "authorization": {
+          "type": "string",
+          "pattern": "^Bearer [\\x21-\\x7E]+$",
+          "maxLength": 8192,
+          "description": "多租鉴权(已有,不变;RFC §1.2)。"
+        },
+        "traceparent": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{2}-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$",
+          "description": "W3C traceparent(version 00 形);观测 requestId 采纳序第二位。"
+        },
+        "x-request-id": {
+          "$ref": "#/definitions/TraceId"
+        },
+        "idempotency-key": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/IdempotencyKey"
+            }
+          ],
+          "description": "写操作幂等键(RFC §1.2;阶段三接线,今日不被读取)。"
+        },
+        "if-match": {
+          "type": "string",
+          "pattern": "^(W/)?\"[\\x21\\x23-\\x7E]*\"$",
+          "maxLength": 1024,
+          "description": "RFC 7232 entity-tag;映射到各域 expectedRevision,不匹配 → 412 conflict(RFC §1.2)。"
+        },
+        "deadline": {
+          "type": "string",
+          "format": "date-time",
+          "description": "RFC-3339 请求截止;过期 → 408 invalid_request;重试不得延长(RFC §1.2)。"
+        },
+        "tansr-session-family": {
+          "$ref": "#/definitions/SessionFamily"
+        },
+        "tansr-closure-id": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/Digest"
+            }
+          ],
+          "description": "围栏前置条件 = 上次围栏 closureId;不等 → 412 precondition_failed;出现在不适用请求 → 400(RFC §1.2 / §1.4)。"
+        },
+        "tansr-event-envelope": {
+          "const": "unified-v1",
+          "description": "显式协商统一事件包络(方案 §0 D7 ②;RFC §1.5 事件包络仅新 SDK 消费):携此头 = 请求按 EventEnvelope 出帧,服务端以同名响应头回响;不携 = 各族原帧字节不变。"
+        }
+      },
+      "additionalProperties": false,
+      "description": "请求侧统一头词表(RFC §1.2;手册 §16.4)。头名按 Node IncomingMessage.headers 小写形登记(HTTP 头名不区分大小写);校验对象为请求头在本词表上的投影。身份字段恒不接受客户端自报(RFC-SDK2-1 §9.1)。"
+    },
+    "ResponseHeaders": {
+      "type": "object",
+      "properties": {
+        "tansr-contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "tansr-manifest-revision": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$",
+          "description": "= manifest revision(整数的十进制串形)。"
+        },
+        "tansr-domain": {
+          "$ref": "#/definitions/Domain"
+        },
+        "tansr-schema-hash": {
+          "$ref": "#/definitions/SchemaHash"
+        },
+        "tansr-closure-id": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/Digest"
+            }
+          ],
+          "description": "围栏端点 200 与前置复核 412 / 403 / 404 回传当前 closureId(RFC §1.4)。"
+        },
+        "tansr-event-envelope": {
+          "const": "unified-v1",
+          "description": "回响请求侧同名协商头(方案 §0 D7 ②):确认本响应(SSE)按 EventEnvelope 出帧;缺席 = 各族原帧。"
+        },
+        "x-request-id": {
+          "$ref": "#/definitions/TraceId"
+        },
+        "retry-after": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$",
+          "description": "秒;503 capacity_exceeded / upstream_unavailable 携带(same-request 须等待)。"
+        }
+      },
+      "required": [
+        "tansr-contract",
+        "tansr-manifest-revision",
+        "tansr-domain",
+        "tansr-schema-hash"
+      ],
+      "additionalProperties": false,
+      "description": "响应侧统一头(RFC §1.1;手册 §16.4):四个 tansr-* 头恒在(含 SSE 首帧与错误响应);头内恒不含 endUserId、sessionId、令牌、内部文件路径。校验对象为响应头在本词表上的投影。"
+    }
+  }
+}

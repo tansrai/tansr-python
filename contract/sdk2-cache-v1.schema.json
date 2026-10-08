@@ -1,0 +1,2822 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://schemas.tansr.com/drafts/sdk2-cache-v1.schema.json",
+  "title": "SDK2 private logical cache continuity candidate v0.2",
+  "$comment": "Unreleased independent SDK2 contract; SDK1/TWP/IR unchanged. Named DTO validation required. Public, gateway-only and host-only definitions have different authority and cannot be interchanged based on root anyOf. TTL/authorization/CAS/durable transaction/byte caps are runtime obligations.",
+  "anyOf": [
+    {
+      "$ref": "#/definitions/CapabilitiesResponse"
+    },
+    {
+      "$ref": "#/definitions/OpenRequest"
+    },
+    {
+      "$ref": "#/definitions/GatewayOpenRequest"
+    },
+    {
+      "$ref": "#/definitions/OpenResponse"
+    },
+    {
+      "$ref": "#/definitions/BindingView"
+    },
+    {
+      "$ref": "#/definitions/BindingQuery"
+    },
+    {
+      "$ref": "#/definitions/RenewRequest"
+    },
+    {
+      "$ref": "#/definitions/CloseRequest"
+    },
+    {
+      "$ref": "#/definitions/RotateRequest"
+    },
+    {
+      "$ref": "#/definitions/OperationQuery"
+    },
+    {
+      "$ref": "#/definitions/MutationReceipt"
+    },
+    {
+      "$ref": "#/definitions/ProjectionView"
+    },
+    {
+      "$ref": "#/definitions/ProjectionWitness"
+    },
+    {
+      "$ref": "#/definitions/ProjectionPublish"
+    },
+    {
+      "$ref": "#/definitions/ExchangeMetadata"
+    },
+    {
+      "$ref": "#/definitions/MappingRecord"
+    },
+    {
+      "$ref": "#/definitions/Diagnostic"
+    },
+    {
+      "$ref": "#/definitions/DiagnosticQuery"
+    },
+    {
+      "$ref": "#/definitions/DiagnosticPage"
+    },
+    {
+      "$ref": "#/definitions/ErrorResponse"
+    },
+    {
+      "$ref": "#/definitions/RebindRequest"
+    },
+    {
+      "$ref": "#/definitions/PolicyRefresh"
+    },
+    {
+      "$ref": "#/definitions/GatewayLink"
+    },
+    {
+      "$ref": "#/definitions/GatewayAdmissionRecord"
+    }
+  ],
+  "definitions": {
+    "Id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._~-]*$"
+    },
+    "LegacyId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "description": "Existing opaque ID; no trimming, case folding or Unicode normalization. Do not mint authority from this string."
+    },
+    "Sequence": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,17}|[1-8][0-9]{18}|9[0-1][0-9]{17}|92[0-1][0-9]{16}|922[0-2][0-9]{15}|9223[0-2][0-9]{14}|92233[0-6][0-9]{13}|922337[0-1][0-9]{12}|92233720[0-2][0-9]{10}|922337203[0-5][0-9]{9}|9223372036[0-7][0-9]{8}|92233720368[0-4][0-9]{7}|922337203685[0-3][0-9]{6}|9223372036854[0-6][0-9]{5}|92233720368547[0-6][0-9]{4}|922337203685477[0-4][0-9]{3}|9223372036854775[0-7][0-9]{2}|922337203685477580[0-6]|9223372036854775807)$",
+      "maxLength": 19,
+      "description": "Canonical unsigned decimal 0..2^63-1. Never parse through IEEE754 Number."
+    },
+    "Digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "Generations": {
+      "type": "object",
+      "properties": {
+        "historyEpoch": {
+          "$ref": "#/definitions/LegacyId"
+        },
+        "deletionGeneration": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "projectionRevision": {
+          "$ref": "#/definitions/Sequence"
+        }
+      },
+      "required": [
+        "historyEpoch",
+        "deletionGeneration",
+        "projectionRevision"
+      ],
+      "additionalProperties": false
+    },
+    "Coverage": {
+      "type": "object",
+      "properties": {
+        "fromSequence": {
+          "$ref": "#/definitions/RecordSequence"
+        },
+        "throughSequence": {
+          "$ref": "#/definitions/RecordSequence"
+        },
+        "headDigest": {
+          "$ref": "#/definitions/Digest"
+        }
+      },
+      "required": [
+        "fromSequence",
+        "throughSequence",
+        "headDigest"
+      ],
+      "additionalProperties": false,
+      "$comment": "Closed inclusive interval, from<=through. Head is a host-known contiguous chain commitment for this source and generation, not a client assertion. SSE cursor is never archive coverage."
+    },
+    "Scope": {
+      "type": "object",
+      "properties": {
+        "applicationScopeId": {
+          "$ref": "#/definitions/Id"
+        },
+        "endUserId": {
+          "$ref": "#/definitions/LegacyId"
+        },
+        "authorizationRevision": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Sequence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "applicationScopeId",
+        "endUserId",
+        "authorizationRevision"
+      ],
+      "additionalProperties": false,
+      "$comment": "Host/API-owned only. Public request scope is derived from current authentication, never body/OS/platform labels. Application and original end-user remain a tuple. Core scope uses its real authorization revision; gateway scope uses null because the API does not know it. Identity is always the original application/user tuple; neither revision nor HMAC substitutes for current authentication."
+    },
+    "EpochView": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "issuedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "state": {
+          "const": "active"
+        }
+      },
+      "required": [
+        "id",
+        "issuedAt",
+        "expiresAt",
+        "state"
+      ],
+      "additionalProperties": false,
+      "$comment": "Trusted host initialization/independent rotator durably prepares current epoch. GET reads snapshot and never mints/renews one. No current live epoch => epoch_unavailable for admission. Rotation disables old write admission, never hides already admitted operation status; retired/unknown IDs cannot be recreated from requests. S1 epoch lifetime defaults to 3600000ms, hard maximum 86400000ms; trusted host validates 0<expiresAt-issuedAt<=effective epochLifetimeMs. Terminal receipt cannot be collected before BOTH epoch expiry and terminal retention expiry; unresolved operations remain. An active epoch is never a license to recreate a collected request ID."
+    },
+    "Protocol": {
+      "const": "sdk2-cache-v1"
+    },
+    "Feature": {
+      "const": "private-logical-cache-v1"
+    },
+    "Audience": {
+      "type": "string",
+      "enum": [
+        "serve-cache",
+        "gateway-cache"
+      ]
+    },
+    "Ticket": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]{43}$",
+      "minLength": 43,
+      "maxLength": 43,
+      "$comment": "32 random bytes, canonical base64url without padding. Scope/audience-bound reference, not self-asserted authority; never log or use as provider key."
+    },
+    "RequestIdentity": {
+      "type": "object",
+      "properties": {
+        "operationEpoch": {
+          "$ref": "#/definitions/Id"
+        },
+        "requestId": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "operationEpoch",
+        "requestId"
+      ],
+      "additionalProperties": false
+    },
+    "KeyedDigest": {
+      "type": "object",
+      "properties": {
+        "algorithm": {
+          "const": "hmac-sha256"
+        },
+        "keyId": {
+          "$ref": "#/definitions/Id"
+        },
+        "digest": {
+          "$ref": "#/definitions/Digest"
+        }
+      },
+      "required": [
+        "algorithm",
+        "keyId",
+        "digest"
+      ],
+      "additionalProperties": false
+    },
+    "Limits": {
+      "type": "object",
+      "properties": {
+        "controlBytes": {
+          "type": "integer",
+          "minimum": 4096,
+          "maximum": 65536
+        },
+        "exchangeBytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 33554432
+        },
+        "projectionBytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 262144
+        },
+        "projectionSegments": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "ticketTtlMs": {
+          "type": "integer",
+          "minimum": 60000,
+          "maximum": 604800000
+        },
+        "mappingIdleMs": {
+          "type": "integer",
+          "minimum": 60000,
+          "maximum": 604800000
+        },
+        "mappingLifetimeMs": {
+          "type": "integer",
+          "minimum": 60000,
+          "maximum": 2592000000
+        },
+        "bindingsPerLogical": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16
+        },
+        "mappingsPerUser": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "mappingsPerApplication": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "mappingsGlobal": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "mappingBytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 16384
+        },
+        "receiptsGlobal": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "receiptBytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 32768
+        },
+        "receiptRetentionMs": {
+          "type": "integer",
+          "minimum": 60000,
+          "maximum": 604800000
+        },
+        "epochLifetimeMs": {
+          "type": "integer",
+          "minimum": 60000,
+          "maximum": 86400000
+        },
+        "diagnosticRowsPerUser": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "diagnosticRowsPerApplication": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "diagnosticRowsGlobal": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "diagnosticBytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 4096
+        },
+        "diagnosticRetentionMs": {
+          "type": "integer",
+          "minimum": 60000,
+          "maximum": 86400000
+        },
+        "diagnosticSamplePerMillion": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000000
+        },
+        "diagnosticsPageRows": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        },
+        "negotiatedTtlMs": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 60000
+        },
+        "retainedRowsPerUser": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10000
+        },
+        "retainedRowsPerApplication": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100000
+        },
+        "retainedRowsGlobal": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000000
+        },
+        "retainedBytesPerUser": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16777216
+        },
+        "retainedBytesPerApplication": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 268435456
+        },
+        "retainedBytesGlobal": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483648
+        }
+      },
+      "required": [
+        "controlBytes",
+        "exchangeBytes",
+        "projectionBytes",
+        "projectionSegments",
+        "ticketTtlMs",
+        "mappingIdleMs",
+        "mappingLifetimeMs",
+        "bindingsPerLogical",
+        "mappingsPerUser",
+        "mappingsPerApplication",
+        "mappingsGlobal",
+        "mappingBytes",
+        "receiptsGlobal",
+        "receiptBytes",
+        "receiptRetentionMs",
+        "epochLifetimeMs",
+        "diagnosticRowsPerUser",
+        "diagnosticRowsPerApplication",
+        "diagnosticRowsGlobal",
+        "diagnosticBytes",
+        "diagnosticRetentionMs",
+        "diagnosticSamplePerMillion",
+        "diagnosticsPageRows",
+        "negotiatedTtlMs",
+        "retainedRowsPerUser",
+        "retainedRowsPerApplication",
+        "retainedRowsGlobal",
+        "retainedBytesPerUser",
+        "retainedBytesPerApplication",
+        "retainedBytesGlobal"
+      ],
+      "additionalProperties": false
+    },
+    "CapabilitiesResponse": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "$ref": "#/definitions/Protocol"
+        },
+        "audience": {
+          "$ref": "#/definitions/Audience"
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Feature"
+          },
+          "minItems": 0,
+          "maxItems": 1
+        },
+        "gateway": {
+          "type": "string",
+          "enum": [
+            "confirmed",
+            "unsupported",
+            "unavailable",
+            "not-applicable"
+          ]
+        },
+        "availability": {
+          "const": "legacy-complete"
+        },
+        "revision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "limits": {
+          "$ref": "#/definitions/Limits"
+        },
+        "operationEpoch": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/EpochView"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "protocol",
+        "audience",
+        "features",
+        "gateway",
+        "availability",
+        "revision",
+        "limits",
+        "operationEpoch"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "features": {
+                "minItems": 1
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "gateway": {
+                "type": "string",
+                "enum": [
+                  "confirmed",
+                  "not-applicable"
+                ]
+              },
+              "operationEpoch": {
+                "$ref": "#/definitions/EpochView"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "audience": {
+                "const": "serve-cache"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "gateway": {
+                "type": "string",
+                "enum": [
+                  "confirmed",
+                  "unsupported",
+                  "unavailable"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "audience": {
+                "const": "gateway-cache"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "gateway": {
+                "const": "not-applicable"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "OpenIntent": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "new"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "resume"
+            },
+            "ticket": {
+              "$ref": "#/definitions/Ticket"
+            }
+          },
+          "required": [
+            "kind",
+            "ticket"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "fork"
+            },
+            "parentTicket": {
+              "$ref": "#/definitions/Ticket"
+            }
+          },
+          "required": [
+            "kind",
+            "parentTicket"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "const": "import"
+            }
+          },
+          "required": [
+            "kind"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "OpenRequest": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "$ref": "#/definitions/Protocol"
+        },
+        "request": {
+          "$ref": "#/definitions/RequestIdentity"
+        },
+        "sessionId": {
+          "$ref": "#/definitions/LegacyId"
+        },
+        "intent": {
+          "$ref": "#/definitions/OpenIntent"
+        },
+        "requiredFeature": {
+          "$ref": "#/definitions/Feature"
+        }
+      },
+      "required": [
+        "protocol",
+        "request",
+        "sessionId",
+        "intent",
+        "requiredFeature"
+      ],
+      "additionalProperties": false
+    },
+    "GatewayOpenRequest": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "$ref": "#/definitions/Protocol"
+        },
+        "request": {
+          "$ref": "#/definitions/RequestIdentity"
+        },
+        "runtimeSessionId": {
+          "$ref": "#/definitions/LegacyId"
+        },
+        "intent": {
+          "$ref": "#/definitions/OpenIntent"
+        },
+        "requiredFeature": {
+          "$ref": "#/definitions/Feature"
+        }
+      },
+      "required": [
+        "protocol",
+        "request",
+        "runtimeSessionId",
+        "intent",
+        "requiredFeature"
+      ],
+      "additionalProperties": false
+    },
+    "ProjectionView": {
+      "type": "object",
+      "properties": {
+        "projectionRef": {
+          "$ref": "#/definitions/Id"
+        },
+        "revision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "current",
+            "rebuild-required",
+            "missing"
+          ]
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "unchanged",
+            "policy-changed",
+            "generation-changed",
+            "provider-changed",
+            "source-missing",
+            "legacy-missing",
+            "key-rotated"
+          ]
+        }
+      },
+      "required": [
+        "projectionRef",
+        "revision",
+        "status",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "BindingView": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "$ref": "#/definitions/Protocol"
+        },
+        "audience": {
+          "$ref": "#/definitions/Audience"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "logicalRef": {
+          "$ref": "#/definitions/Id"
+        },
+        "revision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "active",
+            "closed",
+            "revoked",
+            "expired"
+          ]
+        },
+        "mode": {
+          "const": "private-logical-v1"
+        },
+        "groupGeneration": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "projection": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ProjectionView"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "availability": {
+          "const": "legacy-complete"
+        }
+      },
+      "required": [
+        "protocol",
+        "audience",
+        "bindingId",
+        "logicalRef",
+        "revision",
+        "state",
+        "mode",
+        "groupGeneration",
+        "projection",
+        "expiresAt",
+        "availability"
+      ],
+      "additionalProperties": false
+    },
+    "OpenResponse": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "$ref": "#/definitions/Protocol"
+        },
+        "request": {
+          "$ref": "#/definitions/RequestIdentity"
+        },
+        "binding": {
+          "$ref": "#/definitions/BindingView"
+        },
+        "ticket": {
+          "$ref": "#/definitions/Ticket"
+        },
+        "ticketExpiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "relation": {
+          "type": "string",
+          "enum": [
+            "new",
+            "resumed",
+            "forked",
+            "imported"
+          ]
+        }
+      },
+      "required": [
+        "protocol",
+        "request",
+        "binding",
+        "ticket",
+        "ticketExpiresAt",
+        "relation"
+      ],
+      "additionalProperties": false
+    },
+    "BindingQuery": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "$ref": "#/definitions/Protocol"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "protocol",
+        "bindingId"
+      ],
+      "additionalProperties": false
+    },
+    "BindingMutation": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "$ref": "#/definitions/Protocol"
+        },
+        "request": {
+          "$ref": "#/definitions/RequestIdentity"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "expectedRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "ticket": {
+          "$ref": "#/definitions/Ticket"
+        }
+      },
+      "required": [
+        "protocol",
+        "request",
+        "bindingId",
+        "expectedRevision",
+        "ticket"
+      ],
+      "additionalProperties": false
+    },
+    "RenewRequest": {
+      "$ref": "#/definitions/BindingMutation"
+    },
+    "CloseRequest": {
+      "$ref": "#/definitions/BindingMutation"
+    },
+    "RotateRequest": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "$ref": "#/definitions/Protocol"
+        },
+        "request": {
+          "$ref": "#/definitions/RequestIdentity"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "expectedRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "ticket": {
+          "$ref": "#/definitions/Ticket"
+        },
+        "reason": {
+          "const": "manual"
+        }
+      },
+      "required": [
+        "protocol",
+        "request",
+        "bindingId",
+        "expectedRevision",
+        "ticket",
+        "reason"
+      ],
+      "additionalProperties": false
+    },
+    "OperationQuery": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "$ref": "#/definitions/Protocol"
+        },
+        "operation": {
+          "type": "string",
+          "enum": [
+            "open",
+            "renew",
+            "rotate",
+            "close",
+            "rebind"
+          ]
+        },
+        "request": {
+          "$ref": "#/definitions/RequestIdentity"
+        },
+        "bindingId": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "protocol",
+        "operation",
+        "request",
+        "bindingId"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "open"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "bindingId": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "bindingId": {
+                "$ref": "#/definitions/Id"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "MutationReceipt": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "$ref": "#/definitions/Protocol"
+        },
+        "request": {
+          "$ref": "#/definitions/RequestIdentity"
+        },
+        "operation": {
+          "type": "string",
+          "enum": [
+            "open",
+            "renew",
+            "rotate",
+            "close",
+            "rebind"
+          ]
+        },
+        "semanticDigest": {
+          "$ref": "#/definitions/KeyedDigest"
+        },
+        "state": {
+          "const": "completed"
+        },
+        "binding": {
+          "$ref": "#/definitions/BindingView"
+        },
+        "ticket": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Ticket"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ticketExpiresAt": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date-time"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "protocol",
+        "request",
+        "operation",
+        "semanticDigest",
+        "state",
+        "binding",
+        "ticket",
+        "ticketExpiresAt"
+      ],
+      "additionalProperties": false,
+      "$comment": "Immutable original result, not current authorization or current binding state. Atomic mapping/ticket/revision/receipt commit. Replay under current authority precedes fresh epoch/CAS; never renew TTL on replay."
+    },
+    "ProviderDomain": {
+      "type": "object",
+      "properties": {
+        "provider": {
+          "$ref": "#/definitions/Id"
+        },
+        "model": {
+          "$ref": "#/definitions/LegacyId"
+        },
+        "protocol": {
+          "type": "string",
+          "enum": [
+            "openai_chat",
+            "openai_responses",
+            "anthropic_messages"
+          ]
+        },
+        "deploymentRef": {
+          "$ref": "#/definitions/KeyedDigest"
+        },
+        "adapterVersion": {
+          "$ref": "#/definitions/Id"
+        },
+        "faceCacheRevision": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "provider",
+        "model",
+        "protocol",
+        "deploymentRef",
+        "adapterVersion",
+        "faceCacheRevision"
+      ],
+      "additionalProperties": false
+    },
+    "PolicyWitness": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/CorePolicyWitness"
+        },
+        {
+          "$ref": "#/definitions/GatewayPolicyWitness"
+        }
+      ]
+    },
+    "PrefixSegment": {
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 63
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "tools",
+            "system",
+            "summary",
+            "recent-history",
+            "current-input"
+          ]
+        },
+        "cumulativeFingerprint": {
+          "$ref": "#/definitions/KeyedDigest"
+        },
+        "visibleBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 33554432
+        }
+      },
+      "required": [
+        "index",
+        "kind",
+        "cumulativeFingerprint",
+        "visibleBytes"
+      ],
+      "additionalProperties": false
+    },
+    "ProjectionWitness": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "$ref": "#/definitions/Protocol"
+        },
+        "logicalRef": {
+          "$ref": "#/definitions/Id"
+        },
+        "projectionRef": {
+          "$ref": "#/definitions/Id"
+        },
+        "revision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "generations": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Generations"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "source": {
+          "type": "object",
+          "properties": {
+            "kind": {
+              "type": "string",
+              "enum": [
+                "session-store",
+                "archive",
+                "gateway-request"
+              ]
+            },
+            "reference": {
+              "$ref": "#/definitions/Id"
+            },
+            "effectiveSnapshot": {
+              "$ref": "#/definitions/KeyedDigest"
+            },
+            "summaryCoverage": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Coverage"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "kind",
+            "reference",
+            "effectiveSnapshot",
+            "summaryCoverage"
+          ],
+          "additionalProperties": false
+        },
+        "assemblerVersion": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "serializerVersion": {
+          "$ref": "#/definitions/Id"
+        },
+        "provider": {
+          "$ref": "#/definitions/ProviderDomain"
+        },
+        "policy": {
+          "$ref": "#/definitions/PolicyWitness"
+        },
+        "segments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PrefixSegment"
+          },
+          "minItems": 0,
+          "maxItems": 64
+        },
+        "requestFingerprint": {
+          "$ref": "#/definitions/KeyedDigest"
+        },
+        "gatewayInput": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/GatewayInputWitness"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "protocol",
+        "logicalRef",
+        "projectionRef",
+        "revision",
+        "generations",
+        "source",
+        "assemblerVersion",
+        "serializerVersion",
+        "provider",
+        "policy",
+        "segments",
+        "requestFingerprint",
+        "gatewayInput"
+      ],
+      "additionalProperties": false,
+      "$comment": "Trusted core/provider output only, not a public write request. Immutable effective projection reference, never raw-history reinsertion or external summary authority. HMAC inputs are original IR/provider bytes, not control JSON encoding. Domain/scope/key/context must match before comparison. Core and gateway witness domains are tagged and non-comparable. Gateway has no core generations/assembler/coverage. Its serializerVersion names the actual TWP parser/serializer contract, not a claimed core version.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "properties": {
+                  "kind": {
+                    "const": "gateway-request"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "policy": {
+                "$ref": "#/definitions/GatewayPolicyWitness"
+              },
+              "generations": {
+                "type": "null"
+              },
+              "assemblerVersion": {
+                "type": "null"
+              },
+              "gatewayInput": {
+                "$ref": "#/definitions/GatewayInputWitness"
+              },
+              "source": {
+                "properties": {
+                  "summaryCoverage": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "policy": {
+                "$ref": "#/definitions/CorePolicyWitness"
+              },
+              "generations": {
+                "$ref": "#/definitions/Generations"
+              },
+              "assemblerVersion": {
+                "$ref": "#/definitions/Id"
+              },
+              "gatewayInput": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ProjectionPublish": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "$ref": "#/definitions/Protocol"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "expectedRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "previousProjectionRef": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "projection": {
+          "$ref": "#/definitions/ProjectionWitness"
+        }
+      },
+      "required": [
+        "protocol",
+        "bindingId",
+        "expectedRevision",
+        "previousProjectionRef",
+        "projection"
+      ],
+      "additionalProperties": false,
+      "$comment": "Internal synchronous prepare/persist/publish with current history/policy/source guard; no public route. Core acceptance and immutable projection reference commit together or remain unknown, never install stale projected state."
+    },
+    "ExchangeMetadata": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "$ref": "#/definitions/Protocol"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "ticket": {
+          "$ref": "#/definitions/Ticket"
+        },
+        "runtimeSessionId": {
+          "$ref": "#/definitions/LegacyId"
+        },
+        "projectionRef": {
+          "$ref": "#/definitions/Id"
+        },
+        "payloadBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 33554432
+        },
+        "payloadSha256": {
+          "$ref": "#/definitions/Digest"
+        }
+      },
+      "required": [
+        "protocol",
+        "bindingId",
+        "ticket",
+        "runtimeSessionId",
+        "projectionRef",
+        "payloadBytes",
+        "payloadSha256"
+      ],
+      "additionalProperties": false,
+      "$comment": "Gateway route only: 4-byte big-endian metadata length + canonical metadata <=64KiB + unchanged original TWP UTF-8 body <=32MiB. SHA is raw transport integrity, never a diagnostic fingerprint. Existing TWP body schema and original auth/signature/idempotency/usage remain required; new operation semantic identity additionally binds this immutable envelope. Never decode/reencode inner bytes for retry."
+    },
+    "MappingRecord": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "sdk2-cache-mapping-v1"
+        },
+        "scope": {
+          "$ref": "#/definitions/Scope"
+        },
+        "logicalRef": {
+          "$ref": "#/definitions/Id"
+        },
+        "revision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "groupRef": {
+          "$ref": "#/definitions/Id"
+        },
+        "groupGeneration": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "active",
+            "revoked",
+            "expired"
+          ]
+        },
+        "policy": {
+          "$ref": "#/definitions/PolicyWitness"
+        },
+        "createdAtMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "lastAuthorizedUseAtMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "idleExpiresAtMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "absoluteExpiresAtMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "bindingIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Id"
+          },
+          "minItems": 0,
+          "maxItems": 16,
+          "uniqueItems": true
+        },
+        "generations": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Generations"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "format",
+        "scope",
+        "logicalRef",
+        "revision",
+        "groupRef",
+        "groupGeneration",
+        "state",
+        "policy",
+        "createdAtMs",
+        "lastAuthorizedUseAtMs",
+        "idleExpiresAtMs",
+        "absoluteExpiresAtMs",
+        "bindingIds",
+        "generations"
+      ],
+      "additionalProperties": false,
+      "$comment": "Durable authoritative multi-instance CAS record; only mapping metadata, no prompts/provider credentials. Scope tuple+logicalRef unique, versioned transactions; cache/Redis is not authoritative. Terminal/ticket rows separately bounded and atomically linked. No runtime lease or billing identity substitution.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "policy": {
+                "properties": {
+                  "kind": {
+                    "const": "gateway-observed-v1"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "generations": {
+                "type": "null"
+              },
+              "scope": {
+                "properties": {
+                  "authorizationRevision": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "generations": {
+                "$ref": "#/definitions/Generations"
+              },
+              "scope": {
+                "properties": {
+                  "authorizationRevision": {
+                    "$ref": "#/definitions/Sequence"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Usage": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string",
+          "enum": [
+            "provider-reported",
+            "unavailable"
+          ]
+        },
+        "cacheReadTokens": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cacheWriteTokens": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "uncachedInputTokens": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "outputTokens": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cacheState": {
+          "type": "string",
+          "enum": [
+            "reported-read",
+            "reported-no-read",
+            "unknown"
+          ]
+        },
+        "billingVerified": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "source",
+        "cacheReadTokens",
+        "cacheWriteTokens",
+        "uncachedInputTokens",
+        "outputTokens",
+        "cacheState",
+        "billingVerified"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "source": {
+                "const": "unavailable"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "cacheReadTokens": {
+                "type": "null"
+              },
+              "cacheWriteTokens": {
+                "type": "null"
+              },
+              "uncachedInputTokens": {
+                "type": "null"
+              },
+              "outputTokens": {
+                "type": "null"
+              },
+              "cacheState": {
+                "const": "unknown"
+              },
+              "billingVerified": {
+                "const": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "cacheState": {
+                "const": "reported-read"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "source": {
+                "const": "provider-reported"
+              },
+              "cacheReadTokens": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 9007199254740991
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "cacheState": {
+                "const": "reported-no-read"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "source": {
+                "const": "provider-reported"
+              },
+              "cacheReadTokens": {
+                "const": 0
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "cacheState": {
+                "const": "unknown"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "cacheReadTokens": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Diagnostic": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "$ref": "#/definitions/Protocol"
+        },
+        "diagnosticId": {
+          "$ref": "#/definitions/Id"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "requestRef": {
+          "$ref": "#/definitions/Id"
+        },
+        "groupGeneration": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "comparison": {
+          "type": "string",
+          "enum": [
+            "same-prefix",
+            "prefix-changed",
+            "not-comparable"
+          ]
+        },
+        "firstChangedSegment": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 63
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "cause": {
+          "type": "string",
+          "enum": [
+            "first-request",
+            "content-changed",
+            "group-rotated",
+            "policy-refreshed",
+            "provider-domain-changed",
+            "projection-missing",
+            "key-rotated",
+            "unsupported",
+            "provider-reported",
+            "unknown"
+          ]
+        },
+        "causeAuthority": {
+          "type": "string",
+          "enum": [
+            "local-fact",
+            "provider-report",
+            "unknown"
+          ]
+        },
+        "usage": {
+          "$ref": "#/definitions/Usage"
+        },
+        "elapsedMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3600000
+        },
+        "retryCount": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100
+        },
+        "observedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "protocol",
+        "diagnosticId",
+        "bindingId",
+        "requestRef",
+        "groupGeneration",
+        "comparison",
+        "firstChangedSegment",
+        "cause",
+        "causeAuthority",
+        "usage",
+        "elapsedMs",
+        "retryCount",
+        "observedAt"
+      ],
+      "additionalProperties": false,
+      "$comment": "No prompts, raw/HMAC fingerprints, raw app/user identities, tickets, raw groupRef, provider keys, request body digests or unbounded messages. Correlating prefix equality is not a cache-hit assertion. Same-scope diagnostics permission and caps on every page/read."
+    },
+    "DiagnosticQuery": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "$ref": "#/definitions/Protocol"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "after": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      },
+      "required": [
+        "protocol",
+        "bindingId",
+        "after",
+        "limit"
+      ],
+      "additionalProperties": false
+    },
+    "DiagnosticPage": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "$ref": "#/definitions/Protocol"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Diagnostic"
+          },
+          "minItems": 0,
+          "maxItems": 100
+        },
+        "next": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "protocol",
+        "rows",
+        "next"
+      ],
+      "additionalProperties": false
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "$ref": "#/definitions/Protocol"
+        },
+        "requestId": {
+          "$ref": "#/definitions/Id"
+        },
+        "code": {
+          "type": "string",
+          "enum": [
+            "invalid_request",
+            "protocol_version_mismatch",
+            "unauthorized",
+            "forbidden",
+            "stale_revision",
+            "stale_generation",
+            "request_id_conflict",
+            "projection_stale",
+            "ticket_expired",
+            "mapping_expired",
+            "receipt_expired",
+            "payload_too_large",
+            "unsupported_capability",
+            "capacity_exceeded",
+            "epoch_unavailable",
+            "mapping_unavailable",
+            "result_unknown"
+          ]
+        },
+        "status": {
+          "type": "integer",
+          "minimum": 400,
+          "maximum": 503
+        },
+        "retryAction": {
+          "type": "string",
+          "enum": [
+            "none",
+            "same-request",
+            "query-status",
+            "refresh-projection"
+          ]
+        },
+        "fallback": {
+          "type": "string",
+          "enum": [
+            "none",
+            "legacy-cold"
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      },
+      "required": [
+        "protocol",
+        "requestId",
+        "code",
+        "status",
+        "retryAction",
+        "fallback",
+        "message"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "invalid_request"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 400
+              },
+              "fallback": {
+                "const": "none"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "protocol_version_mismatch"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 400
+              },
+              "fallback": {
+                "const": "none"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "unauthorized"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 401
+              },
+              "retryAction": {
+                "const": "none"
+              },
+              "fallback": {
+                "const": "none"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "forbidden"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 403
+              },
+              "retryAction": {
+                "const": "none"
+              },
+              "fallback": {
+                "const": "none"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "stale_revision"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 409
+              },
+              "fallback": {
+                "const": "none"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "stale_generation"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 409
+              },
+              "fallback": {
+                "const": "none"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "request_id_conflict"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 409
+              },
+              "retryAction": {
+                "const": "none"
+              },
+              "fallback": {
+                "const": "none"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "projection_stale"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 409
+              },
+              "fallback": {
+                "const": "none"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "ticket_expired"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 410
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "mapping_expired"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 410
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "receipt_expired"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 410
+              },
+              "retryAction": {
+                "const": "none"
+              },
+              "fallback": {
+                "const": "none"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "payload_too_large"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 413
+              },
+              "fallback": {
+                "const": "none"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "unsupported_capability"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 422
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "capacity_exceeded"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [429, 503]
+              },
+              "fallback": {
+                "const": "none"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "epoch_unavailable"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [409, 503]
+              },
+              "fallback": {
+                "const": "none"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "mapping_unavailable"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "enum": [404, 409, 503]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": { "const": "mapping_unavailable" },
+              "status": { "enum": [404, 409] }
+            }
+          },
+          "then": {
+            "properties": {
+              "retryAction": { "const": "none" },
+              "fallback": { "const": "none" }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "result_unknown"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 503
+              },
+              "retryAction": {
+                "const": "query-status"
+              },
+              "fallback": {
+                "const": "none"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "RebindRequest": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "$ref": "#/definitions/Protocol"
+        },
+        "request": {
+          "$ref": "#/definitions/RequestIdentity"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "expectedRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "sessionId": {
+          "$ref": "#/definitions/LegacyId"
+        }
+      },
+      "required": [
+        "protocol",
+        "request",
+        "bindingId",
+        "expectedRevision",
+        "sessionId"
+      ],
+      "additionalProperties": false,
+      "$comment": "Current owner authentication plus trusted persisted session/logical lineage, not a bare claimed sessionId; may replace expired/rotated device ticket only while mapping and binding remain active and current policy/deletion witnesses match. No resurrection of revoked/closed/expired mapping."
+    },
+    "RecordSequence": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/Sequence"
+        },
+        {
+          "not": {
+            "const": "0"
+          }
+        }
+      ],
+      "$comment": "Record ordinals start at 1. Zero is only an empty published/acknowledged watermark, never a record ordinal."
+    },
+    "PolicyRefresh": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "protocol": {
+          "$ref": "#/definitions/Protocol"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "expectedRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "policy": {
+          "$ref": "#/definitions/PolicyWitness"
+        },
+        "generations": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Generations"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "action": {
+          "enum": [
+            "rotate",
+            "revoke"
+          ]
+        },
+        "reason": {
+          "enum": [
+            "prompt-changed",
+            "permission-changed",
+            "capability-changed",
+            "memory-changed",
+            "tools-changed",
+            "source-changed",
+            "deletion-changed",
+            "authorization-changed",
+            "gateway-observation-changed"
+          ]
+        }
+      },
+      "required": [
+        "protocol",
+        "bindingId",
+        "expectedRevision",
+        "policy",
+        "generations",
+        "action",
+        "reason"
+      ],
+      "$comment": "Trusted host-only current authority/source facts; never public input. Same-transaction CAS rotates group generation and revokes all tickets, or revokes mapping. Source/deletion/authorization boundary changes require revoke; a harmless still-authorized policy refresh may rotate then permit lineage-verified rebind. No ticket alone can authorize this transition. Gateway observations update only the same witness domain with a strictly newer observationRevision. Authorization boundary change still revokes. Observation change rotates without claiming a core prompt/memory/source generation. Core policy refresh follows existing logical-turn and governance publication barriers.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "reason": {
+                "enum": [
+                  "source-changed",
+                  "deletion-changed",
+                  "authorization-changed"
+                ]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "action": {
+                "const": "revoke"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "policy": {
+                "properties": {
+                  "kind": {
+                    "const": "gateway-observed-v1"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "generations": {
+                "type": "null"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "generations": {
+                "$ref": "#/definitions/Generations"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "policy": {
+                "properties": {
+                  "kind": {
+                    "const": "gateway-observed-v1"
+                  }
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "reason": {
+                "enum": [
+                  "gateway-observation-changed",
+                  "authorization-changed"
+                ]
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "reason": {
+                "not": {
+                  "const": "gateway-observation-changed"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "GatewayLink": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "format": {
+          "const": "sdk2-cache-gateway-link-v1"
+        },
+        "scope": {
+          "$ref": "#/definitions/Scope"
+        },
+        "localBindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "state": {
+          "enum": [
+            "pending",
+            "active",
+            "closing",
+            "closed",
+            "reconciliation-required"
+          ]
+        },
+        "gatewayBindingId": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "gatewayLogicalRef": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "gatewayRevision": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Sequence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "protectedTicketRef": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "operation": {
+          "enum": [
+            "open",
+            "renew",
+            "rotate",
+            "close",
+            "rebind"
+          ]
+        },
+        "request": {
+          "$ref": "#/definitions/RequestIdentity"
+        },
+        "protectedIntentRef": {
+          "$ref": "#/definitions/Id"
+        },
+        "intentDigest": {
+          "$ref": "#/definitions/KeyedDigest"
+        }
+      },
+      "required": [
+        "format",
+        "scope",
+        "localBindingId",
+        "state",
+        "gatewayBindingId",
+        "gatewayLogicalRef",
+        "gatewayRevision",
+        "protectedTicketRef",
+        "operation",
+        "request",
+        "protectedIntentRef",
+        "intentDigest"
+      ],
+      "$comment": "Host-only durable outbox link. Reserve local key and exact protected gateway intent before remote mutation; current auth remains separate. Query/replay same remote key after unknown outcome; never transfer the public serve audience ticket to gateway. Active requires known committed remote binding, revision and protected gateway ticket. Counts toward all retained-state budgets; pending is never TTL-GCed.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "active"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "gatewayBindingId": {
+                "$ref": "#/definitions/Id"
+              },
+              "gatewayLogicalRef": {
+                "$ref": "#/definitions/Id"
+              },
+              "gatewayRevision": {
+                "$ref": "#/definitions/Sequence"
+              },
+              "protectedTicketRef": {
+                "$ref": "#/definitions/Id"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "CorePolicyWitness": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "core-effective-v1"
+        },
+        "authorizationRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "promptRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "capabilityRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "permissionRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "memoryRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "toolSetRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "systemLayerPolicyRevision": {
+          "$ref": "#/definitions/Sequence"
+        }
+      },
+      "required": [
+        "kind",
+        "authorizationRevision",
+        "promptRevision",
+        "capabilityRevision",
+        "permissionRevision",
+        "memoryRevision",
+        "toolSetRevision",
+        "systemLayerPolicyRevision"
+      ],
+      "additionalProperties": false,
+      "$comment": "Trusted core effective logical-turn revisions only. No gateway inference, placeholder revision, mid-turn system refresh or public write authority."
+    },
+    "GatewayPolicyWitness": {
+      "type": "object",
+      "properties": {
+        "kind": {
+          "const": "gateway-observed-v1"
+        },
+        "observationRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "authorizationSnapshot": {
+          "$ref": "#/definitions/KeyedDigest"
+        },
+        "platformConfigSnapshot": {
+          "$ref": "#/definitions/KeyedDigest"
+        },
+        "corePolicy": {
+          "type": "null"
+        }
+      },
+      "required": [
+        "kind",
+        "observationRevision",
+        "authorizationSnapshot",
+        "platformConfigSnapshot",
+        "corePolicy"
+      ],
+      "additionalProperties": false,
+      "$comment": "Gateway-owned durable observation CAS revision, not any core revision. HMACs witness currently observed authorized platform facts but never grant authority. Core revisions are explicitly unknown; a separately authenticated delegation contract is not provided by this candidate."
+    },
+    "GatewayInputWitness": {
+      "type": "object",
+      "properties": {
+        "originalTwp": {
+          "$ref": "#/definitions/KeyedDigest"
+        },
+        "effectiveSystem": {
+          "$ref": "#/definitions/KeyedDigest"
+        },
+        "effectiveTools": {
+          "$ref": "#/definitions/KeyedDigest"
+        },
+        "sanitizedParameters": {
+          "$ref": "#/definitions/KeyedDigest"
+        },
+        "finalProviderRequest": {
+          "$ref": "#/definitions/KeyedDigest"
+        }
+      },
+      "required": [
+        "originalTwp",
+        "effectiveSystem",
+        "effectiveTools",
+        "sanitizedParameters",
+        "finalProviderRequest"
+      ],
+      "additionalProperties": false,
+      "$comment": "Computed by the trusted gateway from validated original input and actual final member request bytes. No control JSON normalization of IR/parameters. Current platform configuration is a separate GatewayPolicyWitness fact; it cannot replace the effective system in the fixed logical turn."
+    },
+    "FinancialAnchor": {
+      "type": "object",
+      "properties": {
+        "ownerType": {
+          "enum": [
+            "user",
+            "org"
+          ]
+        },
+        "ownerId": {
+          "$ref": "#/definitions/LegacyId"
+        },
+        "requestId": {
+          "type": "string",
+          "minLength": 12,
+          "maxLength": 44,
+          "pattern": "^twp:[A-Za-z0-9_-]{8,40}$"
+        }
+      },
+      "required": [
+        "ownerType",
+        "ownerId",
+        "requestId"
+      ],
+      "additionalProperties": false,
+      "$comment": "Trusted old financial identity: (owner_type, owner_id, twp:<original inner.meta.requestId>). Never derive a replacement from app/user/runtime/envelope or cache/HMAC key versions. This DTO does not create a new ledger."
+    },
+    "GatewayAdmissionIdentity": {
+      "type": "object",
+      "properties": {
+        "financialAnchor": {
+          "$ref": "#/definitions/FinancialAnchor"
+        },
+        "scope": {
+          "type": "object",
+          "properties": {
+            "applicationScopeId": {
+              "$ref": "#/definitions/Id"
+            },
+            "endUserId": {
+              "$ref": "#/definitions/LegacyId"
+            }
+          },
+          "required": [
+            "applicationScopeId",
+            "endUserId"
+          ],
+          "additionalProperties": false
+        },
+        "audience": {
+          "const": "gateway-cache"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "runtimeSessionId": {
+          "$ref": "#/definitions/LegacyId"
+        },
+        "projectionRef": {
+          "$ref": "#/definitions/Id"
+        },
+        "innerRequestId": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 40,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "innerBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 33554432
+        },
+        "innerSha256": {
+          "$ref": "#/definitions/Digest"
+        },
+        "envelopeBytes": {
+          "type": "integer",
+          "minimum": 6,
+          "maximum": 33619972
+        },
+        "envelopeSha256": {
+          "$ref": "#/definitions/Digest"
+        }
+      },
+      "required": [
+        "financialAnchor",
+        "scope",
+        "audience",
+        "bindingId",
+        "runtimeSessionId",
+        "projectionRef",
+        "innerRequestId",
+        "innerBytes",
+        "innerSha256",
+        "envelopeBytes",
+        "envelopeSha256"
+      ],
+      "additionalProperties": false,
+      "$comment": "Host-only exact witnessed identity. Runtime must derive innerRequestId from the validated original TWP, require financialAnchor.requestId === twp: + innerRequestId, derive scope and owner from current authentication, and validate all lengths/SHA against the full frame. Never accept client hashes as authority. Public ExchangeMetadata is unchanged."
+    },
+    "GatewayAdmissionRecord": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": "sdk2-cache-admission-v1"
+        },
+        "identity": {
+          "$ref": "#/definitions/GatewayAdmissionIdentity"
+        },
+        "admittedAtMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "idleExpiresAtMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "financialDisposition": {
+          "enum": [
+            "existing-reservation",
+            "not-required"
+          ]
+        },
+        "state": {
+          "enum": [
+            "accepted",
+            "result-unknown",
+            "completed"
+          ]
+        },
+        "resultRef": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "format",
+        "identity",
+        "admittedAtMs",
+        "idleExpiresAtMs",
+        "financialDisposition",
+        "state",
+        "resultRef"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "completed"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "resultRef": {
+                "$ref": "#/definitions/Id"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "resultRef": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ],
+      "$comment": "Durable non-financial admission anchor unique by the original FinancialAnchor. not-required means the original gateway confirms no reservation at all, not merely zero cash. Positive gross covered by gifted Tokens still requires existing-reservation with its original token_state/hold, even if reservation.amountMicro is zero. First anchor + any original reservation/Token hold + mapping idle touch commit atomically on one DB connection; Redis is not this authority. Existing accepted/unknown records are historical facts only, never provider execution permits. Pending cannot be GCed; terminal retention must keep a bounded denial anchor while original IDs could be submitted again."
+    }
+  }
+}

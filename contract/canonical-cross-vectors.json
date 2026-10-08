@@ -1,0 +1,1107 @@
+{
+  "task": "UAPI-01",
+  "spec": "RFC-UAPI-1 §4.1 · SDK2-ext-v1-wire §5",
+  "reference": "scripts/sdk2/draft-wire-codec.mjs (encodeMetadata/decodeMetadata)",
+  "generated": "2026-09-30",
+  "format": {
+    "inputKind": "utf8-text: input 为 JSON 文本，按 UTF-8 编码后送入解码器；bytes: input 为原始字节的 base64（note 内附 hex）。",
+    "generator": "含 generator 的向量无 input 字段：flat-array = '[' + element×count（逗号分隔）+ (tail? ','+tail) + ']'。",
+    "maxBytes": "可选；缺省时各实现用自身默认上限（kernel/api-client/draft 262144，providers 65536）。",
+    "expect": "accept/reject 为参考实现 decodeMetadata 的决定。",
+    "canonicalHex": "accept 向量的 canonical 字节 hex（参考实现 encodeMetadata(decodeMetadata(input))）；超大向量改用 canonicalSha256。"
+  },
+  "vectors": [
+    {
+      "id": "key-order-ascii-sorted",
+      "category": "key-order",
+      "inputKind": "utf8-text",
+      "input": "{\"a\":1,\"b\":2}",
+      "expect": "accept",
+      "canonicalHex": "7b2261223a312c2262223a327d",
+      "note": "ASCII 键已按码元升序；输入即 canonical。"
+    },
+    {
+      "id": "key-order-ascii-unsorted",
+      "category": "key-order",
+      "inputKind": "utf8-text",
+      "input": "{\"b\":2,\"a\":1}",
+      "expect": "accept",
+      "canonicalHex": "7b2261223a312c2262223a327d",
+      "note": "键序倒置的合法输入；canonical 须重排为 a,b。 分歧：api-client decodeControl 拒绝（invalid_response；canonical-only 解码器，输入须已等于 canonical 字节）；其余实现与参考一致。"
+    },
+    {
+      "id": "key-order-punct-sorted",
+      "category": "key-order",
+      "inputKind": "utf8-text",
+      "input": "{\"!\":6,\"0\":4,\"B\":2,\"_\":3,\"a\":1,\"~\":5}",
+      "expect": "accept",
+      "canonicalHex": "7b2221223a362c2230223a342c2242223a322c225f223a332c2261223a312c227e223a357d",
+      "note": "标点/数字/大小写/下划线按 UTF-16 码元（即 ASCII 字节）序：! < 0 < B < _ < a < ~；不得用本地化或大小写不敏感排序。"
+    },
+    {
+      "id": "key-order-punct-unsorted",
+      "category": "key-order",
+      "inputKind": "utf8-text",
+      "input": "{\"a\":1,\"B\":2,\"_\":3,\"0\":4,\"~\":5,\"!\":6}",
+      "expect": "accept",
+      "canonicalHex": "7b2221223a362c2230223a342c2242223a322c225f223a332c2261223a312c227e223a357d",
+      "note": "同上键集乱序输入；canonical 须为 !,0,B,_,a,~。 分歧：api-client decodeControl 拒绝（invalid_response；canonical-only 解码器，输入须已等于 canonical 字节）；其余实现与参考一致。"
+    },
+    {
+      "id": "key-order-prefix-sorted",
+      "category": "key-order",
+      "inputKind": "utf8-text",
+      "input": "{\"a\":1,\"aa\":2,\"ab\":3,\"b\":4}",
+      "expect": "accept",
+      "canonicalHex": "7b2261223a312c226161223a322c226162223a332c2262223a347d",
+      "note": "前缀键先于其扩展键（a < aa < ab < b）。"
+    },
+    {
+      "id": "key-order-numeric-strings-sorted",
+      "category": "key-order",
+      "inputKind": "utf8-text",
+      "input": "{\"10\":1,\"9\":2}",
+      "expect": "accept",
+      "canonicalHex": "7b223130223a312c2239223a327d",
+      "note": "数字形键按码元字符串序（\"10\" < \"9\"），不得按数值序；JS 引擎整数键枚举顺序不得泄漏到 canonical。"
+    },
+    {
+      "id": "key-order-numeric-strings-unsorted",
+      "category": "key-order",
+      "inputKind": "utf8-text",
+      "input": "{\"9\":2,\"10\":1}",
+      "expect": "accept",
+      "canonicalHex": "7b223130223a312c2239223a327d",
+      "note": "同上乱序输入；canonical 须为 \"10\",\"9\"。 分歧：api-client decodeControl 拒绝（invalid_response；canonical-only 解码器，输入须已等于 canonical 字节）；其余实现与参考一致。"
+    },
+    {
+      "id": "key-order-nested-unsorted",
+      "category": "key-order",
+      "inputKind": "utf8-text",
+      "input": "{\"a\":{\"z\":1,\"y\":2},\"b\":[{\"d\":0,\"c\":0}]}",
+      "expect": "accept",
+      "canonicalHex": "7b2261223a7b2279223a322c227a223a317d2c2262223a5b7b2263223a302c2264223a307d5d7d",
+      "note": "嵌套对象与数组内对象亦须逐层排序；数组元素顺序保持。 分歧：api-client decodeControl 拒绝（invalid_response；canonical-only 解码器，输入须已等于 canonical 字节）；其余实现与参考一致。"
+    },
+    {
+      "id": "key-order-proto-key",
+      "category": "key-order",
+      "inputKind": "utf8-text",
+      "input": "{\"__proto__\":1,\"a\":2}",
+      "expect": "accept",
+      "canonicalHex": "7b225f5f70726f746f5f5f223a312c2261223a327d",
+      "note": "__proto__ 作为普通键：须成为自有数据属性而非原型污染；排序 _ (0x5f) < a (0x61)。"
+    },
+    {
+      "id": "key-order-escaped-ascii-key",
+      "category": "key-order",
+      "inputKind": "utf8-text",
+      "input": "{\"\\u0061\":1}",
+      "expect": "accept",
+      "canonicalHex": "7b2261223a317d",
+      "note": "键以 \\u0061 转义书写；解码后为 a，canonical 键须写作 \"a\"。 分歧：api-client decodeControl 拒绝（invalid_response；canonical-only 解码器，输入须已等于 canonical 字节）；其余实现与参考一致。"
+    },
+    {
+      "id": "key-order-non-ascii-latin",
+      "category": "key-order",
+      "inputKind": "utf8-text",
+      "input": "{\"é\":1}",
+      "expect": "reject",
+      "note": "非 ASCII 键：wire §5 要求键均为 ASCII 名字，四份实现均以 ^[\\x21-\\x7e]+$ 拒绝；RFC-UAPI-1 §4.1 \"非 ASCII 键按 UTF-16 码元序\" 一句无实现对应，见报告。"
+    },
+    {
+      "id": "key-order-non-ascii-cjk",
+      "category": "key-order",
+      "inputKind": "utf8-text",
+      "input": "{\"汉\":1,\"a\":2}",
+      "expect": "reject",
+      "note": "非 ASCII（CJK）键拒绝。"
+    },
+    {
+      "id": "key-order-surrogate-pair-key",
+      "category": "key-order",
+      "inputKind": "utf8-text",
+      "input": "{\"😀\":1}",
+      "expect": "reject",
+      "note": "代理对（U+1F600）键拒绝：键仅限可打印 ASCII。"
+    },
+    {
+      "id": "key-order-utf16-vs-codepoint",
+      "category": "key-order",
+      "inputKind": "utf8-text",
+      "input": "{\"～\":1,\"😀\":2}",
+      "expect": "reject",
+      "note": "U+FF5E 与 U+1F600 在 UTF-16 码元序与码点序下顺序相反，是区分两种排序的判别向量；当前因非 ASCII 键被拒绝，留作单模块若放宽键集时的回归锚点。"
+    },
+    {
+      "id": "key-empty",
+      "category": "key-order",
+      "inputKind": "utf8-text",
+      "input": "{\"\":1}",
+      "expect": "reject",
+      "note": "空键拒绝（键须 ≥1 个可打印 ASCII 字符）。"
+    },
+    {
+      "id": "key-with-space",
+      "category": "key-order",
+      "inputKind": "utf8-text",
+      "input": "{\"a b\":1}",
+      "expect": "reject",
+      "note": "键含空格（0x20）拒绝：可打印范围为 0x21–0x7e。"
+    },
+    {
+      "id": "key-del-char",
+      "category": "key-order",
+      "inputKind": "bytes",
+      "input": "eyJhfyI6MX0=",
+      "expect": "reject",
+      "note": "键含 DEL（0x7f）拒绝：{\"a<DEL>\":1}。 输入 hex: 7b22617f223a317d。"
+    },
+    {
+      "id": "key-control-escaped",
+      "category": "key-order",
+      "inputKind": "utf8-text",
+      "input": "{\"a\\u0000\":1}",
+      "expect": "reject",
+      "note": "键含转义控制符 U+0000 拒绝。"
+    },
+    {
+      "id": "dup-top",
+      "category": "dup-key",
+      "inputKind": "utf8-text",
+      "input": "{\"a\":1,\"a\":2}",
+      "expect": "reject",
+      "note": "顶层重复键。"
+    },
+    {
+      "id": "dup-top-same-value",
+      "category": "dup-key",
+      "inputKind": "utf8-text",
+      "input": "{\"a\":1,\"a\":1}",
+      "expect": "reject",
+      "note": "重复键即使取值相同亦拒绝。"
+    },
+    {
+      "id": "dup-nested",
+      "category": "dup-key",
+      "inputKind": "utf8-text",
+      "input": "{\"o\":{\"x\":1,\"x\":2}}",
+      "expect": "reject",
+      "note": "嵌套对象内重复键。"
+    },
+    {
+      "id": "dup-in-array-object",
+      "category": "dup-key",
+      "inputKind": "utf8-text",
+      "input": "[{\"k\":1},{\"k\":1,\"k\":2}]",
+      "expect": "reject",
+      "note": "数组内对象重复键。"
+    },
+    {
+      "id": "dup-escaped-top",
+      "category": "dup-key",
+      "inputKind": "utf8-text",
+      "input": "{\"a\":1,\"\\u0061\":2}",
+      "expect": "reject",
+      "note": "\\u0061 解码后与 a 重复：须按解码键判重，不能先 JSON.parse 覆盖。"
+    },
+    {
+      "id": "dup-escaped-nested",
+      "category": "dup-key",
+      "inputKind": "utf8-text",
+      "input": "{\"o\":{\"ab\":1,\"\\u0061b\":2}}",
+      "expect": "reject",
+      "note": "嵌套层转义重复键。"
+    },
+    {
+      "id": "dup-proto",
+      "category": "dup-key",
+      "inputKind": "utf8-text",
+      "input": "{\"__proto__\":1,\"__proto__\":2}",
+      "expect": "reject",
+      "note": "__proto__ 重复键：null 原型对象上仍须判重。"
+    },
+    {
+      "id": "dup-with-whitespace",
+      "category": "dup-key",
+      "inputKind": "utf8-text",
+      "input": "{ \"a\" : 1 , \"a\" : 2 }",
+      "expect": "reject",
+      "note": "带空白的重复键。"
+    },
+    {
+      "id": "num-zero-root",
+      "category": "number",
+      "inputKind": "utf8-text",
+      "input": "0",
+      "expect": "accept",
+      "canonicalHex": "30",
+      "note": "根标量 0。"
+    },
+    {
+      "id": "num-max-safe",
+      "category": "number",
+      "inputKind": "utf8-text",
+      "input": "[9007199254740991]",
+      "expect": "accept",
+      "canonicalHex": "5b393030373139393235343734303939315d",
+      "note": "2^53−1 为最大允许值。"
+    },
+    {
+      "id": "num-2pow53",
+      "category": "number",
+      "inputKind": "utf8-text",
+      "input": "[9007199254740992]",
+      "expect": "reject",
+      "note": "2^53 超出安全整数范围。"
+    },
+    {
+      "id": "num-2pow64",
+      "category": "number",
+      "inputKind": "utf8-text",
+      "input": "[18446744073709551616]",
+      "expect": "reject",
+      "note": "2^64（20 位）拒绝；不得以 BigInt/浮点静默受理。"
+    },
+    {
+      "id": "num-400-digits",
+      "category": "number",
+      "inputKind": "utf8-text",
+      "input": "[9999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999999]",
+      "expect": "reject",
+      "note": "超长数字串（400 位）拒绝；实现不得因 Number() 溢出为 Infinity 而崩溃。"
+    },
+    {
+      "id": "num-neg-zero",
+      "category": "number",
+      "inputKind": "utf8-text",
+      "input": "[-0]",
+      "expect": "reject",
+      "note": "-0 拒绝。"
+    },
+    {
+      "id": "num-negative",
+      "category": "number",
+      "inputKind": "utf8-text",
+      "input": "[-1]",
+      "expect": "reject",
+      "note": "负数拒绝。"
+    },
+    {
+      "id": "num-exp-lower",
+      "category": "number",
+      "inputKind": "utf8-text",
+      "input": "[1e3]",
+      "expect": "reject",
+      "note": "指数形式拒绝：须在 token 层检查，不能用 Number(1e3)=1000 冒充。"
+    },
+    {
+      "id": "num-exp-upper-plus",
+      "category": "number",
+      "inputKind": "utf8-text",
+      "input": "[1E+3]",
+      "expect": "reject",
+      "note": "大写指数带正号拒绝。"
+    },
+    {
+      "id": "num-decimal-1.0",
+      "category": "number",
+      "inputKind": "utf8-text",
+      "input": "[1.0]",
+      "expect": "reject",
+      "note": "1.0 拒绝（小数点）。"
+    },
+    {
+      "id": "num-decimal-fraction",
+      "category": "number",
+      "inputKind": "utf8-text",
+      "input": "[0.5]",
+      "expect": "reject",
+      "note": "小数拒绝。"
+    },
+    {
+      "id": "num-leading-zero",
+      "category": "number",
+      "inputKind": "utf8-text",
+      "input": "[01]",
+      "expect": "reject",
+      "note": "前导零拒绝。"
+    },
+    {
+      "id": "num-plus-sign",
+      "category": "number",
+      "inputKind": "utf8-text",
+      "input": "[+1]",
+      "expect": "reject",
+      "note": "正号拒绝。"
+    },
+    {
+      "id": "num-hex",
+      "category": "number",
+      "inputKind": "utf8-text",
+      "input": "[0x10]",
+      "expect": "reject",
+      "note": "十六进制拒绝。"
+    },
+    {
+      "id": "num-leading-dot",
+      "category": "number",
+      "inputKind": "utf8-text",
+      "input": "[.5]",
+      "expect": "reject",
+      "note": "无整数部分的小数拒绝。"
+    },
+    {
+      "id": "num-nan",
+      "category": "number",
+      "inputKind": "utf8-text",
+      "input": "[NaN]",
+      "expect": "reject",
+      "note": "NaN 字面量拒绝。"
+    },
+    {
+      "id": "num-infinity",
+      "category": "number",
+      "inputKind": "utf8-text",
+      "input": "[Infinity]",
+      "expect": "reject",
+      "note": "Infinity 字面量拒绝。"
+    },
+    {
+      "id": "num-missing-separator",
+      "category": "number",
+      "inputKind": "utf8-text",
+      "input": "[0 1]",
+      "expect": "reject",
+      "note": "两个数字间缺逗号拒绝。"
+    },
+    {
+      "id": "num-object-padded",
+      "category": "number",
+      "inputKind": "utf8-text",
+      "input": "{\"n\": 12 }",
+      "expect": "accept",
+      "canonicalHex": "7b226e223a31327d",
+      "note": "数字前后带空白的合法输入；canonical 为 {\"n\":12}。 分歧：api-client decodeControl 拒绝（invalid_response；canonical-only 解码器，输入须已等于 canonical 字节）；其余实现与参考一致。"
+    },
+    {
+      "id": "str-surrogate-pair-raw",
+      "category": "string",
+      "inputKind": "utf8-text",
+      "input": "[\"😀\"]",
+      "expect": "accept",
+      "canonicalHex": "5b22f09f9880225d",
+      "note": "代理对以原始 UTF-8（f0 9f 98 80）输入；canonical 直接输出 UTF-8，不转义。"
+    },
+    {
+      "id": "str-surrogate-pair-escaped",
+      "category": "string",
+      "inputKind": "utf8-text",
+      "input": "[\"\\ud83d\\ude00\"]",
+      "expect": "accept",
+      "canonicalHex": "5b22f09f9880225d",
+      "note": "代理对以 \\ud83d\\ude00 转义输入；canonical 须解码为原始 UTF-8。 分歧：api-client decodeControl 拒绝（invalid_response；canonical-only 解码器，输入须已等于 canonical 字节）；其余实现与参考一致。"
+    },
+    {
+      "id": "str-surrogate-pair-escaped-upper",
+      "category": "string",
+      "inputKind": "utf8-text",
+      "input": "[\"\\uD83D\\uDE00\"]",
+      "expect": "accept",
+      "canonicalHex": "5b22f09f9880225d",
+      "note": "大写十六进制转义的代理对；canonical 同上。 分歧：api-client decodeControl 拒绝（invalid_response；canonical-only 解码器，输入须已等于 canonical 字节）；其余实现与参考一致。"
+    },
+    {
+      "id": "str-lone-high-escaped",
+      "category": "string",
+      "inputKind": "utf8-text",
+      "input": "[\"\\ud800\"]",
+      "expect": "reject",
+      "note": "孤立高代理项（转义形式）拒绝。"
+    },
+    {
+      "id": "str-lone-low-escaped",
+      "category": "string",
+      "inputKind": "utf8-text",
+      "input": "[\"\\udc00\"]",
+      "expect": "reject",
+      "note": "孤立低代理项（转义形式）拒绝。"
+    },
+    {
+      "id": "str-lone-high-then-ascii",
+      "category": "string",
+      "inputKind": "utf8-text",
+      "input": "[\"\\ud800a\"]",
+      "expect": "reject",
+      "note": "高代理项后接非低代理项拒绝。"
+    },
+    {
+      "id": "str-reversed-surrogates",
+      "category": "string",
+      "inputKind": "utf8-text",
+      "input": "[\"\\udc00\\ud800\"]",
+      "expect": "reject",
+      "note": "低高顺序颠倒的代理项拒绝。"
+    },
+    {
+      "id": "str-lone-high-raw-bytes",
+      "category": "string",
+      "inputKind": "bytes",
+      "input": "WyLtoIAiXQ==",
+      "expect": "reject",
+      "note": "孤立高代理项 U+D800 以 CESU-8 字节 ed a0 80 直接出现：非法 UTF-8 拒绝。 输入 hex: 5b22eda080225d。"
+    },
+    {
+      "id": "str-lone-low-raw-bytes",
+      "category": "string",
+      "inputKind": "bytes",
+      "input": "WyLtsIAiXQ==",
+      "expect": "reject",
+      "note": "孤立低代理项 U+DC00 的字节 ed b0 80：非法 UTF-8 拒绝。 输入 hex: 5b22edb080225d。"
+    },
+    {
+      "id": "str-cesu8-pair-bytes",
+      "category": "string",
+      "inputKind": "bytes",
+      "input": "WyLtoL3tuIAiXQ==",
+      "expect": "reject",
+      "note": "U+1F600 以 CESU-8（两个 3 字节代理项）编码：非法 UTF-8 拒绝，正确形式为 f0 9f 98 80。 输入 hex: 5b22eda0bdedb880225d。"
+    },
+    {
+      "id": "str-overlong-utf8",
+      "category": "string",
+      "inputKind": "bytes",
+      "input": "WyLAryJd",
+      "expect": "reject",
+      "note": "过长编码 c0 af（\"/\" 的非最短形式）拒绝。 输入 hex: 5b22c0af225d。"
+    },
+    {
+      "id": "str-truncated-utf8",
+      "category": "string",
+      "inputKind": "bytes",
+      "input": "WyLmsSJd",
+      "expect": "reject",
+      "note": "截断的多字节序列（e6 b1 缺第三字节）拒绝。 输入 hex: 5b22e6b1225d。"
+    },
+    {
+      "id": "str-above-max-codepoint",
+      "category": "string",
+      "inputKind": "bytes",
+      "input": "WyL0kICAIl0=",
+      "expect": "reject",
+      "note": "f4 90 80 80 编码 U+110000 超出 Unicode 上限：拒绝。 输入 hex: 5b22f4908080225d。"
+    },
+    {
+      "id": "str-max-codepoint",
+      "category": "string",
+      "inputKind": "bytes",
+      "input": "WyL0j7+/Il0=",
+      "expect": "accept",
+      "canonicalHex": "5b22f48fbfbf225d",
+      "note": "U+10FFFF（f4 8f bf bf）为最大合法标量：接受并原样输出。 输入 hex: 5b22f48fbfbf225d。"
+    },
+    {
+      "id": "str-controls-short-escapes",
+      "category": "string",
+      "inputKind": "utf8-text",
+      "input": "[\"\\b\\t\\n\\f\\r\"]",
+      "expect": "accept",
+      "canonicalHex": "5b225c625c745c6e5c665c72225d",
+      "note": "五个短转义；canonical 保持短转义形式。"
+    },
+    {
+      "id": "str-control-u-escape-lower",
+      "category": "string",
+      "inputKind": "utf8-text",
+      "input": "[\"\\u0001\\u001f\"]",
+      "expect": "accept",
+      "canonicalHex": "5b225c75303030315c7530303166225d",
+      "note": "其余控制符以小写 \\u00xx 输出。"
+    },
+    {
+      "id": "str-control-u-escape-upper",
+      "category": "string",
+      "inputKind": "utf8-text",
+      "input": "[\"\\u001F\"]",
+      "expect": "accept",
+      "canonicalHex": "5b225c7530303166225d",
+      "note": "大写十六进制转义输入；canonical 须归一为小写 \\u001f。 分歧：api-client decodeControl 拒绝（invalid_response；canonical-only 解码器，输入须已等于 canonical 字节）；其余实现与参考一致。"
+    },
+    {
+      "id": "str-control-long-escape-for-short",
+      "category": "string",
+      "inputKind": "utf8-text",
+      "input": "[\"\\u000a\"]",
+      "expect": "accept",
+      "canonicalHex": "5b225c6e225d",
+      "note": "以 \\u000a 书写换行；canonical 须归一为 \\n。 分歧：api-client decodeControl 拒绝（invalid_response；canonical-only 解码器，输入须已等于 canonical 字节）；其余实现与参考一致。"
+    },
+    {
+      "id": "str-nul-escape",
+      "category": "string",
+      "inputKind": "utf8-text",
+      "input": "[\"\\u0000\"]",
+      "expect": "accept",
+      "canonicalHex": "5b225c7530303030225d",
+      "note": "U+0000 以 \\u0000 输出。"
+    },
+    {
+      "id": "str-raw-control-tab",
+      "category": "string",
+      "inputKind": "bytes",
+      "input": "WyJhCWIiXQ==",
+      "expect": "reject",
+      "note": "字符串内未转义的原始 TAB（0x09）拒绝。 输入 hex: 5b22610962225d。"
+    },
+    {
+      "id": "str-raw-del",
+      "category": "string",
+      "inputKind": "bytes",
+      "input": "WyJ/Il0=",
+      "expect": "accept",
+      "canonicalHex": "5b227f225d",
+      "note": "原始 DEL（0x7f）不是 JSON 控制符：接受且 canonical 不转义。 输入 hex: 5b227f225d。"
+    },
+    {
+      "id": "str-slash-escaped",
+      "category": "string",
+      "inputKind": "utf8-text",
+      "input": "[\"\\/\"]",
+      "expect": "accept",
+      "canonicalHex": "5b222f225d",
+      "note": "\\/ 转义输入；canonical 须归一为未转义的 /。 分歧：api-client decodeControl 拒绝（invalid_response；canonical-only 解码器，输入须已等于 canonical 字节）；其余实现与参考一致。"
+    },
+    {
+      "id": "str-slash-raw",
+      "category": "string",
+      "inputKind": "utf8-text",
+      "input": "[\"/\"]",
+      "expect": "accept",
+      "canonicalHex": "5b222f225d",
+      "note": "原始 / 接受，不转义。"
+    },
+    {
+      "id": "str-quote-backslash",
+      "category": "string",
+      "inputKind": "utf8-text",
+      "input": "[\"\\\"\\\\\"]",
+      "expect": "accept",
+      "canonicalHex": "5b225c225c5c225d",
+      "note": "双引号与反斜杠分别为 \\\" 与 \\\\。"
+    },
+    {
+      "id": "str-unicode-escape-ascii",
+      "category": "string",
+      "inputKind": "utf8-text",
+      "input": "[\"\\u0041\"]",
+      "expect": "accept",
+      "canonicalHex": "5b2241225d",
+      "note": "\\u0041 转义输入；canonical 须归一为 \"A\"。 分歧：api-client decodeControl 拒绝（invalid_response；canonical-only 解码器，输入须已等于 canonical 字节）；其余实现与参考一致。"
+    },
+    {
+      "id": "str-u2028-raw",
+      "category": "string",
+      "inputKind": "bytes",
+      "input": "WyLigKjigKkiXQ==",
+      "expect": "accept",
+      "canonicalHex": "5b22e280a8e280a9225d",
+      "note": "U+2028/U+2029 原始 UTF-8 输入；canonical 直接 UTF-8，不转义。 输入 hex: 5b22e280a8e280a9225d。"
+    },
+    {
+      "id": "str-u2028-escaped",
+      "category": "string",
+      "inputKind": "utf8-text",
+      "input": "[\"\\u2028\"]",
+      "expect": "accept",
+      "canonicalHex": "5b22e280a8225d",
+      "note": "U+2028 以转义输入；canonical 须解码为原始 UTF-8（e2 80 a8）。 分歧：api-client decodeControl 拒绝（invalid_response；canonical-only 解码器，输入须已等于 canonical 字节）；其余实现与参考一致。"
+    },
+    {
+      "id": "str-bom-inside-string",
+      "category": "string",
+      "inputKind": "bytes",
+      "input": "WyLvu78iXQ==",
+      "expect": "accept",
+      "canonicalHex": "5b22efbbbf225d",
+      "note": "字符串内部的 U+FEFF 是普通字符：接受并原样输出（只有文档开头的 BOM 被拒绝）。 输入 hex: 5b22efbbbf225d。"
+    },
+    {
+      "id": "str-nfc-nfd-distinct",
+      "category": "string",
+      "inputKind": "bytes",
+      "input": "WyLDqSIsImXMgSJd",
+      "expect": "accept",
+      "canonicalHex": "5b22c3a9222c2265cc81225d",
+      "note": "NFC \"é\" 与 NFD \"e\\u0301\" 并存：不做 Unicode 归一化，两者字节各自保留。 输入 hex: 5b22c3a9222c2265cc81225d。"
+    },
+    {
+      "id": "str-noncharacter-fffe",
+      "category": "string",
+      "inputKind": "bytes",
+      "input": "WyLvv74iXQ==",
+      "expect": "accept",
+      "canonicalHex": "5b22efbfbe225d",
+      "note": "U+FFFE 非字符是合法标量：接受并原样输出。 输入 hex: 5b22efbfbe225d。"
+    },
+    {
+      "id": "str-invalid-escape",
+      "category": "string",
+      "inputKind": "utf8-text",
+      "input": "[\"\\x41\"]",
+      "expect": "reject",
+      "note": "非法转义 \\x 拒绝。"
+    },
+    {
+      "id": "str-short-u-escape",
+      "category": "string",
+      "inputKind": "utf8-text",
+      "input": "[\"\\u12\"]",
+      "expect": "reject",
+      "note": "\\u 后不足 4 位十六进制拒绝。"
+    },
+    {
+      "id": "str-single-quotes",
+      "category": "string",
+      "inputKind": "utf8-text",
+      "input": "['a']",
+      "expect": "reject",
+      "note": "单引号字符串拒绝。"
+    },
+    {
+      "id": "ws-compact",
+      "category": "whitespace",
+      "inputKind": "utf8-text",
+      "input": "{\"a\":[1,true,null],\"b\":\"x\"}",
+      "expect": "accept",
+      "canonicalHex": "7b2261223a5b312c747275652c6e756c6c5d2c2262223a2278227d",
+      "note": "紧凑输入即 canonical。"
+    },
+    {
+      "id": "ws-padded-mixed",
+      "category": "whitespace",
+      "inputKind": "utf8-text",
+      "input": " \t{ \"a\"\r\n: [ 1 ,\ttrue , null ] , \"b\" : \"x\" }\n",
+      "expect": "accept",
+      "canonicalHex": "7b2261223a5b312c747275652c6e756c6c5d2c2262223a2278227d",
+      "note": "同一文档带四种 JSON 空白（空格/TAB/CR/LF）；canonical 须与 ws-compact 相同。 分歧：api-client decodeControl 拒绝（invalid_response；canonical-only 解码器，输入须已等于 canonical 字节）；其余实现与参考一致。"
+    },
+    {
+      "id": "ws-leading-newline",
+      "category": "whitespace",
+      "inputKind": "utf8-text",
+      "input": "\n{}",
+      "expect": "accept",
+      "canonicalHex": "7b7d",
+      "note": "前导 LF 的空对象。 分歧：api-client decodeControl 拒绝（invalid_response；canonical-only 解码器，输入须已等于 canonical 字节）；其余实现与参考一致。"
+    },
+    {
+      "id": "ws-trailing-space",
+      "category": "whitespace",
+      "inputKind": "utf8-text",
+      "input": "{} ",
+      "expect": "accept",
+      "canonicalHex": "7b7d",
+      "note": "尾随空格的空对象。 分歧：api-client decodeControl 拒绝（invalid_response；canonical-only 解码器，输入须已等于 canonical 字节）；其余实现与参考一致。"
+    },
+    {
+      "id": "ws-empty-containers-padded",
+      "category": "whitespace",
+      "inputKind": "utf8-text",
+      "input": "[ { } , [ ] ]",
+      "expect": "accept",
+      "canonicalHex": "5b7b7d2c5b5d5d",
+      "note": "空容器内部空白；canonical 为 [{},[]]。 分歧：api-client decodeControl 拒绝（invalid_response；canonical-only 解码器，输入须已等于 canonical 字节）；其余实现与参考一致。"
+    },
+    {
+      "id": "ws-form-feed",
+      "category": "whitespace",
+      "inputKind": "utf8-text",
+      "input": "\f{}",
+      "expect": "reject",
+      "note": "FF（0x0c）不是 JSON 空白：拒绝。"
+    },
+    {
+      "id": "ws-vertical-tab",
+      "category": "whitespace",
+      "inputKind": "utf8-text",
+      "input": "\u000b{}",
+      "expect": "reject",
+      "note": "VT（0x0b）不是 JSON 空白：拒绝。"
+    },
+    {
+      "id": "ws-nbsp",
+      "category": "whitespace",
+      "inputKind": "bytes",
+      "input": "wqB7fQ==",
+      "expect": "reject",
+      "note": "NBSP（U+00A0）不是 JSON 空白：拒绝。 输入 hex: c2a07b7d。"
+    },
+    {
+      "id": "ws-bom-prefix",
+      "category": "whitespace",
+      "inputKind": "bytes",
+      "input": "77u/e30=",
+      "expect": "reject",
+      "note": "文档开头 BOM 拒绝（TextDecoder ignoreBOM:true 保留 U+FEFF 后被词法拒绝）。 输入 hex: efbbbf7b7d。"
+    },
+    {
+      "id": "depth-32-array-scalar",
+      "category": "depth",
+      "inputKind": "utf8-text",
+      "input": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[0]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]",
+      "expect": "accept",
+      "canonicalHex": "5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b305d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d",
+      "note": "32 层数组包裹标量：标量节点深度 32（根为 0）→ 接受。"
+    },
+    {
+      "id": "depth-33-array-scalar",
+      "category": "depth",
+      "inputKind": "utf8-text",
+      "input": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[0]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]",
+      "expect": "reject",
+      "note": "33 层数组包裹标量：标量节点深度 33 → 拒绝。"
+    },
+    {
+      "id": "depth-33-array-empty",
+      "category": "depth",
+      "inputKind": "utf8-text",
+      "input": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]",
+      "expect": "accept",
+      "canonicalHex": "5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5b5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d5d",
+      "note": "33 层嵌套空数组：最内层空数组节点深度 32 → 四份实现均接受。深度按节点的祖先容器数计，不按括号层数计；RFC §4.1 \"深度 ≤ 32\" 应据此明确。"
+    },
+    {
+      "id": "depth-34-array-empty",
+      "category": "depth",
+      "inputKind": "utf8-text",
+      "input": "[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]",
+      "expect": "reject",
+      "note": "34 层嵌套空数组：最内层节点深度 33 → 拒绝。"
+    },
+    {
+      "id": "depth-32-object-scalar",
+      "category": "depth",
+      "inputKind": "utf8-text",
+      "input": "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":0}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}",
+      "expect": "accept",
+      "canonicalHex": "7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a7b2261223a307d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d7d",
+      "note": "32 层对象包裹标量 → 接受。"
+    },
+    {
+      "id": "depth-33-object-scalar",
+      "category": "depth",
+      "inputKind": "utf8-text",
+      "input": "{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":{\"a\":0}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}",
+      "expect": "reject",
+      "note": "33 层对象包裹标量 → 拒绝。"
+    },
+    {
+      "id": "depth-33-mixed-scalar",
+      "category": "depth",
+      "inputKind": "utf8-text",
+      "input": "{\"a\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[0]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}",
+      "expect": "reject",
+      "note": "对象+32 层数组=标量深度 33 → 拒绝（容器类型混合计数）。"
+    },
+    {
+      "id": "nodes-100000-flat",
+      "category": "nodes",
+      "inputKind": "utf8-text",
+      "generator": {
+        "kind": "flat-array",
+        "element": "0",
+        "count": 99999
+      },
+      "expect": "accept",
+      "canonicalSha256": "fd18bb2cd9307008f7452a4e66ac5826ec85248f1cf75b6ae242b231e718697e",
+      "note": "根数组 + 99999 个标量 = 100000 节点 → 接受（节点上限常量 100000，含根）。输入 199999 字节；providers 控制入口硬帽 64KiB 不适用，见测试 PROVIDERS_CAP_EXCEEDED。 分歧：providers decodeCacheControl 拒绝（byte limit；控制入口 65536 字节硬帽，解析器语义另经 decodeCacheLookupControl 核对）；其余实现与参考一致。"
+    },
+    {
+      "id": "nodes-100001-flat",
+      "category": "nodes",
+      "inputKind": "utf8-text",
+      "generator": {
+        "kind": "flat-array",
+        "element": "0",
+        "count": 100000
+      },
+      "expect": "reject",
+      "note": "根数组 + 100000 个标量 = 100001 节点 → 拒绝。"
+    },
+    {
+      "id": "nodes-100000-mixed",
+      "category": "nodes",
+      "inputKind": "utf8-text",
+      "generator": {
+        "kind": "flat-array",
+        "element": "[0]",
+        "count": 49999,
+        "tail": "0"
+      },
+      "expect": "accept",
+      "canonicalSha256": "af52bd89d643aeb82076597067f4ec777fdcf7970b4ab04a66fed43cd090fcd3",
+      "note": "根 + 49999×([0] 两节点) + 1 标量 = 100000 节点：容器本身计为节点 → 接受。 分歧：providers decodeCacheControl 拒绝（byte limit；控制入口 65536 字节硬帽，解析器语义另经 decodeCacheLookupControl 核对）；其余实现与参考一致。"
+    },
+    {
+      "id": "nodes-100001-mixed",
+      "category": "nodes",
+      "inputKind": "utf8-text",
+      "generator": {
+        "kind": "flat-array",
+        "element": "[0]",
+        "count": 50000
+      },
+      "expect": "reject",
+      "note": "根 + 50000×两节点 = 100001 节点 → 拒绝。对象键不计节点（四份实现一致）。"
+    },
+    {
+      "id": "bytes-exact-limit",
+      "category": "bytes",
+      "inputKind": "utf8-text",
+      "input": "{\"a\":\"日本\"}",
+      "maxBytes": 14,
+      "expect": "accept",
+      "canonicalHex": "7b2261223a22e697a5e69cac227d",
+      "note": "输入 14 字节（含两个 3 字节 CJK），maxBytes=14 → 接受；上限按 UTF-8 字节而非字符数。"
+    },
+    {
+      "id": "bytes-limit-minus-one",
+      "category": "bytes",
+      "inputKind": "utf8-text",
+      "input": "{\"a\":\"日本\"}",
+      "maxBytes": 13,
+      "expect": "reject",
+      "note": "同一输入 maxBytes=13 → 拒绝。"
+    },
+    {
+      "id": "bytes-emoji-exact",
+      "category": "bytes",
+      "inputKind": "utf8-text",
+      "input": "\"😀\"",
+      "maxBytes": 6,
+      "expect": "accept",
+      "canonicalHex": "22f09f988022",
+      "note": "根字符串 6 字节（4 字节 emoji + 引号），maxBytes=6 → 接受。"
+    },
+    {
+      "id": "bytes-emoji-minus-one",
+      "category": "bytes",
+      "inputKind": "utf8-text",
+      "input": "\"😀\"",
+      "maxBytes": 5,
+      "expect": "reject",
+      "note": "同上 maxBytes=5 → 拒绝。"
+    },
+    {
+      "id": "bytes-whitespace-counted-accept",
+      "category": "bytes",
+      "inputKind": "utf8-text",
+      "input": "{ \"a\" : 1 }",
+      "maxBytes": 11,
+      "expect": "accept",
+      "canonicalHex": "7b2261223a317d",
+      "note": "带空白输入 11 字节，maxBytes=11 → 接受；canonical 7 字节。上限按原始输入字节计。 分歧：api-client decodeControl 拒绝（invalid_response；canonical-only 解码器，输入须已等于 canonical 字节）；其余实现与参考一致。"
+    },
+    {
+      "id": "bytes-whitespace-counted-reject",
+      "category": "bytes",
+      "inputKind": "utf8-text",
+      "input": "{ \"a\" : 1 }",
+      "maxBytes": 10,
+      "expect": "reject",
+      "note": "同一输入 maxBytes=10 → 拒绝，虽然 canonical 仅 7 字节。"
+    },
+    {
+      "id": "bytes-escape-counted",
+      "category": "bytes",
+      "inputKind": "utf8-text",
+      "input": "[\"\\u000a\"]",
+      "maxBytes": 10,
+      "expect": "accept",
+      "canonicalHex": "5b225c6e225d",
+      "note": "转义输入 10 字节，maxBytes=10 → 接受；canonical [\"\\n\"] 6 字节。 分歧：api-client decodeControl 拒绝（invalid_response；canonical-only 解码器，输入须已等于 canonical 字节）；其余实现与参考一致。"
+    },
+    {
+      "id": "bytes-limit-one",
+      "category": "bytes",
+      "inputKind": "utf8-text",
+      "input": "0",
+      "maxBytes": 1,
+      "expect": "accept",
+      "canonicalHex": "30",
+      "note": "最小上限 maxBytes=1 与单字节文档。"
+    },
+    {
+      "id": "trail-garbage-char",
+      "category": "trailing",
+      "inputKind": "utf8-text",
+      "input": "{}x",
+      "expect": "reject",
+      "note": "文档后尾随字符拒绝。"
+    },
+    {
+      "id": "trail-second-document",
+      "category": "trailing",
+      "inputKind": "utf8-text",
+      "input": "{} {}",
+      "expect": "reject",
+      "note": "两个顶层值拒绝。"
+    },
+    {
+      "id": "trail-array-comma",
+      "category": "trailing",
+      "inputKind": "utf8-text",
+      "input": "[1,]",
+      "expect": "reject",
+      "note": "数组尾逗号拒绝。"
+    },
+    {
+      "id": "trail-object-comma",
+      "category": "trailing",
+      "inputKind": "utf8-text",
+      "input": "{\"a\":1,}",
+      "expect": "reject",
+      "note": "对象尾逗号拒绝。"
+    },
+    {
+      "id": "trail-nul-byte",
+      "category": "trailing",
+      "inputKind": "bytes",
+      "input": "e30A",
+      "expect": "reject",
+      "note": "尾随 NUL 字节拒绝。 输入 hex: 7b7d00。"
+    },
+    {
+      "id": "trail-literal-suffix",
+      "category": "trailing",
+      "inputKind": "utf8-text",
+      "input": "truex",
+      "expect": "reject",
+      "note": "字面量后紧跟字母拒绝。"
+    },
+    {
+      "id": "trunc-open-object",
+      "category": "truncation",
+      "inputKind": "utf8-text",
+      "input": "{\"a\":",
+      "expect": "reject",
+      "note": "对象在冒号后截断。"
+    },
+    {
+      "id": "trunc-open-array",
+      "category": "truncation",
+      "inputKind": "utf8-text",
+      "input": "[1,",
+      "expect": "reject",
+      "note": "数组在逗号后截断。"
+    },
+    {
+      "id": "trunc-missing-close",
+      "category": "truncation",
+      "inputKind": "utf8-text",
+      "input": "{\"a\":1",
+      "expect": "reject",
+      "note": "缺右花括号。"
+    },
+    {
+      "id": "trunc-unterminated-string",
+      "category": "truncation",
+      "inputKind": "utf8-text",
+      "input": "[\"abc",
+      "expect": "reject",
+      "note": "未终止字符串。"
+    },
+    {
+      "id": "trunc-string-ends-in-escape",
+      "category": "truncation",
+      "inputKind": "utf8-text",
+      "input": "\"x\\",
+      "expect": "reject",
+      "note": "以反斜杠结尾的未终止字符串。"
+    },
+    {
+      "id": "trunc-literal",
+      "category": "truncation",
+      "inputKind": "utf8-text",
+      "input": "tru",
+      "expect": "reject",
+      "note": "截断的字面量。"
+    },
+    {
+      "id": "trunc-empty-input",
+      "category": "truncation",
+      "inputKind": "utf8-text",
+      "input": "",
+      "expect": "reject",
+      "note": "空输入拒绝。"
+    },
+    {
+      "id": "struct-root-true",
+      "category": "structure",
+      "inputKind": "utf8-text",
+      "input": "true",
+      "expect": "accept",
+      "canonicalHex": "74727565",
+      "note": "根字面量 true 接受。"
+    },
+    {
+      "id": "struct-root-null",
+      "category": "structure",
+      "inputKind": "utf8-text",
+      "input": "null",
+      "expect": "accept",
+      "canonicalHex": "6e756c6c",
+      "note": "根字面量 null 接受。"
+    },
+    {
+      "id": "struct-root-string",
+      "category": "structure",
+      "inputKind": "utf8-text",
+      "input": "\"s\"",
+      "expect": "accept",
+      "canonicalHex": "227322",
+      "note": "根字符串接受。"
+    },
+    {
+      "id": "struct-array-order-preserved",
+      "category": "structure",
+      "inputKind": "utf8-text",
+      "input": "[3,1,2]",
+      "expect": "accept",
+      "canonicalHex": "5b332c312c325d",
+      "note": "数组保持原顺序，不排序。"
+    },
+    {
+      "id": "struct-literal-case",
+      "category": "structure",
+      "inputKind": "utf8-text",
+      "input": "True",
+      "expect": "reject",
+      "note": "大写字面量拒绝。"
+    },
+    {
+      "id": "struct-unquoted-key",
+      "category": "structure",
+      "inputKind": "utf8-text",
+      "input": "{a:1}",
+      "expect": "reject",
+      "note": "未加引号的键拒绝。"
+    },
+    {
+      "id": "struct-missing-colon",
+      "category": "structure",
+      "inputKind": "utf8-text",
+      "input": "{\"a\" 1}",
+      "expect": "reject",
+      "note": "缺冒号拒绝。"
+    },
+    {
+      "id": "struct-missing-comma-object",
+      "category": "structure",
+      "inputKind": "utf8-text",
+      "input": "{\"a\":1 \"b\":2}",
+      "expect": "reject",
+      "note": "对象成员间缺逗号拒绝。"
+    }
+  ]
+}

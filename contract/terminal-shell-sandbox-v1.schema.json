@@ -1,0 +1,804 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://tansr.com/contracts/terminal-shell-sandbox-v1.schema.json",
+  "title": "Terminal shell sandbox opt-in profile v1",
+  "$comment": "SRV-02 独立能力合同。Background 定义来自未修改的 candidate-7 schema SHA256 8cd8c7c55a84c5700373aed75d5653a0737d718bfe0546641be367bda1a11896；call/批准关联及null响应的跨字段语义由双方codec验证。 前台raw捕获帽65536字节；ExecResult仅提供合计4096字节UTF8预览，output两通道摘要基于原严格解码且保留BOM的完整UTF8文本，成功文本字节数等于原raw字节数。原窗口缺失/缺块不能用预览冒充完整结果或重新执行。",
+  "definitions": {
+    "BackgroundRequest": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/BackgroundContract"
+            },
+            "action": {
+              "const": "launch"
+            },
+            "command": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 8192
+            },
+            "cwd": {
+              "type": "string",
+              "maxLength": 4096
+            },
+            "mode": {
+              "enum": [
+                "background",
+                "foreground-handoff"
+              ]
+            },
+            "timeoutMs": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 86400000
+            },
+            "foregroundTimeoutMs": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 120000
+            }
+          },
+          "required": [
+            "contract",
+            "action",
+            "command",
+            "cwd",
+            "mode",
+            "timeoutMs"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/BackgroundContract"
+            },
+            "action": {
+              "const": "query"
+            },
+            "identity": {
+              "$ref": "#/definitions/BackgroundIdentity"
+            }
+          },
+          "required": [
+            "contract",
+            "action",
+            "identity"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/BackgroundContract"
+            },
+            "action": {
+              "const": "cancel"
+            },
+            "identity": {
+              "$ref": "#/definitions/BackgroundIdentity"
+            }
+          },
+          "required": [
+            "contract",
+            "action",
+            "identity"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/BackgroundContract"
+            },
+            "action": {
+              "const": "outputRead"
+            },
+            "identity": {
+              "$ref": "#/definitions/BackgroundIdentity"
+            },
+            "artifact": {
+              "$ref": "#/definitions/ArtifactReference"
+            },
+            "offset": {
+              "$ref": "#/definitions/Sequence"
+            },
+            "length": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 16384
+            }
+          },
+          "required": [
+            "contract",
+            "action",
+            "identity",
+            "artifact",
+            "offset",
+            "length"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/BackgroundContract"
+            },
+            "action": {
+              "const": "artifactDelete"
+            },
+            "identity": {
+              "$ref": "#/definitions/BackgroundIdentity"
+            },
+            "artifact": {
+              "$ref": "#/definitions/ArtifactReference"
+            }
+          },
+          "required": [
+            "contract",
+            "action",
+            "identity",
+            "artifact"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "BackgroundContract": {
+      "const": "terminal-services-v1"
+    },
+    "BackgroundIdentity": {
+      "type": "object",
+      "properties": {
+        "taskId": {
+          "$ref": "#/definitions/Id"
+        },
+        "operationId": {
+          "$ref": "#/definitions/Id"
+        },
+        "requestDigest": {
+          "$ref": "#/definitions/Digest"
+        },
+        "runtimeInstanceId": {
+          "$ref": "#/definitions/Id"
+        },
+        "processInstanceId": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "taskId",
+        "operationId",
+        "requestDigest",
+        "runtimeInstanceId",
+        "processInstanceId"
+      ],
+      "additionalProperties": false
+    },
+    "Id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._~-]*$"
+    },
+    "Digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "ArtifactReference": {
+      "type": "object",
+      "properties": {
+        "artifactId": {
+          "$ref": "#/definitions/Id"
+        },
+        "operationId": {
+          "$ref": "#/definitions/Id"
+        },
+        "requestDigest": {
+          "$ref": "#/definitions/Digest"
+        }
+      },
+      "required": [
+        "artifactId",
+        "operationId",
+        "requestDigest"
+      ],
+      "additionalProperties": false
+    },
+    "Sequence": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,17}|[1-8][0-9]{18}|9[0-1][0-9]{17}|92[0-1][0-9]{16}|922[0-2][0-9]{15}|9223[0-2][0-9]{14}|92233[0-6][0-9]{13}|922337[0-1][0-9]{12}|92233720[0-2][0-9]{10}|922337203[0-5][0-9]{9}|9223372036[0-7][0-9]{8}|92233720368[0-4][0-9]{7}|922337203685[0-3][0-9]{6}|9223372036854[0-6][0-9]{5}|92233720368547[0-6][0-9]{4}|922337203685477[0-4][0-9]{3}|9223372036854775[0-7][0-9]{2}|922337203685477580[0-6]|9223372036854775807)$",
+      "maxLength": 19,
+      "description": "Canonical unsigned decimal 0..2^63-1. Never parse through IEEE754 Number."
+    },
+    "BackgroundResponse": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/BackgroundContract"
+            },
+            "action": {
+              "const": "launch"
+            },
+            "task": {
+              "$ref": "#/definitions/BackgroundTaskState"
+            }
+          },
+          "required": [
+            "contract",
+            "action",
+            "task"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/BackgroundContract"
+            },
+            "action": {
+              "const": "query"
+            },
+            "task": {
+              "$ref": "#/definitions/BackgroundTaskState"
+            }
+          },
+          "required": [
+            "contract",
+            "action",
+            "task"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/BackgroundContract"
+            },
+            "action": {
+              "const": "cancel"
+            },
+            "task": {
+              "$ref": "#/definitions/BackgroundTaskState"
+            }
+          },
+          "required": [
+            "contract",
+            "action",
+            "task"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/BackgroundContract"
+            },
+            "action": {
+              "const": "outputRead"
+            },
+            "identity": {
+              "$ref": "#/definitions/BackgroundIdentity"
+            },
+            "artifact": {
+              "$ref": "#/definitions/ArtifactReference"
+            },
+            "offset": {
+              "$ref": "#/definitions/Sequence"
+            },
+            "base64": {
+              "type": "string",
+              "maxLength": 21848,
+              "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+            },
+            "byteLength": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 16384
+            },
+            "payloadDigest": {
+              "$ref": "#/definitions/Digest"
+            },
+            "nextOffset": {
+              "$ref": "#/definitions/Sequence"
+            },
+            "complete": {
+              "type": "boolean"
+            },
+            "gap": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "contract",
+            "action",
+            "identity",
+            "artifact",
+            "offset",
+            "base64",
+            "byteLength",
+            "payloadDigest",
+            "nextOffset",
+            "complete",
+            "gap"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/BackgroundContract"
+            },
+            "action": {
+              "const": "artifactDelete"
+            },
+            "identity": {
+              "$ref": "#/definitions/BackgroundIdentity"
+            },
+            "artifact": {
+              "$ref": "#/definitions/ArtifactReference"
+            },
+            "status": {
+              "enum": [
+                "deleted",
+                "already_deleted"
+              ]
+            }
+          },
+          "required": [
+            "contract",
+            "action",
+            "identity",
+            "artifact",
+            "status"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "BackgroundTaskState": {
+      "type": "object",
+      "properties": {
+        "identity": {
+          "$ref": "#/definitions/BackgroundIdentity"
+        },
+        "artifact": {
+          "$ref": "#/definitions/ArtifactReference"
+        },
+        "state": {
+          "enum": [
+            "running",
+            "completed",
+            "failed",
+            "cancelled",
+            "unknown"
+          ]
+        },
+        "exitCode": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": -2147483648,
+              "maximum": 2147483647
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "signalName": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "totalBytes": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Sequence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "truncated": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "identity",
+        "artifact",
+        "state",
+        "exitCode",
+        "signalName",
+        "totalBytes",
+        "truncated"
+      ],
+      "additionalProperties": false
+    },
+    "ExecutionInterpreter": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "revision": {
+          "$ref": "#/definitions/Id"
+        },
+        "hostShell": {
+          "enum": [
+            "posix",
+            "powershell"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "revision",
+        "hostShell"
+      ],
+      "additionalProperties": false
+    },
+    "Contract": {
+      "const": "terminal-shell-sandbox-v1"
+    },
+    "Call": {
+      "type": "object",
+      "properties": {
+        "turnId": {
+          "$ref": "#/definitions/Id"
+        },
+        "toolCallId": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "turnId",
+        "toolCallId"
+      ],
+      "additionalProperties": false
+    },
+    "ApprovedCall": {
+      "type": "object",
+      "properties": {
+        "turnId": {
+          "$ref": "#/definitions/Id"
+        },
+        "toolCallId": {
+          "$ref": "#/definitions/Id"
+        },
+        "argsDigest": {
+          "$ref": "#/definitions/Digest"
+        }
+      },
+      "required": [
+        "turnId",
+        "toolCallId",
+        "argsDigest"
+      ],
+      "additionalProperties": false
+    },
+    "Escalation": {
+      "type": "object",
+      "properties": {
+        "previousDeniedOperationId": {
+          "$ref": "#/definitions/Id"
+        },
+        "approvedCall": {
+          "$ref": "#/definitions/ApprovedCall"
+        }
+      },
+      "required": [
+        "previousDeniedOperationId",
+        "approvedCall"
+      ],
+      "additionalProperties": false
+    },
+    "Sandbox": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "off",
+            "on",
+            "required"
+          ]
+        },
+        "capability": {
+          "enum": [
+            "none",
+            "partial",
+            "full"
+          ]
+        },
+        "isolationDenied": {
+          "type": "boolean"
+        },
+        "escalated": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "mode",
+        "capability",
+        "isolationDenied",
+        "escalated"
+      ],
+      "additionalProperties": false
+    },
+    "ExecResult": {
+      "type": "object",
+      "properties": {
+        "stdout": {
+          "type": "string",
+          "maxLength": 65536
+        },
+        "stderr": {
+          "type": "string",
+          "maxLength": 65536
+        },
+        "exitCode": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 11,
+              "pattern": "^(0|[1-9][0-9]*|-[1-9][0-9]*)$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "signalName": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "durationMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "timedOut": {
+          "type": "boolean"
+        },
+        "aborted": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "stdout",
+        "stderr",
+        "exitCode",
+        "signalName",
+        "durationMs",
+        "timedOut",
+        "aborted"
+      ],
+      "additionalProperties": false
+    },
+    "Request": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "action": {
+              "const": "exec"
+            },
+            "call": {
+              "$ref": "#/definitions/Call"
+            },
+            "command": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 32768
+            },
+            "cwd": {
+              "type": "string",
+              "maxLength": 4096
+            },
+            "timeoutMs": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 120000
+            },
+            "maxOutputBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65536
+            },
+            "interpreter": {
+              "$ref": "#/definitions/ExecutionInterpreter"
+            },
+            "escalation": {
+              "$ref": "#/definitions/Escalation"
+            }
+          },
+          "required": [
+            "contract",
+            "action",
+            "call",
+            "command",
+            "cwd",
+            "timeoutMs",
+            "maxOutputBytes",
+            "interpreter"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "action": {
+              "const": "background"
+            },
+            "request": {
+              "$ref": "#/definitions/BackgroundRequest"
+            },
+            "call": {
+              "$ref": "#/definitions/Call"
+            },
+            "escalation": {
+              "$ref": "#/definitions/Escalation"
+            }
+          },
+          "required": [
+            "contract",
+            "action",
+            "request"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "Response": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "action": {
+              "const": "exec"
+            },
+            "result": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/ExecResult"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "sandbox": {
+              "$ref": "#/definitions/Sandbox"
+            },
+            "output": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/Output"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "contract",
+            "action",
+            "result",
+            "sandbox",
+            "output"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "contract": {
+              "$ref": "#/definitions/Contract"
+            },
+            "action": {
+              "const": "background"
+            },
+            "result": {
+              "anyOf": [
+                {
+                  "$ref": "#/definitions/BackgroundResponse"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "sandbox": {
+              "$ref": "#/definitions/Sandbox"
+            }
+          },
+          "required": [
+            "contract",
+            "action",
+            "result",
+            "sandbox"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "OutputChannel": {
+      "type": "object",
+      "properties": {
+        "totalBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "payloadDigest": {
+          "$ref": "#/definitions/Digest"
+        }
+      },
+      "required": [
+        "totalBytes",
+        "payloadDigest"
+      ],
+      "additionalProperties": false
+    },
+    "Output": {
+      "type": "object",
+      "properties": {
+        "previewTruncated": {
+          "type": "boolean"
+        },
+        "stdout": {
+          "$ref": "#/definitions/OutputChannel"
+        },
+        "stderr": {
+          "$ref": "#/definitions/OutputChannel"
+        }
+      },
+      "required": [
+        "previewTruncated",
+        "stdout",
+        "stderr"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

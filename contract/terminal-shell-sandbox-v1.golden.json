@@ -1,0 +1,1002 @@
+{
+  "contract": "terminal-shell-sandbox-v1",
+  "schemaSha256": "be3ebcf6dc650844319a18a15f6abbefb9316f704410b591f9ba6dcab7620fe1",
+  "toolName": "TansrTerminalShellSandbox",
+  "definitionDigest": "058f31335cbb45a6ffe1b5ede8466013462c544c8108d687f41fa18447d51b96",
+  "cases": [
+    {
+      "id": "exec-normal",
+      "kind": "request",
+      "accept": true,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "call": {
+          "turnId": "turn-1",
+          "toolCallId": "call-1"
+        },
+        "command": "build",
+        "cwd": "",
+        "interpreter": {
+          "id": "node",
+          "revision": "1",
+          "hostShell": "posix"
+        },
+        "timeoutMs": 1000,
+        "maxOutputBytes": 4096
+      }
+    },
+    {
+      "id": "exec-approved",
+      "kind": "request",
+      "accept": true,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "call": {
+          "turnId": "turn-1",
+          "toolCallId": "call-1"
+        },
+        "command": "build",
+        "cwd": "",
+        "interpreter": {
+          "id": "node",
+          "revision": "1",
+          "hostShell": "posix"
+        },
+        "timeoutMs": 1000,
+        "maxOutputBytes": 4096,
+        "escalation": {
+          "previousDeniedOperationId": "denied-1",
+          "approvedCall": {
+            "turnId": "turn-1",
+            "toolCallId": "call-1",
+            "argsDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        }
+      }
+    },
+    {
+      "id": "background-launch",
+      "kind": "request",
+      "accept": true,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "background",
+        "call": {
+          "turnId": "turn-1",
+          "toolCallId": "call-1"
+        },
+        "request": {
+          "contract": "terminal-services-v1",
+          "action": "launch",
+          "command": "build",
+          "cwd": "",
+          "mode": "background",
+          "timeoutMs": 1000
+        }
+      }
+    },
+    {
+      "id": "background-approved",
+      "kind": "request",
+      "accept": true,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "background",
+        "call": {
+          "turnId": "turn-1",
+          "toolCallId": "call-1"
+        },
+        "request": {
+          "contract": "terminal-services-v1",
+          "action": "launch",
+          "command": "build",
+          "cwd": "",
+          "mode": "background",
+          "timeoutMs": 1000
+        },
+        "escalation": {
+          "previousDeniedOperationId": "denied-1",
+          "approvedCall": {
+            "turnId": "turn-1",
+            "toolCallId": "call-1",
+            "argsDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        }
+      }
+    },
+    {
+      "id": "background-query",
+      "kind": "request",
+      "accept": true,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "background",
+        "request": {
+          "contract": "terminal-services-v1",
+          "action": "query",
+          "identity": {
+            "taskId": "task-1",
+            "operationId": "launch-1",
+            "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "runtimeInstanceId": "runtime-1",
+            "processInstanceId": "process-1"
+          }
+        }
+      }
+    },
+    {
+      "id": "exec-result",
+      "kind": "response",
+      "accept": true,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "result": {
+          "stdout": "ok",
+          "stderr": "",
+          "exitCode": "0",
+          "signalName": null,
+          "durationMs": 1,
+          "timedOut": false,
+          "aborted": false
+        },
+        "sandbox": {
+          "mode": "on",
+          "capability": "full",
+          "isolationDenied": false,
+          "escalated": false
+        },
+        "output": {
+          "previewTruncated": false,
+          "stdout": {
+            "totalBytes": 2,
+            "payloadDigest": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df"
+          },
+          "stderr": {
+            "totalBytes": 0,
+            "payloadDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      },
+      "request": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "call": {
+          "turnId": "turn-1",
+          "toolCallId": "call-1"
+        },
+        "command": "build",
+        "cwd": "",
+        "interpreter": {
+          "id": "node",
+          "revision": "1",
+          "hostShell": "posix"
+        },
+        "timeoutMs": 1000,
+        "maxOutputBytes": 4096
+      }
+    },
+    {
+      "id": "exec-denied-before-spawn",
+      "kind": "response",
+      "accept": true,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "result": null,
+        "sandbox": {
+          "mode": "on",
+          "capability": "full",
+          "isolationDenied": true,
+          "escalated": false
+        },
+        "output": null
+      },
+      "request": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "call": {
+          "turnId": "turn-1",
+          "toolCallId": "call-1"
+        },
+        "command": "build",
+        "cwd": "",
+        "interpreter": {
+          "id": "node",
+          "revision": "1",
+          "hostShell": "posix"
+        },
+        "timeoutMs": 1000,
+        "maxOutputBytes": 4096
+      }
+    },
+    {
+      "id": "exec-approved-result",
+      "kind": "response",
+      "accept": true,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "result": {
+          "stdout": "ok",
+          "stderr": "",
+          "exitCode": "0",
+          "signalName": null,
+          "durationMs": 1,
+          "timedOut": false,
+          "aborted": false
+        },
+        "sandbox": {
+          "mode": "on",
+          "capability": "full",
+          "isolationDenied": false,
+          "escalated": true
+        },
+        "output": {
+          "previewTruncated": false,
+          "stdout": {
+            "totalBytes": 2,
+            "payloadDigest": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df"
+          },
+          "stderr": {
+            "totalBytes": 0,
+            "payloadDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      },
+      "request": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "call": {
+          "turnId": "turn-1",
+          "toolCallId": "call-1"
+        },
+        "command": "build",
+        "cwd": "",
+        "interpreter": {
+          "id": "node",
+          "revision": "1",
+          "hostShell": "posix"
+        },
+        "timeoutMs": 1000,
+        "maxOutputBytes": 4096,
+        "escalation": {
+          "previousDeniedOperationId": "denied-1",
+          "approvedCall": {
+            "turnId": "turn-1",
+            "toolCallId": "call-1",
+            "argsDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        }
+      }
+    },
+    {
+      "id": "none-honest-result",
+      "kind": "response",
+      "accept": true,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "result": {
+          "stdout": "ok",
+          "stderr": "",
+          "exitCode": "0",
+          "signalName": null,
+          "durationMs": 1,
+          "timedOut": false,
+          "aborted": false
+        },
+        "sandbox": {
+          "mode": "on",
+          "capability": "none",
+          "isolationDenied": false,
+          "escalated": false
+        },
+        "output": {
+          "previewTruncated": false,
+          "stdout": {
+            "totalBytes": 2,
+            "payloadDigest": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df"
+          },
+          "stderr": {
+            "totalBytes": 0,
+            "payloadDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      },
+      "request": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "call": {
+          "turnId": "turn-1",
+          "toolCallId": "call-1"
+        },
+        "command": "build",
+        "cwd": "",
+        "interpreter": {
+          "id": "node",
+          "revision": "1",
+          "hostShell": "posix"
+        },
+        "timeoutMs": 1000,
+        "maxOutputBytes": 4096
+      }
+    },
+    {
+      "id": "old-contract-rejected",
+      "kind": "request",
+      "accept": false,
+      "input": {
+        "contract": "terminal-services-v1",
+        "action": "exec",
+        "call": {
+          "turnId": "turn-1",
+          "toolCallId": "call-1"
+        },
+        "command": "build",
+        "cwd": "",
+        "interpreter": {
+          "id": "node",
+          "revision": "1",
+          "hostShell": "posix"
+        },
+        "timeoutMs": 1000,
+        "maxOutputBytes": 4096
+      }
+    },
+    {
+      "id": "unknown-fields",
+      "kind": "request",
+      "accept": false,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "call": {
+          "turnId": "turn-1",
+          "toolCallId": "call-1"
+        },
+        "command": "build",
+        "cwd": "",
+        "interpreter": {
+          "id": "node",
+          "revision": "1",
+          "hostShell": "posix"
+        },
+        "timeoutMs": 1000,
+        "maxOutputBytes": 4096,
+        "approved": true
+      }
+    },
+    {
+      "id": "missing-call",
+      "kind": "request",
+      "accept": false,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "command": "build",
+        "cwd": "",
+        "interpreter": {
+          "id": "node",
+          "revision": "1",
+          "hostShell": "posix"
+        },
+        "timeoutMs": 1000,
+        "maxOutputBytes": 4096
+      }
+    },
+    {
+      "id": "wrong-call-turn",
+      "kind": "request",
+      "accept": false,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "call": {
+          "turnId": "turn-1",
+          "toolCallId": "call-1"
+        },
+        "command": "build",
+        "cwd": "",
+        "interpreter": {
+          "id": "node",
+          "revision": "1",
+          "hostShell": "posix"
+        },
+        "timeoutMs": 1000,
+        "maxOutputBytes": 4096,
+        "escalation": {
+          "previousDeniedOperationId": "denied-1",
+          "approvedCall": {
+            "turnId": "other",
+            "toolCallId": "call-1",
+            "argsDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        }
+      }
+    },
+    {
+      "id": "wrong-call-id",
+      "kind": "request",
+      "accept": false,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "call": {
+          "turnId": "turn-1",
+          "toolCallId": "call-1"
+        },
+        "command": "build",
+        "cwd": "",
+        "interpreter": {
+          "id": "node",
+          "revision": "1",
+          "hostShell": "posix"
+        },
+        "timeoutMs": 1000,
+        "maxOutputBytes": 4096,
+        "escalation": {
+          "previousDeniedOperationId": "denied-1",
+          "approvedCall": {
+            "turnId": "turn-1",
+            "toolCallId": "other",
+            "argsDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        }
+      }
+    },
+    {
+      "id": "missing-old-operation",
+      "kind": "request",
+      "accept": false,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "call": {
+          "turnId": "turn-1",
+          "toolCallId": "call-1"
+        },
+        "command": "build",
+        "cwd": "",
+        "interpreter": {
+          "id": "node",
+          "revision": "1",
+          "hostShell": "posix"
+        },
+        "timeoutMs": 1000,
+        "maxOutputBytes": 4096,
+        "escalation": {
+          "approvedCall": {
+            "turnId": "turn-1",
+            "toolCallId": "call-1",
+            "argsDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        }
+      }
+    },
+    {
+      "id": "launch-missing-call",
+      "kind": "request",
+      "accept": false,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "background",
+        "request": {
+          "contract": "terminal-services-v1",
+          "action": "launch",
+          "command": "build",
+          "cwd": "",
+          "mode": "background",
+          "timeoutMs": 1000
+        }
+      }
+    },
+    {
+      "id": "query-with-call",
+      "kind": "request",
+      "accept": false,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "background",
+        "request": {
+          "contract": "terminal-services-v1",
+          "action": "query",
+          "identity": {
+            "taskId": "task-1",
+            "operationId": "launch-1",
+            "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "runtimeInstanceId": "runtime-1",
+            "processInstanceId": "process-1"
+          }
+        },
+        "call": {
+          "turnId": "turn-1",
+          "toolCallId": "call-1"
+        }
+      }
+    },
+    {
+      "id": "query-with-approval",
+      "kind": "request",
+      "accept": false,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "background",
+        "request": {
+          "contract": "terminal-services-v1",
+          "action": "query",
+          "identity": {
+            "taskId": "task-1",
+            "operationId": "launch-1",
+            "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "runtimeInstanceId": "runtime-1",
+            "processInstanceId": "process-1"
+          }
+        },
+        "escalation": {
+          "previousDeniedOperationId": "denied-1",
+          "approvedCall": {
+            "turnId": "turn-1",
+            "toolCallId": "call-1",
+            "argsDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        }
+      }
+    },
+    {
+      "id": "exec-output-cap",
+      "kind": "request",
+      "accept": false,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "call": {
+          "turnId": "turn-1",
+          "toolCallId": "call-1"
+        },
+        "command": "build",
+        "cwd": "",
+        "interpreter": {
+          "id": "node",
+          "revision": "1",
+          "hostShell": "posix"
+        },
+        "timeoutMs": 1000,
+        "maxOutputBytes": 65537
+      }
+    },
+    {
+      "id": "none-false-denial",
+      "kind": "response",
+      "accept": false,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "result": null,
+        "sandbox": {
+          "mode": "on",
+          "capability": "none",
+          "isolationDenied": true,
+          "escalated": false
+        },
+        "output": {
+          "previewTruncated": false,
+          "stdout": {
+            "totalBytes": 2,
+            "payloadDigest": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df"
+          },
+          "stderr": {
+            "totalBytes": 0,
+            "payloadDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      }
+    },
+    {
+      "id": "required-false-bypass",
+      "kind": "response",
+      "accept": false,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "result": {
+          "stdout": "ok",
+          "stderr": "",
+          "exitCode": "0",
+          "signalName": null,
+          "durationMs": 1,
+          "timedOut": false,
+          "aborted": false
+        },
+        "sandbox": {
+          "mode": "required",
+          "capability": "full",
+          "isolationDenied": false,
+          "escalated": true
+        },
+        "output": {
+          "previewTruncated": false,
+          "stdout": {
+            "totalBytes": 2,
+            "payloadDigest": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df"
+          },
+          "stderr": {
+            "totalBytes": 0,
+            "payloadDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      }
+    },
+    {
+      "id": "null-without-denial",
+      "kind": "response",
+      "accept": false,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "result": null,
+        "sandbox": {
+          "mode": "on",
+          "capability": "full",
+          "isolationDenied": false,
+          "escalated": false
+        },
+        "output": {
+          "previewTruncated": false,
+          "stdout": {
+            "totalBytes": 2,
+            "payloadDigest": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df"
+          },
+          "stderr": {
+            "totalBytes": 0,
+            "payloadDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      }
+    },
+    {
+      "id": "unapproved-escalated",
+      "kind": "response",
+      "accept": false,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "result": {
+          "stdout": "ok",
+          "stderr": "",
+          "exitCode": "0",
+          "signalName": null,
+          "durationMs": 1,
+          "timedOut": false,
+          "aborted": false
+        },
+        "sandbox": {
+          "mode": "on",
+          "capability": "full",
+          "isolationDenied": false,
+          "escalated": true
+        },
+        "output": {
+          "previewTruncated": false,
+          "stdout": {
+            "totalBytes": 2,
+            "payloadDigest": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df"
+          },
+          "stderr": {
+            "totalBytes": 0,
+            "payloadDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      },
+      "request": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "call": {
+          "turnId": "turn-1",
+          "toolCallId": "call-1"
+        },
+        "command": "build",
+        "cwd": "",
+        "interpreter": {
+          "id": "node",
+          "revision": "1",
+          "hostShell": "posix"
+        },
+        "timeoutMs": 1000,
+        "maxOutputBytes": 4096
+      }
+    },
+    {
+      "id": "exit-code-overflow",
+      "kind": "response",
+      "accept": false,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "result": {
+          "stdout": "ok",
+          "stderr": "",
+          "exitCode": "2147483648",
+          "signalName": null,
+          "durationMs": 1,
+          "timedOut": false,
+          "aborted": false
+        },
+        "sandbox": {
+          "mode": "on",
+          "capability": "full",
+          "isolationDenied": false,
+          "escalated": false
+        },
+        "output": {
+          "previewTruncated": false,
+          "stdout": {
+            "totalBytes": 2,
+            "payloadDigest": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df"
+          },
+          "stderr": {
+            "totalBytes": 0,
+            "payloadDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      }
+    },
+    {
+      "id": "exec-original-64k-cap",
+      "kind": "request",
+      "accept": true,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "call": {
+          "turnId": "turn-1",
+          "toolCallId": "call-1"
+        },
+        "command": "build",
+        "cwd": "",
+        "interpreter": {
+          "id": "node",
+          "revision": "1",
+          "hostShell": "posix"
+        },
+        "timeoutMs": 1000,
+        "maxOutputBytes": 65536
+      }
+    },
+    {
+      "id": "missing-output-summary",
+      "kind": "response",
+      "accept": false,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "result": {
+          "stdout": "ok",
+          "stderr": "",
+          "exitCode": "0",
+          "signalName": null,
+          "durationMs": 1,
+          "timedOut": false,
+          "aborted": false
+        },
+        "sandbox": {
+          "mode": "on",
+          "capability": "full",
+          "isolationDenied": false,
+          "escalated": false
+        }
+      }
+    },
+    {
+      "id": "result-null-summary-present",
+      "kind": "response",
+      "accept": false,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "result": null,
+        "sandbox": {
+          "mode": "on",
+          "capability": "full",
+          "isolationDenied": true,
+          "escalated": false
+        },
+        "output": {
+          "previewTruncated": false,
+          "stdout": {
+            "totalBytes": 2,
+            "payloadDigest": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df"
+          },
+          "stderr": {
+            "totalBytes": 0,
+            "payloadDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      }
+    },
+    {
+      "id": "summary-null-result-present",
+      "kind": "response",
+      "accept": false,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "result": {
+          "stdout": "ok",
+          "stderr": "",
+          "exitCode": "0",
+          "signalName": null,
+          "durationMs": 1,
+          "timedOut": false,
+          "aborted": false
+        },
+        "sandbox": {
+          "mode": "on",
+          "capability": "full",
+          "isolationDenied": false,
+          "escalated": false
+        },
+        "output": null
+      }
+    },
+    {
+      "id": "missing-truncation-claim",
+      "kind": "response",
+      "accept": false,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "result": {
+          "stdout": "ok",
+          "stderr": "",
+          "exitCode": "0",
+          "signalName": null,
+          "durationMs": 1,
+          "timedOut": false,
+          "aborted": false
+        },
+        "sandbox": {
+          "mode": "on",
+          "capability": "full",
+          "isolationDenied": false,
+          "escalated": false
+        },
+        "output": {
+          "previewTruncated": false,
+          "stdout": {
+            "totalBytes": 4097,
+            "payloadDigest": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df"
+          },
+          "stderr": {
+            "totalBytes": 0,
+            "payloadDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      }
+    },
+    {
+      "id": "false-truncation-claim",
+      "kind": "response",
+      "accept": false,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "result": {
+          "stdout": "ok",
+          "stderr": "",
+          "exitCode": "0",
+          "signalName": null,
+          "durationMs": 1,
+          "timedOut": false,
+          "aborted": false
+        },
+        "sandbox": {
+          "mode": "on",
+          "capability": "full",
+          "isolationDenied": false,
+          "escalated": false
+        },
+        "output": {
+          "previewTruncated": true,
+          "stdout": {
+            "totalBytes": 2,
+            "payloadDigest": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df"
+          },
+          "stderr": {
+            "totalBytes": 0,
+            "payloadDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      }
+    },
+    {
+      "id": "preview-envelope-cap",
+      "kind": "response",
+      "accept": false,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "result": {
+          "stdout": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "stderr": "",
+          "exitCode": "0",
+          "signalName": null,
+          "durationMs": 1,
+          "timedOut": false,
+          "aborted": false
+        },
+        "sandbox": {
+          "mode": "on",
+          "capability": "full",
+          "isolationDenied": false,
+          "escalated": false
+        },
+        "output": {
+          "previewTruncated": false,
+          "stdout": {
+            "totalBytes": 4097,
+            "payloadDigest": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df"
+          },
+          "stderr": {
+            "totalBytes": 0,
+            "payloadDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      }
+    },
+    {
+      "id": "original-raw-cap",
+      "kind": "response",
+      "accept": false,
+      "input": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "result": {
+          "stdout": "ok",
+          "stderr": "",
+          "exitCode": "0",
+          "signalName": null,
+          "durationMs": 1,
+          "timedOut": false,
+          "aborted": false
+        },
+        "sandbox": {
+          "mode": "on",
+          "capability": "full",
+          "isolationDenied": false,
+          "escalated": false
+        },
+        "output": {
+          "previewTruncated": true,
+          "stdout": {
+            "totalBytes": 4097,
+            "payloadDigest": "2689367b205c16ce32ed4200942b8b8b1e262dfc70d9bc9fbc77c49699a4f1df"
+          },
+          "stderr": {
+            "totalBytes": 0,
+            "payloadDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          }
+        }
+      },
+      "request": {
+        "contract": "terminal-shell-sandbox-v1",
+        "action": "exec",
+        "call": {
+          "turnId": "turn-1",
+          "toolCallId": "call-1"
+        },
+        "command": "build",
+        "cwd": "",
+        "interpreter": {
+          "id": "node",
+          "revision": "1",
+          "hostShell": "posix"
+        },
+        "timeoutMs": 1000,
+        "maxOutputBytes": 4096
+      }
+    }
+  ]
+}

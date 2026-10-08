@@ -1,0 +1,944 @@
+{
+  "contract": "sdk2-archive-recovery-v1",
+  "schemaSha256": "f530de1096b4f5d56ea688b7f2cec9ae66deb7d3719db85ab1f48287d3bd7ad4",
+  "provenance": "deterministic kernel source/control SQLite ACK; Node old sync receiver migrate-v1, reopen/confirm; old sync cache receiveSync; error bodies from original server policy",
+  "scope": {
+    "applicationScopeId": "receiver-app",
+    "endUserId": "user",
+    "authorizationRevision": "7"
+  },
+  "identity": {
+    "scope": {
+      "applicationScopeId": "receiver-app",
+      "endUserId": "user"
+    },
+    "bindingId": "binding",
+    "target": {
+      "sessionId": "session/中文",
+      "generations": {
+        "historyEpoch": "history",
+        "deletionGeneration": "0",
+        "projectionRevision": "0"
+      }
+    },
+    "sourceId": "source",
+    "sourceGeneration": "source-generation"
+  },
+  "receiverLimits": {
+    "maxRecords": 100,
+    "maxArtifacts": 100,
+    "maxStoredBytes": 1048576,
+    "maxBatchBytes": 65536
+  },
+  "receive": {
+    "checkpoint": {
+      "binding": {
+        "protocol": "sdk2-ext-v1",
+        "bindingId": "binding",
+        "scope": {
+          "applicationScopeId": "receiver-app",
+          "endUserId": "user",
+          "authorizationRevision": "7"
+        },
+        "target": {
+          "sessionId": "session/中文",
+          "sourceSnapshotDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "generations": {
+            "historyEpoch": "history",
+            "deletionGeneration": "0",
+            "projectionRevision": "0"
+          }
+        },
+        "revision": "5",
+        "state": "active",
+        "sourceId": "source",
+        "acceptedCapabilities": [
+          "archive-transfer-v1",
+          "context-materials-v1"
+        ],
+        "rejectedCapabilities": [],
+        "availability": "legacy-complete",
+        "operationEpoch": {
+          "id": "epoch",
+          "issuedAt": "2026-09-20T00:00:00Z",
+          "expiresAt": "2026-09-20T00:01:00Z",
+          "state": "active"
+        },
+        "limits": {
+          "controlBytes": 262144,
+          "recordBytes": 262144,
+          "pageRecords": 128,
+          "pageBytes": 1048576,
+          "attachmentBytes": 33554432,
+          "chunkBytes": 262144,
+          "materialConcurrent": 2,
+          "materialQueue": 16,
+          "materialCandidates": 32,
+          "materialBytes": 1048576,
+          "materialDeadlineMs": 30000,
+          "pendingRecords": 4096,
+          "pendingBytes": 67108864,
+          "inflightReserveBytes": 16777216,
+          "offlineMs": 86400000,
+          "eventRetentionMs": 600000,
+          "eventRetentionFrames": 4096,
+          "eventRetentionBytes": 8388608,
+          "terminalReceiptRetentionMs": 604800000,
+          "epochLifetimeMs": 3600000,
+          "materialChunkBytes": 65536
+        },
+        "archiveAckFormat": "split-receipts-v1"
+      },
+      "status": {
+        "protocol": "sdk2-ext-v1",
+        "bindingId": "binding",
+        "revision": "5",
+        "generations": {
+          "historyEpoch": "history",
+          "deletionGeneration": "0",
+          "projectionRevision": "0"
+        },
+        "sourceId": "source",
+        "sourceGeneration": "source-generation",
+        "publishedThroughSequence": "1",
+        "acknowledgedCoverage": null,
+        "releasableThroughSequence": null,
+        "pendingBytes": 25,
+        "pendingRecords": 1,
+        "sessionPersistence": "unchanged",
+        "state": "active"
+      },
+      "page": {
+        "protocol": "sdk2-ext-v1",
+        "bindingId": "binding",
+        "generations": {
+          "historyEpoch": "history",
+          "deletionGeneration": "0",
+          "projectionRevision": "0"
+        },
+        "records": [
+          {
+            "recordId": "jr-r-36e79b31a6d0c893c4b44ae0d53e12d025147922a21f0eaa73397cd56417c917",
+            "sequence": "1",
+            "target": {
+              "sessionId": "session/中文",
+              "sourceSnapshotDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "generations": {
+                "historyEpoch": "history",
+                "deletionGeneration": "0",
+                "projectionRevision": "0"
+              }
+            },
+            "turnId": "original-run",
+            "recordKind": "turn",
+            "turnState": "completed",
+            "predecessorDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+            "recordDigest": "9c8aa153fcc88b11ea787a1dc34ec38975f21fb046fc9456a4f8aef5ca79ca5a",
+            "payload": {
+              "artifactId": "jr-p-36e79b31a6d0c893c4b44ae0d53e12d025147922a21f0eaa73397cd56417c917",
+              "sourceId": "source",
+              "bytes": 21,
+              "sha256": "df8fc721c7294358020ecc73512ab110b08433eee13e01392c19a8c625db9a05",
+              "mediaType": "application/json"
+            },
+            "attachments": [
+              {
+                "artifactId": "jr-a-399c59c044e663918da274df47cc936c2c4d24fb71b6d0997145d1e2a4eaf7bd",
+                "sourceId": "source",
+                "bytes": 4,
+                "sha256": "0ff830e8c68aca18063bce54c3191d5c116a2dfe33249538b252746cb777ef10",
+                "mediaType": "application/octet-stream"
+              }
+            ],
+            "payloadDigest": "6d10954dbb23d680395c463c63ffb132ef2dd234a27223bea1ec4397331b0f59"
+          }
+        ],
+        "nextAfterSequence": "1",
+        "complete": true,
+        "publishedThroughSequence": "1"
+      },
+      "request": {
+        "operationEpoch": "epoch",
+        "requestId": "original-ack-rev5"
+      }
+    },
+    "artifacts": [
+      {
+        "artifactId": "jr-p-36e79b31a6d0c893c4b44ae0d53e12d025147922a21f0eaa73397cd56417c917",
+        "base64": "cmVhbCB0ZXJtaW5hbCBhcmNoaXZl",
+        "sha256": "df8fc721c7294358020ecc73512ab110b08433eee13e01392c19a8c625db9a05"
+      },
+      {
+        "artifactId": "jr-a-399c59c044e663918da274df47cc936c2c4d24fb71b6d0997145d1e2a4eaf7bd",
+        "base64": "AAGA/w==",
+        "sha256": "0ff830e8c68aca18063bce54c3191d5c116a2dfe33249538b252746cb777ef10"
+      }
+    ]
+  },
+  "request": {
+    "bindingId": "binding",
+    "previous": {
+      "ackFormat": "split-receipts-v1",
+      "attachments": [
+        {
+          "artifactId": "jr-a-399c59c044e663918da274df47cc936c2c4d24fb71b6d0997145d1e2a4eaf7bd",
+          "sha256": "0ff830e8c68aca18063bce54c3191d5c116a2dfe33249538b252746cb777ef10",
+          "state": "durably-stored"
+        }
+      ],
+      "bindingId": "binding",
+      "coverage": {
+        "fromSequence": "1",
+        "headDigest": "9c8aa153fcc88b11ea787a1dc34ec38975f21fb046fc9456a4f8aef5ca79ca5a",
+        "throughSequence": "1"
+      },
+      "expectedRevision": "5",
+      "generations": {
+        "deletionGeneration": "0",
+        "historyEpoch": "history",
+        "projectionRevision": "0"
+      },
+      "payloads": [
+        {
+          "artifactId": "jr-p-36e79b31a6d0c893c4b44ae0d53e12d025147922a21f0eaa73397cd56417c917",
+          "sha256": "df8fc721c7294358020ecc73512ab110b08433eee13e01392c19a8c625db9a05",
+          "state": "durably-stored"
+        }
+      ],
+      "protocol": "sdk2-ext-v1",
+      "request": {
+        "operationEpoch": "epoch",
+        "requestId": "original-ack-rev5"
+      },
+      "sourceGeneration": "source-generation",
+      "sourceId": "source"
+    },
+    "protocol": "sdk2-ext-v1",
+    "request": {
+      "operationEpoch": "epoch",
+      "requestId": "fixed-recovery-request"
+    }
+  },
+  "response": {
+    "bindingId": "binding",
+    "next": {
+      "ackFormat": "split-receipts-v1",
+      "attachments": [
+        {
+          "artifactId": "jr-a-399c59c044e663918da274df47cc936c2c4d24fb71b6d0997145d1e2a4eaf7bd",
+          "sha256": "0ff830e8c68aca18063bce54c3191d5c116a2dfe33249538b252746cb777ef10",
+          "state": "durably-stored"
+        }
+      ],
+      "bindingId": "binding",
+      "coverage": {
+        "fromSequence": "1",
+        "headDigest": "9c8aa153fcc88b11ea787a1dc34ec38975f21fb046fc9456a4f8aef5ca79ca5a",
+        "throughSequence": "1"
+      },
+      "expectedRevision": "6",
+      "generations": {
+        "deletionGeneration": "0",
+        "historyEpoch": "history",
+        "projectionRevision": "0"
+      },
+      "payloads": [
+        {
+          "artifactId": "jr-p-36e79b31a6d0c893c4b44ae0d53e12d025147922a21f0eaa73397cd56417c917",
+          "sha256": "df8fc721c7294358020ecc73512ab110b08433eee13e01392c19a8c625db9a05",
+          "state": "durably-stored"
+        }
+      ],
+      "protocol": "sdk2-ext-v1",
+      "request": {
+        "operationEpoch": "epoch",
+        "requestId": "fixed-recovery-request"
+      },
+      "sourceGeneration": "source-generation",
+      "sourceId": "source"
+    },
+    "previous": {
+      "ackFormat": "split-receipts-v1",
+      "attachments": [
+        {
+          "artifactId": "jr-a-399c59c044e663918da274df47cc936c2c4d24fb71b6d0997145d1e2a4eaf7bd",
+          "sha256": "0ff830e8c68aca18063bce54c3191d5c116a2dfe33249538b252746cb777ef10",
+          "state": "durably-stored"
+        }
+      ],
+      "bindingId": "binding",
+      "coverage": {
+        "fromSequence": "1",
+        "headDigest": "9c8aa153fcc88b11ea787a1dc34ec38975f21fb046fc9456a4f8aef5ca79ca5a",
+        "throughSequence": "1"
+      },
+      "expectedRevision": "5",
+      "generations": {
+        "deletionGeneration": "0",
+        "historyEpoch": "history",
+        "projectionRevision": "0"
+      },
+      "payloads": [
+        {
+          "artifactId": "jr-p-36e79b31a6d0c893c4b44ae0d53e12d025147922a21f0eaa73397cd56417c917",
+          "sha256": "df8fc721c7294358020ecc73512ab110b08433eee13e01392c19a8c625db9a05",
+          "state": "durably-stored"
+        }
+      ],
+      "protocol": "sdk2-ext-v1",
+      "request": {
+        "operationEpoch": "epoch",
+        "requestId": "original-ack-rev5"
+      },
+      "sourceGeneration": "source-generation",
+      "sourceId": "source"
+    },
+    "protocol": "sdk2-ext-v1",
+    "receipt": {
+      "bindingId": "binding",
+      "operation": "archive-ack",
+      "outcomeRef": "ack-e268038c751c89ffc079f8f3bae735b46168c28f8fb8d4227bcfa7b698a940fc",
+      "protocol": "sdk2-ext-v1",
+      "request": {
+        "operationEpoch": "epoch",
+        "requestId": "fixed-recovery-request"
+      },
+      "revision": "7",
+      "semanticDigest": "e8fff228a79291f88fdead21993fd379e9b7f2e4e8e9610195ce60dc295d8fb6",
+      "state": "completed"
+    },
+    "request": {
+      "operationEpoch": "epoch",
+      "requestId": "fixed-recovery-request"
+    }
+  },
+  "wire": {
+    "request": {
+      "canonical": "{\"bindingId\":\"binding\",\"previous\":{\"ackFormat\":\"split-receipts-v1\",\"attachments\":[{\"artifactId\":\"jr-a-399c59c044e663918da274df47cc936c2c4d24fb71b6d0997145d1e2a4eaf7bd\",\"sha256\":\"0ff830e8c68aca18063bce54c3191d5c116a2dfe33249538b252746cb777ef10\",\"state\":\"durably-stored\"}],\"bindingId\":\"binding\",\"coverage\":{\"fromSequence\":\"1\",\"headDigest\":\"9c8aa153fcc88b11ea787a1dc34ec38975f21fb046fc9456a4f8aef5ca79ca5a\",\"throughSequence\":\"1\"},\"expectedRevision\":\"5\",\"generations\":{\"deletionGeneration\":\"0\",\"historyEpoch\":\"history\",\"projectionRevision\":\"0\"},\"payloads\":[{\"artifactId\":\"jr-p-36e79b31a6d0c893c4b44ae0d53e12d025147922a21f0eaa73397cd56417c917\",\"sha256\":\"df8fc721c7294358020ecc73512ab110b08433eee13e01392c19a8c625db9a05\",\"state\":\"durably-stored\"}],\"protocol\":\"sdk2-ext-v1\",\"request\":{\"operationEpoch\":\"epoch\",\"requestId\":\"original-ack-rev5\"},\"sourceGeneration\":\"source-generation\",\"sourceId\":\"source\"},\"protocol\":\"sdk2-ext-v1\",\"request\":{\"operationEpoch\":\"epoch\",\"requestId\":\"fixed-recovery-request\"}}",
+      "bytes": 995,
+      "sha256": "489fa46f954c3c51d7f675c4fd8908cdfcfe4c809fce111fddd1f33b8ed739a9"
+    },
+    "response": {
+      "canonical": "{\"bindingId\":\"binding\",\"next\":{\"ackFormat\":\"split-receipts-v1\",\"attachments\":[{\"artifactId\":\"jr-a-399c59c044e663918da274df47cc936c2c4d24fb71b6d0997145d1e2a4eaf7bd\",\"sha256\":\"0ff830e8c68aca18063bce54c3191d5c116a2dfe33249538b252746cb777ef10\",\"state\":\"durably-stored\"}],\"bindingId\":\"binding\",\"coverage\":{\"fromSequence\":\"1\",\"headDigest\":\"9c8aa153fcc88b11ea787a1dc34ec38975f21fb046fc9456a4f8aef5ca79ca5a\",\"throughSequence\":\"1\"},\"expectedRevision\":\"6\",\"generations\":{\"deletionGeneration\":\"0\",\"historyEpoch\":\"history\",\"projectionRevision\":\"0\"},\"payloads\":[{\"artifactId\":\"jr-p-36e79b31a6d0c893c4b44ae0d53e12d025147922a21f0eaa73397cd56417c917\",\"sha256\":\"df8fc721c7294358020ecc73512ab110b08433eee13e01392c19a8c625db9a05\",\"state\":\"durably-stored\"}],\"protocol\":\"sdk2-ext-v1\",\"request\":{\"operationEpoch\":\"epoch\",\"requestId\":\"fixed-recovery-request\"},\"sourceGeneration\":\"source-generation\",\"sourceId\":\"source\"},\"previous\":{\"ackFormat\":\"split-receipts-v1\",\"attachments\":[{\"artifactId\":\"jr-a-399c59c044e663918da274df47cc936c2c4d24fb71b6d0997145d1e2a4eaf7bd\",\"sha256\":\"0ff830e8c68aca18063bce54c3191d5c116a2dfe33249538b252746cb777ef10\",\"state\":\"durably-stored\"}],\"bindingId\":\"binding\",\"coverage\":{\"fromSequence\":\"1\",\"headDigest\":\"9c8aa153fcc88b11ea787a1dc34ec38975f21fb046fc9456a4f8aef5ca79ca5a\",\"throughSequence\":\"1\"},\"expectedRevision\":\"5\",\"generations\":{\"deletionGeneration\":\"0\",\"historyEpoch\":\"history\",\"projectionRevision\":\"0\"},\"payloads\":[{\"artifactId\":\"jr-p-36e79b31a6d0c893c4b44ae0d53e12d025147922a21f0eaa73397cd56417c917\",\"sha256\":\"df8fc721c7294358020ecc73512ab110b08433eee13e01392c19a8c625db9a05\",\"state\":\"durably-stored\"}],\"protocol\":\"sdk2-ext-v1\",\"request\":{\"operationEpoch\":\"epoch\",\"requestId\":\"original-ack-rev5\"},\"sourceGeneration\":\"source-generation\",\"sourceId\":\"source\"},\"protocol\":\"sdk2-ext-v1\",\"receipt\":{\"bindingId\":\"binding\",\"operation\":\"archive-ack\",\"outcomeRef\":\"ack-e268038c751c89ffc079f8f3bae735b46168c28f8fb8d4227bcfa7b698a940fc\",\"protocol\":\"sdk2-ext-v1\",\"request\":{\"operationEpoch\":\"epoch\",\"requestId\":\"fixed-recovery-request\"},\"revision\":\"7\",\"semanticDigest\":\"e8fff228a79291f88fdead21993fd379e9b7f2e4e8e9610195ce60dc295d8fb6\",\"state\":\"completed\"},\"request\":{\"operationEpoch\":\"epoch\",\"requestId\":\"fixed-recovery-request\"}}",
+      "bytes": 2231,
+      "sha256": "36938514f93a8e7091507b66afda9b2f64c97fc38b9f7585063d0e9108dcbc7b"
+    }
+  },
+  "sqlite": {
+    "formats": [
+      "sdk2-terminal-recovery-sqlite-v1",
+      "sdk2-archive-sync-recovery-sqlite-v1"
+    ],
+    "ddl": [
+      {
+        "name": "ack_rebases",
+        "sql": "CREATE TABLE ack_rebases (request TEXT PRIMARY KEY, previous_request TEXT NOT NULL UNIQUE, intent TEXT NOT NULL, result TEXT, original_receipt TEXT, reserve BLOB NOT NULL) STRICT"
+      },
+      {
+        "name": "ack_rebases_pending",
+        "sql": "CREATE UNIQUE INDEX ack_rebases_pending ON ack_rebases((1)) WHERE result IS NULL AND original_receipt IS NULL"
+      }
+    ],
+    "prepared": {
+      "request": "{\"operationEpoch\":\"epoch\",\"requestId\":\"fixed-recovery-request\"}",
+      "previous_request": "{\"operationEpoch\":\"epoch\",\"requestId\":\"original-ack-rev5\"}",
+      "intent": {
+        "bindingId": "binding",
+        "previous": {
+          "ackFormat": "split-receipts-v1",
+          "attachments": [
+            {
+              "artifactId": "jr-a-399c59c044e663918da274df47cc936c2c4d24fb71b6d0997145d1e2a4eaf7bd",
+              "sha256": "0ff830e8c68aca18063bce54c3191d5c116a2dfe33249538b252746cb777ef10",
+              "state": "durably-stored"
+            }
+          ],
+          "bindingId": "binding",
+          "coverage": {
+            "fromSequence": "1",
+            "headDigest": "9c8aa153fcc88b11ea787a1dc34ec38975f21fb046fc9456a4f8aef5ca79ca5a",
+            "throughSequence": "1"
+          },
+          "expectedRevision": "5",
+          "generations": {
+            "deletionGeneration": "0",
+            "historyEpoch": "history",
+            "projectionRevision": "0"
+          },
+          "payloads": [
+            {
+              "artifactId": "jr-p-36e79b31a6d0c893c4b44ae0d53e12d025147922a21f0eaa73397cd56417c917",
+              "sha256": "df8fc721c7294358020ecc73512ab110b08433eee13e01392c19a8c625db9a05",
+              "state": "durably-stored"
+            }
+          ],
+          "protocol": "sdk2-ext-v1",
+          "request": {
+            "operationEpoch": "epoch",
+            "requestId": "original-ack-rev5"
+          },
+          "sourceGeneration": "source-generation",
+          "sourceId": "source"
+        },
+        "protocol": "sdk2-ext-v1",
+        "request": {
+          "operationEpoch": "epoch",
+          "requestId": "fixed-recovery-request"
+        }
+      },
+      "result": null,
+      "original_receipt": null,
+      "reserveBytes": 6012
+    },
+    "rebased": {
+      "request": "{\"operationEpoch\":\"epoch\",\"requestId\":\"fixed-recovery-request\"}",
+      "previous_request": "{\"operationEpoch\":\"epoch\",\"requestId\":\"original-ack-rev5\"}",
+      "intent": {
+        "bindingId": "binding",
+        "previous": {
+          "ackFormat": "split-receipts-v1",
+          "attachments": [
+            {
+              "artifactId": "jr-a-399c59c044e663918da274df47cc936c2c4d24fb71b6d0997145d1e2a4eaf7bd",
+              "sha256": "0ff830e8c68aca18063bce54c3191d5c116a2dfe33249538b252746cb777ef10",
+              "state": "durably-stored"
+            }
+          ],
+          "bindingId": "binding",
+          "coverage": {
+            "fromSequence": "1",
+            "headDigest": "9c8aa153fcc88b11ea787a1dc34ec38975f21fb046fc9456a4f8aef5ca79ca5a",
+            "throughSequence": "1"
+          },
+          "expectedRevision": "5",
+          "generations": {
+            "deletionGeneration": "0",
+            "historyEpoch": "history",
+            "projectionRevision": "0"
+          },
+          "payloads": [
+            {
+              "artifactId": "jr-p-36e79b31a6d0c893c4b44ae0d53e12d025147922a21f0eaa73397cd56417c917",
+              "sha256": "df8fc721c7294358020ecc73512ab110b08433eee13e01392c19a8c625db9a05",
+              "state": "durably-stored"
+            }
+          ],
+          "protocol": "sdk2-ext-v1",
+          "request": {
+            "operationEpoch": "epoch",
+            "requestId": "original-ack-rev5"
+          },
+          "sourceGeneration": "source-generation",
+          "sourceId": "source"
+        },
+        "protocol": "sdk2-ext-v1",
+        "request": {
+          "operationEpoch": "epoch",
+          "requestId": "fixed-recovery-request"
+        }
+      },
+      "result": {
+        "bindingId": "binding",
+        "next": {
+          "ackFormat": "split-receipts-v1",
+          "attachments": [
+            {
+              "artifactId": "jr-a-399c59c044e663918da274df47cc936c2c4d24fb71b6d0997145d1e2a4eaf7bd",
+              "sha256": "0ff830e8c68aca18063bce54c3191d5c116a2dfe33249538b252746cb777ef10",
+              "state": "durably-stored"
+            }
+          ],
+          "bindingId": "binding",
+          "coverage": {
+            "fromSequence": "1",
+            "headDigest": "9c8aa153fcc88b11ea787a1dc34ec38975f21fb046fc9456a4f8aef5ca79ca5a",
+            "throughSequence": "1"
+          },
+          "expectedRevision": "6",
+          "generations": {
+            "deletionGeneration": "0",
+            "historyEpoch": "history",
+            "projectionRevision": "0"
+          },
+          "payloads": [
+            {
+              "artifactId": "jr-p-36e79b31a6d0c893c4b44ae0d53e12d025147922a21f0eaa73397cd56417c917",
+              "sha256": "df8fc721c7294358020ecc73512ab110b08433eee13e01392c19a8c625db9a05",
+              "state": "durably-stored"
+            }
+          ],
+          "protocol": "sdk2-ext-v1",
+          "request": {
+            "operationEpoch": "epoch",
+            "requestId": "fixed-recovery-request"
+          },
+          "sourceGeneration": "source-generation",
+          "sourceId": "source"
+        },
+        "previous": {
+          "ackFormat": "split-receipts-v1",
+          "attachments": [
+            {
+              "artifactId": "jr-a-399c59c044e663918da274df47cc936c2c4d24fb71b6d0997145d1e2a4eaf7bd",
+              "sha256": "0ff830e8c68aca18063bce54c3191d5c116a2dfe33249538b252746cb777ef10",
+              "state": "durably-stored"
+            }
+          ],
+          "bindingId": "binding",
+          "coverage": {
+            "fromSequence": "1",
+            "headDigest": "9c8aa153fcc88b11ea787a1dc34ec38975f21fb046fc9456a4f8aef5ca79ca5a",
+            "throughSequence": "1"
+          },
+          "expectedRevision": "5",
+          "generations": {
+            "deletionGeneration": "0",
+            "historyEpoch": "history",
+            "projectionRevision": "0"
+          },
+          "payloads": [
+            {
+              "artifactId": "jr-p-36e79b31a6d0c893c4b44ae0d53e12d025147922a21f0eaa73397cd56417c917",
+              "sha256": "df8fc721c7294358020ecc73512ab110b08433eee13e01392c19a8c625db9a05",
+              "state": "durably-stored"
+            }
+          ],
+          "protocol": "sdk2-ext-v1",
+          "request": {
+            "operationEpoch": "epoch",
+            "requestId": "original-ack-rev5"
+          },
+          "sourceGeneration": "source-generation",
+          "sourceId": "source"
+        },
+        "protocol": "sdk2-ext-v1",
+        "receipt": {
+          "bindingId": "binding",
+          "operation": "archive-ack",
+          "outcomeRef": "ack-e268038c751c89ffc079f8f3bae735b46168c28f8fb8d4227bcfa7b698a940fc",
+          "protocol": "sdk2-ext-v1",
+          "request": {
+            "operationEpoch": "epoch",
+            "requestId": "fixed-recovery-request"
+          },
+          "revision": "7",
+          "semanticDigest": "e8fff228a79291f88fdead21993fd379e9b7f2e4e8e9610195ce60dc295d8fb6",
+          "state": "completed"
+        },
+        "request": {
+          "operationEpoch": "epoch",
+          "requestId": "fixed-recovery-request"
+        }
+      },
+      "original_receipt": null,
+      "reserveBytes": 3819
+    }
+  },
+  "syncPage": {
+    "ack": {
+      "ackFormat": "split-receipts-v1",
+      "attachments": [
+        {
+          "artifactId": "jr-a-399c59c044e663918da274df47cc936c2c4d24fb71b6d0997145d1e2a4eaf7bd",
+          "sha256": "0ff830e8c68aca18063bce54c3191d5c116a2dfe33249538b252746cb777ef10",
+          "state": "durably-stored"
+        }
+      ],
+      "bindingId": "binding",
+      "coverage": {
+        "fromSequence": "1",
+        "headDigest": "9c8aa153fcc88b11ea787a1dc34ec38975f21fb046fc9456a4f8aef5ca79ca5a",
+        "throughSequence": "1"
+      },
+      "expectedRevision": "6",
+      "generations": {
+        "deletionGeneration": "0",
+        "historyEpoch": "history",
+        "projectionRevision": "0"
+      },
+      "payloads": [
+        {
+          "artifactId": "jr-p-36e79b31a6d0c893c4b44ae0d53e12d025147922a21f0eaa73397cd56417c917",
+          "sha256": "df8fc721c7294358020ecc73512ab110b08433eee13e01392c19a8c625db9a05",
+          "state": "durably-stored"
+        }
+      ],
+      "protocol": "sdk2-ext-v1",
+      "request": {
+        "operationEpoch": "epoch",
+        "requestId": "fixed-recovery-request"
+      },
+      "sourceGeneration": "source-generation",
+      "sourceId": "source"
+    },
+    "checkpoint": {
+      "binding": {
+        "acceptedCapabilities": [
+          "archive-transfer-v1",
+          "context-materials-v1"
+        ],
+        "archiveAckFormat": "split-receipts-v1",
+        "availability": "legacy-complete",
+        "bindingId": "binding",
+        "limits": {
+          "attachmentBytes": 33554432,
+          "chunkBytes": 262144,
+          "controlBytes": 262144,
+          "epochLifetimeMs": 3600000,
+          "eventRetentionBytes": 8388608,
+          "eventRetentionFrames": 4096,
+          "eventRetentionMs": 600000,
+          "inflightReserveBytes": 16777216,
+          "materialBytes": 1048576,
+          "materialCandidates": 32,
+          "materialChunkBytes": 65536,
+          "materialConcurrent": 2,
+          "materialDeadlineMs": 30000,
+          "materialQueue": 16,
+          "offlineMs": 86400000,
+          "pageBytes": 1048576,
+          "pageRecords": 128,
+          "pendingBytes": 67108864,
+          "pendingRecords": 4096,
+          "recordBytes": 262144,
+          "terminalReceiptRetentionMs": 604800000
+        },
+        "operationEpoch": {
+          "expiresAt": "2026-09-20T00:01:00Z",
+          "id": "epoch",
+          "issuedAt": "2026-09-20T00:00:00Z",
+          "state": "active"
+        },
+        "protocol": "sdk2-ext-v1",
+        "rejectedCapabilities": [],
+        "revision": "6",
+        "scope": {
+          "applicationScopeId": "receiver-app",
+          "authorizationRevision": "7",
+          "endUserId": "user"
+        },
+        "sourceId": "source",
+        "state": "active",
+        "target": {
+          "generations": {
+            "deletionGeneration": "0",
+            "historyEpoch": "history",
+            "projectionRevision": "0"
+          },
+          "sessionId": "session/中文",
+          "sourceSnapshotDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      },
+      "page": {
+        "bindingId": "binding",
+        "complete": true,
+        "generations": {
+          "deletionGeneration": "0",
+          "historyEpoch": "history",
+          "projectionRevision": "0"
+        },
+        "nextAfterSequence": "1",
+        "protocol": "sdk2-ext-v1",
+        "publishedThroughSequence": "1",
+        "records": [
+          {
+            "attachments": [
+              {
+                "artifactId": "jr-a-399c59c044e663918da274df47cc936c2c4d24fb71b6d0997145d1e2a4eaf7bd",
+                "bytes": 4,
+                "mediaType": "application/octet-stream",
+                "sha256": "0ff830e8c68aca18063bce54c3191d5c116a2dfe33249538b252746cb777ef10",
+                "sourceId": "source"
+              }
+            ],
+            "payload": {
+              "artifactId": "jr-p-36e79b31a6d0c893c4b44ae0d53e12d025147922a21f0eaa73397cd56417c917",
+              "bytes": 21,
+              "mediaType": "application/json",
+              "sha256": "df8fc721c7294358020ecc73512ab110b08433eee13e01392c19a8c625db9a05",
+              "sourceId": "source"
+            },
+            "payloadDigest": "6d10954dbb23d680395c463c63ffb132ef2dd234a27223bea1ec4397331b0f59",
+            "predecessorDigest": "0000000000000000000000000000000000000000000000000000000000000000",
+            "recordDigest": "9c8aa153fcc88b11ea787a1dc34ec38975f21fb046fc9456a4f8aef5ca79ca5a",
+            "recordId": "jr-r-36e79b31a6d0c893c4b44ae0d53e12d025147922a21f0eaa73397cd56417c917",
+            "recordKind": "turn",
+            "sequence": "1",
+            "target": {
+              "generations": {
+                "deletionGeneration": "0",
+                "historyEpoch": "history",
+                "projectionRevision": "0"
+              },
+              "sessionId": "session/中文",
+              "sourceSnapshotDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "turnId": "original-run",
+            "turnState": "completed"
+          }
+        ]
+      },
+      "request": {
+        "operationEpoch": "epoch",
+        "requestId": "fixed-recovery-request"
+      },
+      "status": {
+        "acknowledgedCoverage": null,
+        "bindingId": "binding",
+        "generations": {
+          "deletionGeneration": "0",
+          "historyEpoch": "history",
+          "projectionRevision": "0"
+        },
+        "pendingBytes": 25,
+        "pendingRecords": 1,
+        "protocol": "sdk2-ext-v1",
+        "publishedThroughSequence": "1",
+        "releasableThroughSequence": null,
+        "revision": "6",
+        "sessionPersistence": "unchanged",
+        "sourceGeneration": "source-generation",
+        "sourceId": "source",
+        "state": "active"
+      }
+    },
+    "format": "archive-sync-v1",
+    "identity": {
+      "bindingId": "binding",
+      "scope": {
+        "applicationScopeId": "receiver-app",
+        "endUserId": "user"
+      },
+      "sourceGeneration": "source-generation",
+      "sourceId": "source",
+      "target": {
+        "generations": {
+          "deletionGeneration": "0",
+          "historyEpoch": "history",
+          "projectionRevision": "0"
+        },
+        "sessionId": "session/中文"
+      }
+    },
+    "receipt": {
+      "bindingId": "binding",
+      "operation": "archive-ack",
+      "outcomeRef": "ack-e268038c751c89ffc079f8f3bae735b46168c28f8fb8d4227bcfa7b698a940fc",
+      "protocol": "sdk2-ext-v1",
+      "request": {
+        "operationEpoch": "epoch",
+        "requestId": "fixed-recovery-request"
+      },
+      "revision": "7",
+      "semanticDigest": "e8fff228a79291f88fdead21993fd379e9b7f2e4e8e9610195ce60dc295d8fb6",
+      "state": "completed"
+    },
+    "retentionRevision": "0",
+    "tombstones": []
+  },
+  "cacheReceipt": {
+    "format": "archive-sync-receipt-v1",
+    "head": {
+      "sequence": "1",
+      "recordDigest": "9c8aa153fcc88b11ea787a1dc34ec38975f21fb046fc9456a4f8aef5ca79ca5a"
+    },
+    "retentionRevision": "0"
+  },
+  "errors": [
+    {
+      "status": 400,
+      "body": {
+        "protocol": "sdk2-ext-v1",
+        "requestId": "fixed-recovery-request",
+        "code": "invalid_request",
+        "status": 400,
+        "message": "invalid_request",
+        "retryAction": "none"
+      },
+      "wire": {
+        "canonical": "{\"code\":\"invalid_request\",\"message\":\"invalid_request\",\"protocol\":\"sdk2-ext-v1\",\"requestId\":\"fixed-recovery-request\",\"retryAction\":\"none\",\"status\":400}",
+        "bytes": 150,
+        "sha256": "2eecf65714a17b821df551014c3db72cec88cd0d73eaea89c22b81c0c47d5c32"
+      }
+    },
+    {
+      "status": 401,
+      "body": {
+        "protocol": "sdk2-ext-v1",
+        "requestId": "fixed-recovery-request",
+        "code": "unauthorized",
+        "status": 401,
+        "message": "unauthorized",
+        "retryAction": "none"
+      },
+      "wire": {
+        "canonical": "{\"code\":\"unauthorized\",\"message\":\"unauthorized\",\"protocol\":\"sdk2-ext-v1\",\"requestId\":\"fixed-recovery-request\",\"retryAction\":\"none\",\"status\":401}",
+        "bytes": 144,
+        "sha256": "0f5880ad22ef76d28bd80184119dae62b6ad9fb2dd68addbf9d7f887aa1c9b8a"
+      }
+    },
+    {
+      "status": 403,
+      "body": {
+        "protocol": "sdk2-ext-v1",
+        "requestId": "fixed-recovery-request",
+        "code": "forbidden",
+        "status": 403,
+        "message": "forbidden",
+        "retryAction": "none"
+      },
+      "wire": {
+        "canonical": "{\"code\":\"forbidden\",\"message\":\"forbidden\",\"protocol\":\"sdk2-ext-v1\",\"requestId\":\"fixed-recovery-request\",\"retryAction\":\"none\",\"status\":403}",
+        "bytes": 138,
+        "sha256": "96499262fb99d10db76281ec878d75f38656f2dc4b2c042e3dac7c1908f723e3"
+      }
+    },
+    {
+      "status": 409,
+      "body": {
+        "protocol": "sdk2-ext-v1",
+        "requestId": "fixed-recovery-request",
+        "code": "binding_conflict",
+        "status": 409,
+        "message": "binding_conflict",
+        "retryAction": "none"
+      },
+      "wire": {
+        "canonical": "{\"code\":\"binding_conflict\",\"message\":\"binding_conflict\",\"protocol\":\"sdk2-ext-v1\",\"requestId\":\"fixed-recovery-request\",\"retryAction\":\"none\",\"status\":409}",
+        "bytes": 152,
+        "sha256": "bb9a8042c2d63094125f51b146a9d77010de379ebf52ba6d96fcebd69935b548"
+      }
+    },
+    {
+      "status": 409,
+      "body": {
+        "protocol": "sdk2-ext-v1",
+        "requestId": "fixed-recovery-request",
+        "code": "request_id_conflict",
+        "status": 409,
+        "message": "request_id_conflict",
+        "retryAction": "none"
+      },
+      "wire": {
+        "canonical": "{\"code\":\"request_id_conflict\",\"message\":\"request_id_conflict\",\"protocol\":\"sdk2-ext-v1\",\"requestId\":\"fixed-recovery-request\",\"retryAction\":\"none\",\"status\":409}",
+        "bytes": 158,
+        "sha256": "b63e2327e1ad83433f237e217bc3f2007112f6ad4146ce8b0078e68e63ee2697"
+      }
+    },
+    {
+      "status": 409,
+      "body": {
+        "protocol": "sdk2-ext-v1",
+        "requestId": "fixed-recovery-request",
+        "code": "stale_generation",
+        "status": 409,
+        "message": "stale_generation",
+        "retryAction": "none"
+      },
+      "wire": {
+        "canonical": "{\"code\":\"stale_generation\",\"message\":\"stale_generation\",\"protocol\":\"sdk2-ext-v1\",\"requestId\":\"fixed-recovery-request\",\"retryAction\":\"none\",\"status\":409}",
+        "bytes": 152,
+        "sha256": "74064b4f85b0847b21318a092e6840ec6470e61939ab632e8e62628956862bb1"
+      }
+    },
+    {
+      "status": 503,
+      "retryAfter": "5",
+      "body": {
+        "protocol": "sdk2-ext-v1",
+        "requestId": "fixed-recovery-request",
+        "code": "epoch_unavailable",
+        "status": 503,
+        "message": "epoch_unavailable",
+        "retryAction": "same-request"
+      },
+      "wire": {
+        "canonical": "{\"code\":\"epoch_unavailable\",\"message\":\"epoch_unavailable\",\"protocol\":\"sdk2-ext-v1\",\"requestId\":\"fixed-recovery-request\",\"retryAction\":\"same-request\",\"status\":503}",
+        "bytes": 162,
+        "sha256": "b41519c6b01b4a99824c36a8199af48d6d9879aa497cd785daf75c9fbbb7b803"
+      }
+    },
+    {
+      "status": 503,
+      "retryAfter": "5",
+      "body": {
+        "protocol": "sdk2-ext-v1",
+        "requestId": "fixed-recovery-request",
+        "code": "source_unavailable",
+        "status": 503,
+        "message": "source_unavailable",
+        "retryAction": "query-status"
+      },
+      "wire": {
+        "canonical": "{\"code\":\"source_unavailable\",\"message\":\"source_unavailable\",\"protocol\":\"sdk2-ext-v1\",\"requestId\":\"fixed-recovery-request\",\"retryAction\":\"query-status\",\"status\":503}",
+        "bytes": 164,
+        "sha256": "7a44bb150ff0367b204e443ea4b42ae0606455466256b6465794490cc07a0d05"
+      }
+    },
+    {
+      "status": 413,
+      "body": {
+        "protocol": "sdk2-ext-v1",
+        "requestId": "fixed-recovery-request",
+        "code": "payload_too_large",
+        "status": 413,
+        "message": "payload_too_large",
+        "retryAction": "none"
+      },
+      "wire": {
+        "canonical": "{\"code\":\"payload_too_large\",\"message\":\"payload_too_large\",\"protocol\":\"sdk2-ext-v1\",\"requestId\":\"fixed-recovery-request\",\"retryAction\":\"none\",\"status\":413}",
+        "bytes": 154,
+        "sha256": "ad3c99bfbf915632195754d6b95290faa215b767a6c692b9dcd76cea162c546c"
+      }
+    },
+    {
+      "status": 429,
+      "retryAfter": "5",
+      "body": {
+        "protocol": "sdk2-ext-v1",
+        "requestId": "fixed-recovery-request",
+        "code": "capacity_exceeded",
+        "status": 429,
+        "message": "capacity_exceeded",
+        "retryAction": "same-request"
+      },
+      "wire": {
+        "canonical": "{\"code\":\"capacity_exceeded\",\"message\":\"capacity_exceeded\",\"protocol\":\"sdk2-ext-v1\",\"requestId\":\"fixed-recovery-request\",\"retryAction\":\"same-request\",\"status\":429}",
+        "bytes": 162,
+        "sha256": "9cbcf2cea7e61d05e11dc78085fb19436d24cb3d0753b565f525527a734c82b8"
+      }
+    },
+    {
+      "status": 422,
+      "body": {
+        "protocol": "sdk2-ext-v1",
+        "requestId": "fixed-recovery-request",
+        "code": "unsupported_capability",
+        "status": 422,
+        "message": "unsupported_capability",
+        "retryAction": "none"
+      },
+      "wire": {
+        "canonical": "{\"code\":\"unsupported_capability\",\"message\":\"unsupported_capability\",\"protocol\":\"sdk2-ext-v1\",\"requestId\":\"fixed-recovery-request\",\"retryAction\":\"none\",\"status\":422}",
+        "bytes": 164,
+        "sha256": "969ee35edc1042013b9873d5a71617dff1a734dcc78402d357c129e0ff574508"
+      }
+    },
+    {
+      "status": 500,
+      "body": {
+        "protocol": "sdk2-ext-v1",
+        "requestId": "fixed-recovery-request",
+        "code": "internal_error",
+        "status": 500,
+        "message": "internal_error",
+        "retryAction": "query-status"
+      },
+      "wire": {
+        "canonical": "{\"code\":\"internal_error\",\"message\":\"internal_error\",\"protocol\":\"sdk2-ext-v1\",\"requestId\":\"fixed-recovery-request\",\"retryAction\":\"query-status\",\"status\":500}",
+        "bytes": 156,
+        "sha256": "5dd64e38d810e2dc98f91092b8ff9772bf1817e35557d9709549541db286c856"
+      }
+    }
+  ]
+}

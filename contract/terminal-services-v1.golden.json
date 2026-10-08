@@ -1,0 +1,1880 @@
+{
+  "description": "SRV-01候选结构金样：仅断言两端结构与标量保真；不代表鉴权、跨字段完整性、持久性或完整协议冻结。",
+  "schemaSha256": "8cd8c7c55a84c5700373aed75d5653a0737d718bfe0546641be367bda1a11896",
+  "copiedDefinitions": [
+    "Id",
+    "LegacyId",
+    "Sequence",
+    "Digest",
+    "Scope",
+    "ExecutionBinding",
+    "ExecutionTarget",
+    "ExecutionInterpreter"
+  ],
+  "positive": [
+    {
+      "id": "sequence-zero",
+      "definition": "Sequence",
+      "value": "0"
+    },
+    {
+      "id": "sequence-above-ieee754",
+      "definition": "Sequence",
+      "value": "9007199254740993"
+    },
+    {
+      "id": "sequence-int64-max",
+      "definition": "Sequence",
+      "value": "9223372036854775807"
+    },
+    {
+      "id": "session-sdk1",
+      "definition": "SessionReference",
+      "value": {
+        "sessionContract": "sdk1",
+        "sessionId": "existing session / 原样"
+      }
+    },
+    {
+      "id": "session-sdk2",
+      "definition": "SessionReference",
+      "value": {
+        "sessionContract": "sdk2-offload-v1",
+        "sessionId": "existing session / 原样"
+      }
+    },
+    {
+      "id": "discovery-candidate",
+      "definition": "CapabilitiesResponse",
+      "value": {
+        "contract": "terminal-services-v1",
+        "schemaRevision": "2026-09-26.candidate-7",
+        "schemaSha256": "8cd8c7c55a84c5700373aed75d5653a0737d718bfe0546641be367bda1a11896",
+        "sessionContracts": [
+          "sdk1",
+          "sdk2-offload-v1"
+        ],
+        "features": [
+          {
+            "feature": "execution-stream-v1",
+            "supported": false,
+            "installed": false,
+            "authorization": "unconfirmed",
+            "device": "unconfirmed"
+          },
+          {
+            "feature": "execution-background-v1",
+            "supported": false,
+            "installed": false,
+            "authorization": "unconfirmed",
+            "device": "unconfirmed"
+          },
+          {
+            "feature": "memory-lifecycle-v1",
+            "supported": false,
+            "installed": false,
+            "authorization": "unconfirmed",
+            "device": "unconfirmed"
+          },
+          {
+            "feature": "session-configuration-v1",
+            "supported": false,
+            "installed": false,
+            "authorization": "unconfirmed",
+            "device": "unconfirmed"
+          }
+        ],
+        "limits": {
+          "maxControlBytes": 262144,
+          "maxBlockBytes": 16384,
+          "maxBatchBytes": 65536,
+          "maxPendingBytes": 2097152,
+          "maxRetainedBytes": 8388608
+        }
+      }
+    },
+    {
+      "id": "binding-sdk1",
+      "definition": "BindingRequest",
+      "value": {
+        "contract": "terminal-services-v1",
+        "requestId": "req-1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "existing session / 原样"
+        },
+        "executionBinding": null,
+        "required": [
+          "execution-stream-v1"
+        ],
+        "optional": [
+          "memory-lifecycle-v1"
+        ]
+      }
+    },
+    {
+      "id": "binding-sdk2",
+      "definition": "BindingRequest",
+      "value": {
+        "contract": "terminal-services-v1",
+        "requestId": "req-1",
+        "session": {
+          "sessionContract": "sdk2-offload-v1",
+          "sessionId": "existing session / 原样"
+        },
+        "executionBinding": {
+          "bindingId": "binding-1",
+          "revision": "9007199254740993",
+          "target": {
+            "executorId": "executor-1",
+            "connectionId": "connection-1",
+            "connectionRevision": "9223372036854775807",
+            "workspaceId": "workspace-1",
+            "workspaceRevision": "1",
+            "interpreter": {
+              "id": "pwsh",
+              "revision": "7",
+              "hostShell": "powershell"
+            }
+          }
+        },
+        "required": [
+          "execution-stream-v1"
+        ],
+        "optional": [
+          "memory-lifecycle-v1"
+        ]
+      }
+    },
+    {
+      "id": "binding-response-host-scope",
+      "definition": "BindingResponse",
+      "value": {
+        "contract": "terminal-services-v1",
+        "requestId": "req-1",
+        "session": {
+          "sessionContract": "sdk2-offload-v1",
+          "sessionId": "existing session / 原样"
+        },
+        "scope": {
+          "applicationScopeId": "app-1",
+          "endUserId": "existing user / 原样",
+          "authorizationRevision": "9007199254740993"
+        },
+        "executionBinding": {
+          "bindingId": "binding-1",
+          "revision": "9007199254740993",
+          "target": {
+            "executorId": "executor-1",
+            "connectionId": "connection-1",
+            "connectionRevision": "9223372036854775807",
+            "workspaceId": "workspace-1",
+            "workspaceRevision": "1",
+            "interpreter": {
+              "id": "pwsh",
+              "revision": "7",
+              "hostShell": "powershell"
+            }
+          }
+        },
+        "accepted": [
+          "execution-stream-v1"
+        ],
+        "unavailable": [
+          {
+            "feature": "execution-background-v1",
+            "supported": false,
+            "installed": false,
+            "authorization": "unconfirmed",
+            "device": "unconfirmed"
+          },
+          {
+            "feature": "memory-lifecycle-v1",
+            "supported": false,
+            "installed": false,
+            "authorization": "unconfirmed",
+            "device": "unconfirmed"
+          },
+          {
+            "feature": "session-configuration-v1",
+            "supported": false,
+            "installed": false,
+            "authorization": "unconfirmed",
+            "device": "unconfirmed"
+          }
+        ],
+        "outputAuthority": "tool-output",
+        "limits": {
+          "maxControlBytes": 262144,
+          "maxBlockBytes": 16384,
+          "maxBatchBytes": 65536,
+          "maxPendingBytes": 2097152,
+          "maxRetainedBytes": 8388608
+        }
+      }
+    },
+    {
+      "id": "output-block-string-boundaries",
+      "definition": "OutputBlock",
+      "value": {
+        "seq": "9007199254740993",
+        "byteOffset": "9223372036854775807",
+        "channel": "stdout",
+        "encoding": "utf-8",
+        "byteLength": 1,
+        "payloadDigest": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+        "base64": "YQ=="
+      }
+    },
+    {
+      "id": "output-batch-sealed",
+      "definition": "OutputBatchRequest",
+      "value": {
+        "contract": "terminal-services-v1",
+        "session": {
+          "sessionContract": "sdk2-offload-v1",
+          "sessionId": "existing session / 原样"
+        },
+        "operation": {
+          "operationId": "op-1",
+          "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "executorId": "executor-1",
+        "connectionId": "connection-1",
+        "blocks": [
+          {
+            "seq": "0",
+            "byteOffset": "0",
+            "channel": "stdout",
+            "encoding": "utf-8",
+            "byteLength": 1,
+            "payloadDigest": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+            "base64": "YQ=="
+          }
+        ],
+        "seal": {
+          "lastSeq": "0",
+          "totalBytes": "1",
+          "payloadDigest": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+          "truncated": false
+        }
+      }
+    },
+    {
+      "id": "output-accepted-not-durable",
+      "definition": "OutputStatus",
+      "value": {
+        "contract": "terminal-services-v1",
+        "operation": {
+          "operationId": "op-1",
+          "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "state": "receiving",
+        "acceptedThrough": "9007199254740993",
+        "durableThrough": null,
+        "retainedFrom": "9007199254740993",
+        "nextByteOffset": "9223372036854775807",
+        "seal": null
+      }
+    },
+    {
+      "id": "output-block-event",
+      "definition": "OutputEvent",
+      "value": {
+        "contract": "terminal-services-v1",
+        "type": "output.block",
+        "operation": {
+          "operationId": "op-1",
+          "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "block": {
+          "seq": "9007199254740993",
+          "byteOffset": "9223372036854775807",
+          "channel": "stdout",
+          "encoding": "utf-8",
+          "byteLength": 1,
+          "payloadDigest": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+          "base64": "YQ=="
+        }
+      }
+    },
+    {
+      "id": "output-status-event",
+      "definition": "OutputEvent",
+      "value": {
+        "contract": "terminal-services-v1",
+        "type": "output.status",
+        "status": {
+          "contract": "terminal-services-v1",
+          "operation": {
+            "operationId": "op-1",
+            "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          "state": "receiving",
+          "acceptedThrough": "9007199254740993",
+          "durableThrough": null,
+          "retainedFrom": "9007199254740993",
+          "nextByteOffset": "9223372036854775807",
+          "seal": null
+        }
+      }
+    },
+    {
+      "id": "executor-notification",
+      "definition": "ExecutorEvent",
+      "value": {
+        "contract": "terminal-services-v1",
+        "eventId": "9223372036854775807",
+        "type": "operations-available",
+        "executorId": "executor-1",
+        "connectionId": "connection-1",
+        "operation": {
+          "operationId": "op-1",
+          "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      }
+    },
+    {
+      "id": "output-correlation",
+      "definition": "OutputCorrelation",
+      "value": {
+        "contract": "terminal-services-v1",
+        "session": {
+          "sessionContract": "sdk2-offload-v1",
+          "sessionId": "existing session / 原样"
+        },
+        "toolCallId": "existing tool / 原样",
+        "operation": {
+          "operationId": "op-1",
+          "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "outputAuthority": "tool-output"
+      }
+    },
+    {
+      "id": "error-commit-unknown",
+      "definition": "ErrorResponse",
+      "value": {
+        "contract": "terminal-services-v1",
+        "requestId": "req-1",
+        "code": "commit_unknown",
+        "status": 503,
+        "retryAction": "reconcile"
+      }
+    },
+    {
+      "id": "configuration-request",
+      "definition": "ConfigurationRequest",
+      "value": {
+        "contract": "terminal-services-v1",
+        "requestId": "configuration-1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "existing-session"
+        },
+        "expectedRevision": 0,
+        "changes": {
+          "model": "fast",
+          "thinking": null
+        }
+      }
+    },
+    {
+      "id": "configuration-replayed",
+      "definition": "ConfigurationCommitResponse",
+      "value": {
+        "contract": "terminal-services-v1",
+        "requestId": "configuration-1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "existing-session"
+        },
+        "status": "replayed",
+        "configuration": {
+          "revision": 1,
+          "model": "fast",
+          "thinking": null
+        }
+      }
+    },
+    {
+      "id": "memory-state",
+      "definition": "MemoryStateResponse",
+      "value": {
+        "contract": "terminal-services-v1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "fixture-session"
+        },
+        "memory": {
+          "identity": {
+            "kind": "server-managed",
+            "domain": "fixture-domain",
+            "sourceId": "fixture-source",
+            "sourceGeneration": "0",
+            "applicationScopeId": "fixture-app",
+            "endUserId": "fixture-user"
+          },
+          "revision": "0",
+          "deletionGeneration": "0",
+          "available": true
+        }
+      }
+    },
+    {
+      "id": "memory-pin",
+      "definition": "MemoryCommandRequest",
+      "value": {
+        "contract": "terminal-services-v1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "fixture-session"
+        },
+        "requestId": "memory-request",
+        "operationId": "memory-operation",
+        "sourceId": "fixture-source",
+        "sourceGeneration": "0",
+        "expectedRevision": "0",
+        "command": {
+          "kind": "pin",
+          "text": "用户明确要求保留的合成偏好"
+        }
+      }
+    },
+    {
+      "id": "background-launch",
+      "definition": "BackgroundRequest",
+      "value": {
+        "contract": "terminal-services-v1",
+        "action": "launch",
+        "command": "fixture-tool",
+        "cwd": "",
+        "mode": "background",
+        "timeoutMs": 300000
+      }
+    },
+    {
+      "id": "memory-domain-hierarchy",
+      "definition": "MemoryIdentifier",
+      "value": "application/user.project"
+    },
+    {
+      "id": "memory-publication-head",
+      "definition": "MemoryPublicationRequest",
+      "value": {
+        "contract": "terminal-services-v1",
+        "sourceId": "device-memory",
+        "sourceGeneration": "9007199254740993",
+        "domainKey": "app/user",
+        "action": "head"
+      }
+    },
+    {
+      "id": "memory-publication-cas-begin",
+      "definition": "MemoryPublicationRequest",
+      "value": {
+        "contract": "terminal-services-v1",
+        "sourceId": "device-memory",
+        "sourceGeneration": "9007199254740993",
+        "domainKey": "app/user",
+        "action": "begin",
+        "transferId": "transfer-1",
+        "expectedEtag": null,
+        "byteLength": 4194304,
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "id": "memory-publication-unknown",
+      "definition": "MemoryPublicationResponse",
+      "value": {
+        "contract": "terminal-services-v1",
+        "sourceId": "device-memory",
+        "sourceGeneration": "9007199254740993",
+        "domainKey": "app/user",
+        "action": "query",
+        "transfer": {
+          "transferId": "transfer-1",
+          "status": "unknown",
+          "receivedBytes": null,
+          "etag": null
+        }
+      }
+    }
+  ],
+  "negative": [
+    {
+      "id": "sequence-overflow",
+      "definition": "Sequence",
+      "value": "9223372036854775808"
+    },
+    {
+      "id": "sequence-leading-zero",
+      "definition": "Sequence",
+      "value": "01"
+    },
+    {
+      "id": "sequence-number",
+      "definition": "Sequence",
+      "value": 9007199254740992
+    },
+    {
+      "id": "sequence-negative",
+      "definition": "Sequence",
+      "value": "-1"
+    },
+    {
+      "id": "sequence-exponent",
+      "definition": "Sequence",
+      "value": "1e3"
+    },
+    {
+      "id": "session-unknown-contract",
+      "definition": "SessionReference",
+      "value": {
+        "sessionContract": "sdk3",
+        "sessionId": "existing session / 原样"
+      }
+    },
+    {
+      "id": "session-scope-injection",
+      "definition": "SessionReference",
+      "value": {
+        "sessionContract": "sdk1",
+        "sessionId": "existing session / 原样",
+        "scope": {
+          "applicationScopeId": "app-1",
+          "endUserId": "existing user / 原样",
+          "authorizationRevision": "9007199254740993"
+        }
+      }
+    },
+    {
+      "id": "binding-scope-injection",
+      "definition": "BindingRequest",
+      "value": {
+        "contract": "terminal-services-v1",
+        "requestId": "req-1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "existing session / 原样"
+        },
+        "executionBinding": null,
+        "required": [
+          "execution-stream-v1"
+        ],
+        "optional": [
+          "memory-lifecycle-v1"
+        ],
+        "scope": {
+          "applicationScopeId": "app-1",
+          "endUserId": "existing user / 原样",
+          "authorizationRevision": "9007199254740993"
+        }
+      }
+    },
+    {
+      "id": "binding-unknown-feature",
+      "definition": "BindingRequest",
+      "value": {
+        "contract": "terminal-services-v1",
+        "requestId": "req-1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "existing session / 原样"
+        },
+        "executionBinding": null,
+        "required": [
+          "shell-unrestricted"
+        ],
+        "optional": [
+          "memory-lifecycle-v1"
+        ]
+      }
+    },
+    {
+      "id": "binding-duplicate-feature",
+      "definition": "BindingRequest",
+      "value": {
+        "contract": "terminal-services-v1",
+        "requestId": "req-1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "existing session / 原样"
+        },
+        "executionBinding": null,
+        "required": [
+          "execution-stream-v1",
+          "execution-stream-v1"
+        ],
+        "optional": [
+          "memory-lifecycle-v1"
+        ]
+      }
+    },
+    {
+      "id": "block-illegal-base64",
+      "definition": "OutputBlock",
+      "value": {
+        "seq": "9007199254740993",
+        "byteOffset": "9223372036854775807",
+        "channel": "stdout",
+        "encoding": "utf-8",
+        "byteLength": 1,
+        "payloadDigest": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+        "base64": "@@=="
+      }
+    },
+    {
+      "id": "block-invalid-base64-padding",
+      "definition": "OutputBlock",
+      "value": {
+        "seq": "9007199254740993",
+        "byteOffset": "9223372036854775807",
+        "channel": "stdout",
+        "encoding": "utf-8",
+        "byteLength": 1,
+        "payloadDigest": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+        "base64": "YQ==="
+      }
+    },
+    {
+      "id": "block-whitespace-base64",
+      "definition": "OutputBlock",
+      "value": {
+        "seq": "9007199254740993",
+        "byteOffset": "9223372036854775807",
+        "channel": "stdout",
+        "encoding": "utf-8",
+        "byteLength": 1,
+        "payloadDigest": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+        "base64": "Y Q=="
+      }
+    },
+    {
+      "id": "block-negative-bytes",
+      "definition": "OutputBlock",
+      "value": {
+        "seq": "9007199254740993",
+        "byteOffset": "9223372036854775807",
+        "channel": "stdout",
+        "encoding": "utf-8",
+        "byteLength": -1,
+        "payloadDigest": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+        "base64": "YQ=="
+      }
+    },
+    {
+      "id": "block-oversize",
+      "definition": "OutputBlock",
+      "value": {
+        "seq": "9007199254740993",
+        "byteOffset": "9223372036854775807",
+        "channel": "stdout",
+        "encoding": "utf-8",
+        "byteLength": 16385,
+        "payloadDigest": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+        "base64": "YQ=="
+      }
+    },
+    {
+      "id": "block-sequence-overflow",
+      "definition": "OutputBlock",
+      "value": {
+        "seq": "9223372036854775808",
+        "byteOffset": "9223372036854775807",
+        "channel": "stdout",
+        "encoding": "utf-8",
+        "byteLength": 1,
+        "payloadDigest": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+        "base64": "YQ=="
+      }
+    },
+    {
+      "id": "batch-scope-injection",
+      "definition": "OutputBatchRequest",
+      "value": {
+        "contract": "terminal-services-v1",
+        "session": {
+          "sessionContract": "sdk2-offload-v1",
+          "sessionId": "existing session / 原样"
+        },
+        "operation": {
+          "operationId": "op-1",
+          "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "executorId": "executor-1",
+        "connectionId": "connection-1",
+        "blocks": [
+          {
+            "seq": "0",
+            "byteOffset": "0",
+            "channel": "stdout",
+            "encoding": "utf-8",
+            "byteLength": 1,
+            "payloadDigest": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+            "base64": "YQ=="
+          }
+        ],
+        "seal": {
+          "lastSeq": "0",
+          "totalBytes": "1",
+          "payloadDigest": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+          "truncated": false
+        },
+        "scope": {
+          "applicationScopeId": "app-1",
+          "endUserId": "existing user / 原样",
+          "authorizationRevision": "9007199254740993"
+        }
+      }
+    },
+    {
+      "id": "status-missing-durable",
+      "definition": "OutputStatus",
+      "value": {
+        "contract": "terminal-services-v1",
+        "operation": {
+          "operationId": "op-1",
+          "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "state": "receiving",
+        "acceptedThrough": "9007199254740993",
+        "retainedFrom": "9007199254740993",
+        "nextByteOffset": "9223372036854775807",
+        "seal": null
+      }
+    },
+    {
+      "id": "status-number-durable",
+      "definition": "OutputStatus",
+      "value": {
+        "contract": "terminal-services-v1",
+        "operation": {
+          "operationId": "op-1",
+          "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "state": "receiving",
+        "acceptedThrough": "9007199254740993",
+        "durableThrough": 1,
+        "retainedFrom": "9007199254740993",
+        "nextByteOffset": "9223372036854775807",
+        "seal": null
+      }
+    },
+    {
+      "id": "event-wrong-discriminator",
+      "definition": "OutputEvent",
+      "value": {
+        "contract": "terminal-services-v1",
+        "type": "output.status",
+        "operation": {
+          "operationId": "op-1",
+          "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        },
+        "block": {
+          "seq": "9007199254740993",
+          "byteOffset": "9223372036854775807",
+          "channel": "stdout",
+          "encoding": "utf-8",
+          "byteLength": 1,
+          "payloadDigest": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+          "base64": "YQ=="
+        }
+      }
+    },
+    {
+      "id": "event-cross-variant-field",
+      "definition": "OutputEvent",
+      "value": {
+        "contract": "terminal-services-v1",
+        "type": "output.status",
+        "status": {
+          "contract": "terminal-services-v1",
+          "operation": {
+            "operationId": "op-1",
+            "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+          },
+          "state": "receiving",
+          "acceptedThrough": "9007199254740993",
+          "durableThrough": null,
+          "retainedFrom": "9007199254740993",
+          "nextByteOffset": "9223372036854775807",
+          "seal": null
+        },
+        "block": {
+          "seq": "9007199254740993",
+          "byteOffset": "9223372036854775807",
+          "channel": "stdout",
+          "encoding": "utf-8",
+          "byteLength": 1,
+          "payloadDigest": "ca978112ca1bbdcafac231b39a23dc4da786eff8147c4e72b9807785afee48bb",
+          "base64": "YQ=="
+        }
+      }
+    },
+    {
+      "id": "error-unknown-code",
+      "definition": "ErrorResponse",
+      "value": {
+        "contract": "terminal-services-v1",
+        "requestId": "req-1",
+        "code": "anything_allowed",
+        "status": 503,
+        "retryAction": "reconcile"
+      }
+    },
+    {
+      "id": "configuration-unsafe-revision",
+      "definition": "ConfigurationRequest",
+      "value": {
+        "contract": "terminal-services-v1",
+        "requestId": "configuration-1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "existing-session"
+        },
+        "expectedRevision": 9007199254740992,
+        "changes": {
+          "model": "fast",
+          "thinking": null
+        }
+      }
+    },
+    {
+      "id": "configuration-executable-client",
+      "definition": "ConfigurationRequest",
+      "value": {
+        "contract": "terminal-services-v1",
+        "requestId": "configuration-1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "existing-session"
+        },
+        "expectedRevision": 0,
+        "changes": {
+          "client": {
+            "code": "untrusted"
+          }
+        }
+      }
+    },
+    {
+      "id": "configuration-negative-thinking",
+      "definition": "ConfigurationRequest",
+      "value": {
+        "contract": "terminal-services-v1",
+        "requestId": "configuration-1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "existing-session"
+        },
+        "expectedRevision": 0,
+        "changes": {
+          "thinking": {
+            "budget": -1
+          }
+        }
+      }
+    },
+    {
+      "id": "memory-client-scope",
+      "definition": "MemoryCommandRequest",
+      "value": {
+        "contract": "terminal-services-v1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "fixture-session"
+        },
+        "requestId": "memory-request",
+        "operationId": "memory-operation",
+        "sourceId": "fixture-source",
+        "sourceGeneration": "0",
+        "expectedRevision": "0",
+        "command": {
+          "kind": "pin",
+          "text": "用户明确要求保留的合成偏好"
+        },
+        "scope": {
+          "endUserId": "attacker"
+        }
+      }
+    },
+    {
+      "id": "memory-number-revision",
+      "definition": "MemoryCommandRequest",
+      "value": {
+        "contract": "terminal-services-v1",
+        "session": {
+          "sessionContract": "sdk1",
+          "sessionId": "fixture-session"
+        },
+        "requestId": "memory-request",
+        "operationId": "memory-operation",
+        "sourceId": "fixture-source",
+        "sourceGeneration": "0",
+        "expectedRevision": 0,
+        "command": {
+          "kind": "pin",
+          "text": "用户明确要求保留的合成偏好"
+        }
+      }
+    },
+    {
+      "id": "background-launch-self-digest",
+      "definition": "BackgroundRequest",
+      "value": {
+        "contract": "terminal-services-v1",
+        "action": "launch",
+        "command": "fixture",
+        "cwd": "",
+        "mode": "background",
+        "timeoutMs": 1000,
+        "requestDigest": "0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    },
+    {
+      "id": "memory-control-character",
+      "definition": "MemoryIdentifier",
+      "value": "bad\nname"
+    },
+    {
+      "id": "memory-publication-size-limit",
+      "definition": "MemoryPublicationRequest",
+      "value": {
+        "contract": "terminal-services-v1",
+        "sourceId": "device-memory",
+        "sourceGeneration": "9007199254740993",
+        "domainKey": "app/user",
+        "action": "begin",
+        "transferId": "transfer-1",
+        "expectedEtag": null,
+        "byteLength": 4194305,
+        "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      }
+    },
+    {
+      "id": "memory-publication-scope-injection",
+      "definition": "MemoryPublicationRequest",
+      "value": {
+        "contract": "terminal-services-v1",
+        "sourceId": "device-memory",
+        "sourceGeneration": "9007199254740993",
+        "domainKey": "app/user",
+        "action": "head",
+        "applicationScopeId": "other-app"
+      }
+    },
+    {
+      "id": "memory-publication-read-limit",
+      "definition": "MemoryPublicationRequest",
+      "value": {
+        "contract": "terminal-services-v1",
+        "sourceId": "device-memory",
+        "sourceGeneration": "9007199254740993",
+        "domainKey": "app/user",
+        "action": "read",
+        "etag": "etag",
+        "offset": 0,
+        "length": 12289
+      }
+    }
+  ],
+  "semantic": {
+    "description": "跨字段语义另行验证。以下outputStatus正负例在JSON schema结构上均合法；负例不能被当作已有结构校验已拒绝。声明自洽仍不证明真实持久、鉴权或原文可用。",
+    "outputStatus": {
+      "positive": [
+        {
+          "id": "available-empty",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "available",
+            "acceptedThrough": null,
+            "durableThrough": null,
+            "retainedFrom": null,
+            "nextByteOffset": "0",
+            "seal": null
+          }
+        },
+        {
+          "id": "received-not-durable",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "receiving",
+            "acceptedThrough": "2",
+            "durableThrough": null,
+            "retainedFrom": "0",
+            "nextByteOffset": "4",
+            "seal": null
+          }
+        },
+        {
+          "id": "received-durable-prefix",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "receiving",
+            "acceptedThrough": "2",
+            "durableThrough": "1",
+            "retainedFrom": "0",
+            "nextByteOffset": "4",
+            "seal": null
+          }
+        },
+        {
+          "id": "received-durable-through",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "receiving",
+            "acceptedThrough": "2",
+            "durableThrough": "2",
+            "retainedFrom": "0",
+            "nextByteOffset": "4",
+            "seal": null
+          }
+        },
+        {
+          "id": "received-bigint-boundaries",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "receiving",
+            "acceptedThrough": "9007199254740993",
+            "durableThrough": "9007199254740992",
+            "retainedFrom": "9007199254740993",
+            "nextByteOffset": "9223372036854775807",
+            "seal": null
+          }
+        },
+        {
+          "id": "sealed-complete",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "complete",
+            "acceptedThrough": "2",
+            "durableThrough": null,
+            "retainedFrom": "0",
+            "nextByteOffset": "4",
+            "seal": {
+              "lastSeq": "2",
+              "totalBytes": "4",
+              "payloadDigest": "94b442133c0ec875ac4d1c2fb0a78e8a424fe7fcd94f5af3b60b59849a7cd7a8",
+              "truncated": false
+            }
+          }
+        },
+        {
+          "id": "sealed-truncated",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "truncated",
+            "acceptedThrough": "2",
+            "durableThrough": null,
+            "retainedFrom": "0",
+            "nextByteOffset": "4",
+            "seal": {
+              "lastSeq": "2",
+              "totalBytes": "4",
+              "payloadDigest": "94b442133c0ec875ac4d1c2fb0a78e8a424fe7fcd94f5af3b60b59849a7cd7a8",
+              "truncated": true
+            }
+          }
+        },
+        {
+          "id": "empty-complete",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "complete",
+            "acceptedThrough": null,
+            "durableThrough": null,
+            "retainedFrom": null,
+            "nextByteOffset": "0",
+            "seal": {
+              "lastSeq": null,
+              "totalBytes": "0",
+              "payloadDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "truncated": false
+            }
+          }
+        },
+        {
+          "id": "gap-unsealed",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "gap",
+            "acceptedThrough": "2",
+            "durableThrough": null,
+            "retainedFrom": "2",
+            "nextByteOffset": "4",
+            "seal": null
+          }
+        },
+        {
+          "id": "gap-sealed",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "gap",
+            "acceptedThrough": "2",
+            "durableThrough": null,
+            "retainedFrom": "2",
+            "nextByteOffset": "4",
+            "seal": {
+              "lastSeq": "2",
+              "totalBytes": "4",
+              "payloadDigest": "94b442133c0ec875ac4d1c2fb0a78e8a424fe7fcd94f5af3b60b59849a7cd7a8",
+              "truncated": false
+            }
+          }
+        },
+        {
+          "id": "gap-truncated-seal",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "gap",
+            "acceptedThrough": "2",
+            "durableThrough": null,
+            "retainedFrom": "2",
+            "nextByteOffset": "4",
+            "seal": {
+              "lastSeq": "2",
+              "totalBytes": "4",
+              "payloadDigest": "94b442133c0ec875ac4d1c2fb0a78e8a424fe7fcd94f5af3b60b59849a7cd7a8",
+              "truncated": true
+            }
+          }
+        },
+        {
+          "id": "unavailable-preserves-watermarks",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "unavailable",
+            "acceptedThrough": "2",
+            "durableThrough": "1",
+            "retainedFrom": null,
+            "nextByteOffset": "4",
+            "seal": null
+          }
+        },
+        {
+          "id": "unavailable-preserves-seal",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "unavailable",
+            "acceptedThrough": "2",
+            "durableThrough": null,
+            "retainedFrom": null,
+            "nextByteOffset": "4",
+            "seal": {
+              "lastSeq": "2",
+              "totalBytes": "4",
+              "payloadDigest": "94b442133c0ec875ac4d1c2fb0a78e8a424fe7fcd94f5af3b60b59849a7cd7a8",
+              "truncated": false
+            }
+          }
+        },
+        {
+          "id": "unavailable-unknown-watermarks",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "unavailable",
+            "acceptedThrough": null,
+            "durableThrough": null,
+            "retainedFrom": null,
+            "nextByteOffset": null,
+            "seal": null
+          }
+        },
+        {
+          "id": "receiving-first-byte",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "receiving",
+            "acceptedThrough": "0",
+            "durableThrough": null,
+            "retainedFrom": "0",
+            "nextByteOffset": "1",
+            "seal": null
+          }
+        },
+        {
+          "id": "receiving-highest-byte-boundary",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "receiving",
+            "acceptedThrough": "9223372036854775806",
+            "durableThrough": null,
+            "retainedFrom": "9223372036854775806",
+            "nextByteOffset": "9223372036854775807",
+            "seal": null
+          }
+        }
+      ],
+      "negative": [
+        {
+          "id": "durable-without-accepted",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "receiving",
+            "acceptedThrough": null,
+            "durableThrough": "0",
+            "retainedFrom": null,
+            "nextByteOffset": "0",
+            "seal": null
+          }
+        },
+        {
+          "id": "durable-above-accepted",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "receiving",
+            "acceptedThrough": "2",
+            "durableThrough": "3",
+            "retainedFrom": "0",
+            "nextByteOffset": "4",
+            "seal": null
+          }
+        },
+        {
+          "id": "durable-bigint-above-accepted",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "receiving",
+            "acceptedThrough": "9007199254740992",
+            "durableThrough": "9007199254740993",
+            "retainedFrom": "9007199254740992",
+            "nextByteOffset": "9223372036854775807",
+            "seal": null
+          }
+        },
+        {
+          "id": "retained-without-accepted",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "receiving",
+            "acceptedThrough": null,
+            "durableThrough": null,
+            "retainedFrom": "0",
+            "nextByteOffset": "0",
+            "seal": null
+          }
+        },
+        {
+          "id": "retained-above-accepted",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "receiving",
+            "acceptedThrough": "2",
+            "durableThrough": null,
+            "retainedFrom": "3",
+            "nextByteOffset": "4",
+            "seal": null
+          }
+        },
+        {
+          "id": "offset-without-accepted",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "receiving",
+            "acceptedThrough": null,
+            "durableThrough": null,
+            "retainedFrom": null,
+            "nextByteOffset": "1",
+            "seal": null
+          }
+        },
+        {
+          "id": "seal-last-seq-mismatch",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "complete",
+            "acceptedThrough": "2",
+            "durableThrough": null,
+            "retainedFrom": "0",
+            "nextByteOffset": "4",
+            "seal": {
+              "lastSeq": "1",
+              "totalBytes": "4",
+              "payloadDigest": "94b442133c0ec875ac4d1c2fb0a78e8a424fe7fcd94f5af3b60b59849a7cd7a8",
+              "truncated": false
+            }
+          }
+        },
+        {
+          "id": "seal-total-bytes-mismatch",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "complete",
+            "acceptedThrough": "2",
+            "durableThrough": null,
+            "retainedFrom": "0",
+            "nextByteOffset": "4",
+            "seal": {
+              "lastSeq": "2",
+              "totalBytes": "3",
+              "payloadDigest": "94b442133c0ec875ac4d1c2fb0a78e8a424fe7fcd94f5af3b60b59849a7cd7a8",
+              "truncated": false
+            }
+          }
+        },
+        {
+          "id": "empty-seal-with-accepted",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "complete",
+            "acceptedThrough": "2",
+            "durableThrough": null,
+            "retainedFrom": "0",
+            "nextByteOffset": "4",
+            "seal": {
+              "lastSeq": null,
+              "totalBytes": "0",
+              "payloadDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "truncated": false
+            }
+          }
+        },
+        {
+          "id": "empty-seal-wrong-digest",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "complete",
+            "acceptedThrough": null,
+            "durableThrough": null,
+            "retainedFrom": null,
+            "nextByteOffset": "0",
+            "seal": {
+              "lastSeq": null,
+              "totalBytes": "0",
+              "payloadDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+              "truncated": false
+            }
+          }
+        },
+        {
+          "id": "empty-seal-nonzero-total",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "complete",
+            "acceptedThrough": null,
+            "durableThrough": null,
+            "retainedFrom": null,
+            "nextByteOffset": "0",
+            "seal": {
+              "lastSeq": null,
+              "totalBytes": "1",
+              "payloadDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "truncated": false
+            }
+          }
+        },
+        {
+          "id": "complete-without-seal",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "complete",
+            "acceptedThrough": "2",
+            "durableThrough": null,
+            "retainedFrom": "0",
+            "nextByteOffset": "4",
+            "seal": null
+          }
+        },
+        {
+          "id": "complete-with-truncated-seal",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "complete",
+            "acceptedThrough": "2",
+            "durableThrough": null,
+            "retainedFrom": "0",
+            "nextByteOffset": "4",
+            "seal": {
+              "lastSeq": "2",
+              "totalBytes": "4",
+              "payloadDigest": "94b442133c0ec875ac4d1c2fb0a78e8a424fe7fcd94f5af3b60b59849a7cd7a8",
+              "truncated": true
+            }
+          }
+        },
+        {
+          "id": "truncated-without-seal",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "truncated",
+            "acceptedThrough": "2",
+            "durableThrough": null,
+            "retainedFrom": "0",
+            "nextByteOffset": "4",
+            "seal": null
+          }
+        },
+        {
+          "id": "truncated-with-complete-seal",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "truncated",
+            "acceptedThrough": "2",
+            "durableThrough": null,
+            "retainedFrom": "0",
+            "nextByteOffset": "4",
+            "seal": {
+              "lastSeq": "2",
+              "totalBytes": "4",
+              "payloadDigest": "94b442133c0ec875ac4d1c2fb0a78e8a424fe7fcd94f5af3b60b59849a7cd7a8",
+              "truncated": false
+            }
+          }
+        },
+        {
+          "id": "available-with-accepted",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "available",
+            "acceptedThrough": "2",
+            "durableThrough": null,
+            "retainedFrom": "0",
+            "nextByteOffset": "4",
+            "seal": null
+          }
+        },
+        {
+          "id": "available-with-empty-seal",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "available",
+            "acceptedThrough": null,
+            "durableThrough": null,
+            "retainedFrom": null,
+            "nextByteOffset": "0",
+            "seal": {
+              "lastSeq": null,
+              "totalBytes": "0",
+              "payloadDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "truncated": false
+            }
+          }
+        },
+        {
+          "id": "available-unknown-offset",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "available",
+            "acceptedThrough": null,
+            "durableThrough": null,
+            "retainedFrom": null,
+            "nextByteOffset": null,
+            "seal": null
+          }
+        },
+        {
+          "id": "receiving-unknown-offset",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "receiving",
+            "acceptedThrough": null,
+            "durableThrough": null,
+            "retainedFrom": null,
+            "nextByteOffset": null,
+            "seal": null
+          }
+        },
+        {
+          "id": "gap-unknown-offset",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "gap",
+            "acceptedThrough": null,
+            "durableThrough": null,
+            "retainedFrom": null,
+            "nextByteOffset": null,
+            "seal": null
+          }
+        },
+        {
+          "id": "unavailable-known-accepted-unknown-offset",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "unavailable",
+            "acceptedThrough": "0",
+            "durableThrough": null,
+            "retainedFrom": null,
+            "nextByteOffset": null,
+            "seal": null
+          }
+        },
+        {
+          "id": "unavailable-unknown-with-seal",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "unavailable",
+            "acceptedThrough": null,
+            "durableThrough": null,
+            "retainedFrom": null,
+            "nextByteOffset": null,
+            "seal": {
+              "lastSeq": null,
+              "totalBytes": "0",
+              "payloadDigest": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+              "truncated": false
+            }
+          }
+        },
+        {
+          "id": "receiving-without-accepted",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "receiving",
+            "acceptedThrough": null,
+            "durableThrough": null,
+            "retainedFrom": null,
+            "nextByteOffset": "0",
+            "seal": null
+          }
+        },
+        {
+          "id": "receiving-with-seal",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "receiving",
+            "acceptedThrough": "2",
+            "durableThrough": null,
+            "retainedFrom": "0",
+            "nextByteOffset": "4",
+            "seal": {
+              "lastSeq": "2",
+              "totalBytes": "4",
+              "payloadDigest": "94b442133c0ec875ac4d1c2fb0a78e8a424fe7fcd94f5af3b60b59849a7cd7a8",
+              "truncated": false
+            }
+          }
+        },
+        {
+          "id": "accepted-with-zero-byte-count",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "receiving",
+            "acceptedThrough": "2",
+            "durableThrough": null,
+            "retainedFrom": "0",
+            "nextByteOffset": "0",
+            "seal": null
+          }
+        },
+        {
+          "id": "accepted-more-blocks-than-bytes",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "receiving",
+            "acceptedThrough": "2",
+            "durableThrough": null,
+            "retainedFrom": "0",
+            "nextByteOffset": "2",
+            "seal": null
+          }
+        },
+        {
+          "id": "gap-without-accepted",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "gap",
+            "acceptedThrough": null,
+            "durableThrough": null,
+            "retainedFrom": null,
+            "nextByteOffset": "0",
+            "seal": null
+          }
+        },
+        {
+          "id": "accepted-last-int64-needs-unrepresentable-byte-count",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "receiving",
+            "acceptedThrough": "9223372036854775807",
+            "durableThrough": null,
+            "retainedFrom": "9223372036854775807",
+            "nextByteOffset": "9223372036854775807",
+            "seal": null
+          }
+        },
+        {
+          "id": "accepted-bigint-minimum-byte-count",
+          "definition": "OutputStatus",
+          "value": {
+            "contract": "terminal-services-v1",
+            "operation": {
+              "operationId": "op-1",
+              "requestDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            },
+            "state": "receiving",
+            "acceptedThrough": "9007199254740993",
+            "durableThrough": "9007199254740992",
+            "retainedFrom": "9007199254740993",
+            "nextByteOffset": "9007199254740993",
+            "seal": null
+          }
+        }
+      ]
+    },
+    "interleavedUtf8": {
+      "description": "同operation统一seq及byteOffset；stdout的UTF-8字符😀跨第0/2块，stderr第1块x交错；须分通道持续解码，seal按原捕获seq串联raw bytes。",
+      "blocks": [
+        {
+          "seq": "0",
+          "byteOffset": "0",
+          "channel": "stdout",
+          "encoding": "utf-8",
+          "byteLength": 2,
+          "payloadDigest": "3c1c36c746e9b9106e77cfc2ede3374d38a883e23fbcd3b20023e326008c5434",
+          "base64": "8J8="
+        },
+        {
+          "seq": "1",
+          "byteOffset": "2",
+          "channel": "stderr",
+          "encoding": "utf-8",
+          "byteLength": 1,
+          "payloadDigest": "2d711642b726b04401627ca9fbac32f5c8530fb1903cc4db02258717921a4881",
+          "base64": "eA=="
+        },
+        {
+          "seq": "2",
+          "byteOffset": "3",
+          "channel": "stdout",
+          "encoding": "utf-8",
+          "byteLength": 2,
+          "payloadDigest": "2e394f6d9bb41a558c7da1d161c0c8da474e5331a9802c11ccfad078d8c17497",
+          "base64": "mIA="
+        }
+      ],
+      "seal": {
+        "lastSeq": "2",
+        "totalBytes": "5",
+        "payloadDigest": "b827d0cd3ac9885715be621cd9e6789d53fbbfe2393c226cfe2cf5d5d0cb1889",
+        "truncated": false
+      },
+      "capturedBase64": "8J94mIA=",
+      "decodedChannels": {
+        "stdout": "😀",
+        "stderr": "x"
+      }
+    }
+  }
+}

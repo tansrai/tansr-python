@@ -1,0 +1,3295 @@
+{
+  "description": "unified-v1 结构金样(UAPI-01 阶段三):Manifest / Capabilities / CapabilityClosure / FacadeError / UnifiedError / EventEnvelope / RequestHeaders / ResponseHeaders 的正向与负向向量;只断言结构与标量保真,不代表鉴权或跨请求语义。依据 RFC-UAPI-1 v1.0-rc 会签稿与方案 §0 D7(统一码 19、tansr-event-envelope 协商头、票据段 ticketId)、§0 D18(事件包络 wire 定形 7 键 { contract, eventId, domain, type, cursorSet, terminalStatus, raw };EventEnvelope 正例与服务端 event-envelope.ts 真实产物同形)。CapabilityClosure 正例 = closure.ts computeClosure 真实产物(测试重算比对);Manifest 正例按路径引用仓内 api-manifest.json(valueFile)。负向向量两形:内联 value,或 base(某正例 name)+ patch(RFC 6902 子集 add / replace / remove,按序施于 base 深拷贝)——后者让\"错在哪一位\"一目了然并控制体积。",
+  "schemaSha256": "fd07962916f7662ecc69c3f8c8d2b79aa5b99f542cbfd310a50f56777e51f117",
+  "closureSources": {
+    "full": {
+      "installed": {
+        "session": "sdk2-offload-v1",
+        "execution": true,
+        "archive": true,
+        "archive-sync": true,
+        "cache": true,
+        "terminal": true,
+        "terminal-observation": true,
+        "terminal-profile": true
+      },
+      "authorizationRevision": "7",
+      "session": {
+        "family": "sdk2-offload-v1",
+        "state": "idle"
+      },
+      "execution": {
+        "boundaryRevision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "effectiveTools": [
+          {
+            "name": "Shell",
+            "executionKind": "bound-device",
+            "available": true,
+            "unavailableReason": null
+          },
+          {
+            "name": "Read",
+            "executionKind": "bound-device",
+            "available": true,
+            "unavailableReason": null
+          },
+          {
+            "name": "WebSearch",
+            "executionKind": "managed-service",
+            "available": true,
+            "unavailableReason": null
+          }
+        ]
+      },
+      "archive": {
+        "epochId": "epoch-1",
+        "capabilities": [
+          "archive-transfer-v1",
+          "context-materials-v1"
+        ]
+      },
+      "terminal": {
+        "schemaRevision": "2026-09-26.candidate-7",
+        "features": {
+          "execution-stream-v1": "installed",
+          "execution-background-v1": "installed",
+          "memory-lifecycle-v1": "installed",
+          "session-configuration-v1": "installed"
+        }
+      },
+      "input": {
+        "version": 1,
+        "accepts": [
+          "text",
+          "textBlocks"
+        ]
+      },
+      "audio": {
+        "speechToText": true,
+        "textToSpeech": true
+      },
+      "cache": {
+        "protocol": "sdk2-cache-v1",
+        "features": [
+          "private-logical-cache-v1"
+        ]
+      }
+    },
+    "partial": {
+      "installed": {
+        "session": "sdk1",
+        "execution": false,
+        "archive": true,
+        "archive-sync": false,
+        "cache": false,
+        "terminal": true,
+        "terminal-observation": true,
+        "terminal-profile": false
+      },
+      "authorizationRevision": null,
+      "session": {
+        "family": "sdk1",
+        "state": "ended"
+      },
+      "execution": null,
+      "archive": {
+        "epochId": null,
+        "capabilities": [
+          "archive-transfer-v1"
+        ]
+      },
+      "terminal": {
+        "schemaRevision": "2026-09-26.candidate-7",
+        "features": {
+          "execution-stream-v1": "installed",
+          "execution-background-v1": "supported",
+          "memory-lifecycle-v1": "unconfirmed",
+          "session-configuration-v1": "installed"
+        }
+      },
+      "input": null,
+      "audio": null,
+      "cache": null
+    }
+  },
+  "vectors": [
+    {
+      "name": "manifest-repo-artifact",
+      "definition": "Manifest",
+      "expect": "valid",
+      "valueFile": "packages/server/contract/api-manifest.json",
+      "note": "仓内产物原文(按路径引用:golden 若内嵌 manifest 而 manifest 又登记 golden 的 SHA 即成循环)"
+    },
+    {
+      "name": "manifest-runtime-view",
+      "definition": "Manifest",
+      "expect": "valid",
+      "value": {
+        "format": "tansr-api-manifest-v1",
+        "contract": "unified-v1",
+        "revision": 4,
+        "schemaHash": "d97e35a97e4e88699b988b56ce56d4420e62f3887c20348c9dc148db4dee74e3",
+        "families": [
+          {
+            "id": "sdk2-archive-recovery-v1",
+            "domains": [
+              "archive"
+            ],
+            "status": "additive",
+            "rfc": "doc/rfc/RFC-SDK2-ACK-recovery-v1.md",
+            "source": "doc/rfc/sdk2-archive-recovery-v1.schema.json",
+            "sha256": "f530de1096b4f5d56ea688b7f2cec9ae66deb7d3719db85ab1f48287d3bd7ad4",
+            "golden": {
+              "doc/rfc/sdk2-archive-recovery-v1.golden.json": "614adf2088585a6213d010acde29598d40757d0f2d7b4608f1670ccbde3a5553",
+              "doc/rfc/sdk2-archive-recovery-v1.sqlite.sql": "a6fcfef2458cb0dcf9788af2385573c85b238dc875dee7ffc144f27dcc28028b"
+            },
+            "generated": [
+              "packages/api-client/src/sdk2/archive-recovery-schema-generated.ts",
+              "packages/api-client/src/sdk2/archive-recovery-types-generated.ts",
+              "packages/server/src/sdk2/archive-recovery-contract.generated.ts"
+            ],
+            "legacyEntries": [
+              "/v3/sdk2/bindings/:id/archive/ack-rebases"
+            ],
+            "apiEntries": [
+              "/api/archive/bindings/:id/archive/ack-rebases"
+            ],
+            "clients": [
+              {
+                "client": "node",
+                "repo": "tansr-cli",
+                "lock": "generated",
+                "observed": "2026-09-30",
+                "drift": false
+              },
+              {
+                "client": "csharp",
+                "repo": "tansr-net",
+                "file": "src/Tansr.Sdk/Archive/Recovery",
+                "lock": "hand-written",
+                "observed": "2026-09-30",
+                "drift": false
+              },
+              {
+                "client": "android",
+                "repo": "tansr-android",
+                "lock": "absent",
+                "observed": "2026-09-30",
+                "drift": false
+              },
+              {
+                "client": "ios",
+                "repo": "tansr-ios",
+                "lock": "absent",
+                "observed": "2026-09-30",
+                "drift": false
+              },
+              {
+                "client": "harmony",
+                "repo": "tansr-harmony",
+                "lock": "absent",
+                "observed": "2026-09-30",
+                "drift": false
+              }
+            ],
+            "requestIdPath": [
+              "request",
+              "requestId"
+            ]
+          },
+          {
+            "id": "agent-session-v1",
+            "domains": [
+              "session"
+            ],
+            "status": "frozen",
+            "rfc": "doc/98-Agent会话服务v2契约冻结件.md",
+            "source": "packages/server/src/v2/contract.ts",
+            "sha256": "6e1876edc476322e2fc3613958f5b44700bb80ea23550fa794f5729220674f3e",
+            "golden": {
+              "packages/cli/test/fixtures/agent-v2-frames/frames.json": "5d3a40dcfea3709a06b78dd9a0066f68194efff96ebc4defc79476a589161d50",
+              "packages/protocol/schemas/kernel-event.schema.json": "54b587ade59bf20a3d55647a160c3d857dbf2fa73730d82cf7811b7ee4097501"
+            },
+            "generated": [],
+            "legacyEntries": [
+              "/v2/sessions",
+              "/v2/sessions/:id/**"
+            ],
+            "apiEntries": [
+              "/api/sessions",
+              "/api/sessions/:id/**",
+              "/api/capabilities/sessions"
+            ],
+            "clients": [
+              {
+                "client": "node",
+                "repo": "tansr-cli",
+                "lock": "source",
+                "observed": "2026-09-30",
+                "drift": false
+              },
+              {
+                "client": "csharp",
+                "repo": "tansr-net",
+                "file": "contract/session-compatibility.json",
+                "lock": "route-vectors",
+                "observed": "2026-09-30",
+                "drift": false
+              },
+              {
+                "client": "android",
+                "repo": "tansr-android",
+                "file": "core/src/test/resources/contract/vendored.json",
+                "lock": "MANIFEST-revision-9",
+                "observed": "2026-09-30",
+                "drift": false
+              },
+              {
+                "client": "ios",
+                "repo": "tansr-ios",
+                "file": "Tests/TansrCoreTests/Fixtures/contract/vendored.json",
+                "lock": "MANIFEST-revision-9",
+                "observed": "2026-09-30",
+                "drift": false
+              },
+              {
+                "client": "harmony",
+                "repo": "tansr-harmony",
+                "file": "tests/fixtures/PROVENANCE.json",
+                "lock": "sourceCommit-ad43a96d",
+                "observed": "2026-09-30",
+                "drift": false
+              }
+            ],
+            "requestIdPath": null,
+            "sessionManifestRevision": 9,
+            "sessionManifestSha256": "6e1876edc476322e2fc3613958f5b44700bb80ea23550fa794f5729220674f3e"
+          }
+        ],
+        "operations": [
+          {
+            "name": "discovery.session.capabilities",
+            "domain": "discovery",
+            "family": null,
+            "method": "GET",
+            "apiPath": "/api/sessions/:id/capabilities",
+            "aliases": [],
+            "legacyPath": null,
+            "legacyOffloadPath": null,
+            "kind": "read",
+            "sse": false,
+            "request": null,
+            "response": null,
+            "query": [],
+            "notes": "会话级能力闭合围栏(方案 §3.6 / RFC-UAPI-1 §1.4):{ contract, closureId, authorizationRevision, domains, operations } + 响应头 tansr-closure-id;写操作可携 tansr-closure-id 作前置(412 closure_stale)",
+            "etagPath": null,
+            "expectedRevision": null
+          },
+          {
+            "name": "session.message.send",
+            "domain": "session",
+            "family": "agent-session-v1",
+            "method": "POST",
+            "apiPath": "/api/sessions/:id/messages",
+            "aliases": [],
+            "legacyPath": "/v2/sessions/:id/messages",
+            "legacyOffloadPath": "/v3/sdk2/sessions/:id/messages",
+            "kind": "write",
+            "sse": false,
+            "request": "agent-session-v1#MessagesBodySchema",
+            "response": null,
+            "query": [],
+            "notes": "202 { sessionId, accepted: true };事件经 session.events.observe",
+            "etagPath": null,
+            "expectedRevision": null
+          },
+          {
+            "name": "session.events.observe",
+            "domain": "session",
+            "family": "agent-session-v1",
+            "method": "GET",
+            "apiPath": "/api/sessions/:id/events",
+            "aliases": [],
+            "legacyPath": "/v2/sessions/:id/events",
+            "legacyOffloadPath": "/v3/sdk2/sessions/:id/events",
+            "kind": "stream",
+            "sse": true,
+            "request": null,
+            "response": null,
+            "query": [
+              "exclude"
+            ],
+            "notes": "Last-Event-ID 续订;帧 = KernelEvent(golden kernel-event.schema.json)+ 控制帧 CONTROL_FRAME",
+            "etagPath": null,
+            "expectedRevision": null
+          },
+          {
+            "name": "terminal.memory.receipt",
+            "domain": "terminal",
+            "family": "terminal-services-v1",
+            "method": "GET",
+            "apiPath": "/api/terminal/sessions/:id/memory/commands/:targetId",
+            "aliases": [
+              "/api/sessions/:id/memory/commands/:targetId"
+            ],
+            "legacyPath": "/v3/terminal/sessions/:id/memory/commands/:targetId",
+            "legacyOffloadPath": null,
+            "kind": "read",
+            "sse": false,
+            "request": null,
+            "response": "terminal-services-v1#MemoryReceiptResponse",
+            "query": [
+              "contract",
+              "sessionContract",
+              "requestId"
+            ],
+            "notes": ":targetId = operationId",
+            "etagPath": null,
+            "expectedRevision": null
+          },
+          {
+            "name": "archive.ack.rebase",
+            "domain": "archive",
+            "family": "sdk2-archive-recovery-v1",
+            "method": "POST",
+            "apiPath": "/api/archive/bindings/:id/archive/ack-rebases",
+            "aliases": [],
+            "legacyPath": "/v3/sdk2/bindings/:id/archive/ack-rebases",
+            "legacyOffloadPath": null,
+            "kind": "write",
+            "sse": false,
+            "request": "sdk2-archive-recovery-v1#AckRebaseRequest",
+            "response": "sdk2-archive-recovery-v1#AckRebaseReceipt",
+            "query": [],
+            "notes": null,
+            "etagPath": null,
+            "expectedRevision": null
+          }
+        ],
+        "capabilities": [
+          {
+            "id": "archive.limit.controlBytes",
+            "domain": "archive",
+            "family": "sdk2-ext-v1",
+            "kind": "limit",
+            "source": "packages/api-client/src/sdk2/wire-limits-generated.ts#SDK2_LIMIT_RANGES",
+            "value": {
+              "min": 1024,
+              "max": 262144,
+              "default": 262144
+            }
+          },
+          {
+            "id": "terminal.feature.execution-stream-v1",
+            "domain": "terminal",
+            "family": "terminal-services-v1",
+            "kind": "feature",
+            "source": "doc/rfc/terminal-services-v1.schema.json#Feature",
+            "value": "execution-stream-v1"
+          },
+          {
+            "id": "session.input.text",
+            "domain": "session",
+            "family": "agent-session-v1",
+            "kind": "capability",
+            "source": "packages/kernel/src/query/session-input-delivery.ts#SessionInputCapabilities",
+            "value": "boolean"
+          }
+        ],
+        "platformApi": [
+          {
+            "id": "sdk-cross-repo-contract-v1",
+            "doc": "doc/89-SDK跨仓契约v1.md",
+            "host": "tansr-api",
+            "entries": [
+              "/t1/*",
+              "/v1/app-tokens",
+              "/v1/my-usage"
+            ],
+            "vendored": "packages/sdk/contract/openapi.json"
+          },
+          {
+            "id": "sdk2-cache-v1",
+            "doc": "doc/rfc/RFC-SDK2-缓存连续性.md",
+            "host": "tansr-api",
+            "entries": [
+              "/t1/cache/v1/*"
+            ],
+            "vendored": null
+          },
+          {
+            "id": "sdk2-cache-core-v1",
+            "doc": "doc/rfc/sdk2-cache-core-v1.md",
+            "host": "tansr-api",
+            "entries": [
+              "/t1/cache/core/v1/*"
+            ],
+            "vendored": null
+          }
+        ],
+        "runtime": {
+          "installed": {
+            "session": "sdk2-offload-v1",
+            "execution": true,
+            "archive": true,
+            "archive-sync": false,
+            "cache": false,
+            "terminal": true,
+            "terminal-observation": true,
+            "terminal-profile": true
+          }
+        }
+      },
+      "note": "从仓内产物裁剪的运行时视图(2 族 / 5 操作 / 3 能力项 + runtime.installed;GET /api/manifest 形)"
+    },
+    {
+      "name": "capabilities-offload-deployment",
+      "definition": "Capabilities",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "manifestRevision": 4,
+        "schemaHash": "sha256:d97e35a97e4e88699b988b56ce56d4420e62f3887c20348c9dc148db4dee74e3",
+        "domains": {
+          "session": {
+            "installed": true,
+            "family": {
+              "preferred": "sdk2-offload-v1",
+              "available": [
+                "sdk1",
+                "sdk2-offload-v1"
+              ]
+            },
+            "contract": "agent-session-v1",
+            "status": "frozen",
+            "schemaHash": "sha256:6e1876edc476322e2fc3613958f5b44700bb80ea23550fa794f5729220674f3e"
+          },
+          "execution": {
+            "installed": true,
+            "contract": "sdk2-ext-v1",
+            "status": "final",
+            "schemaHash": "sha256:969273844ca9196f19dd71b292b65a49307d63be0d20a0caf557e105ba6d8605"
+          },
+          "archive": {
+            "installed": true,
+            "contract": "sdk2-ext-v1",
+            "status": "final",
+            "schemaHash": "sha256:969273844ca9196f19dd71b292b65a49307d63be0d20a0caf557e105ba6d8605"
+          },
+          "archive-sync": {
+            "installed": false,
+            "contract": "archive-sync-v1",
+            "status": "additive",
+            "schemaHash": "sha256:fac68e8ba9540c6511f677d23ef0d18c32c2eb91b5157556ae3e2869e7f4e533"
+          },
+          "cache": {
+            "installed": false,
+            "contract": "sdk2-cache-v1",
+            "status": "drafted",
+            "schemaHash": "sha256:88e7941861fab1a6380b9226e3a42adb8c872efdf720dc36e92ffa42da43d818"
+          },
+          "terminal": {
+            "installed": true,
+            "contract": "terminal-services-v1",
+            "status": "candidate",
+            "schemaHash": "sha256:8cd8c7c55a84c5700373aed75d5653a0737d718bfe0546641be367bda1a11896"
+          },
+          "terminal-observation": {
+            "installed": true,
+            "contract": "terminal-observation-v1",
+            "status": "additive",
+            "schemaHash": "sha256:b6668463458e78b2cfe23baa72d9d9ac6263a248467dd8aeb60387fc2f67c28a"
+          },
+          "terminal-profile": {
+            "installed": true,
+            "contract": "terminal-profile-v1",
+            "status": "additive",
+            "schemaHash": "sha256:560ad136f0619a2a0592151d56e10871c3799ca438163c4e2872381bf5f5159a"
+          }
+        }
+      },
+      "note": "facade.ts capabilitiesBody:卸载族首选、两族可用、终端三面装配"
+    },
+    {
+      "name": "capabilities-sdk1-only-deployment",
+      "definition": "Capabilities",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "manifestRevision": 4,
+        "schemaHash": "sha256:d97e35a97e4e88699b988b56ce56d4420e62f3887c20348c9dc148db4dee74e3",
+        "domains": {
+          "session": {
+            "installed": true,
+            "family": {
+              "preferred": "sdk1",
+              "available": [
+                "sdk1"
+              ]
+            },
+            "contract": "agent-session-v1",
+            "status": "frozen",
+            "schemaHash": "sha256:6e1876edc476322e2fc3613958f5b44700bb80ea23550fa794f5729220674f3e"
+          },
+          "execution": {
+            "installed": false,
+            "contract": "sdk2-ext-v1",
+            "status": "final",
+            "schemaHash": "sha256:969273844ca9196f19dd71b292b65a49307d63be0d20a0caf557e105ba6d8605"
+          },
+          "archive": {
+            "installed": false,
+            "contract": "sdk2-ext-v1",
+            "status": "final",
+            "schemaHash": "sha256:969273844ca9196f19dd71b292b65a49307d63be0d20a0caf557e105ba6d8605"
+          },
+          "archive-sync": {
+            "installed": false,
+            "contract": "archive-sync-v1",
+            "status": "additive",
+            "schemaHash": "sha256:fac68e8ba9540c6511f677d23ef0d18c32c2eb91b5157556ae3e2869e7f4e533"
+          },
+          "cache": {
+            "installed": false,
+            "contract": "sdk2-cache-v1",
+            "status": "drafted",
+            "schemaHash": "sha256:88e7941861fab1a6380b9226e3a42adb8c872efdf720dc36e92ffa42da43d818"
+          },
+          "terminal": {
+            "installed": false,
+            "contract": "terminal-services-v1",
+            "status": "candidate",
+            "schemaHash": "sha256:8cd8c7c55a84c5700373aed75d5653a0737d718bfe0546641be367bda1a11896"
+          },
+          "terminal-observation": {
+            "installed": false,
+            "contract": "terminal-observation-v1",
+            "status": "additive",
+            "schemaHash": "sha256:b6668463458e78b2cfe23baa72d9d9ac6263a248467dd8aeb60387fc2f67c28a"
+          },
+          "terminal-profile": {
+            "installed": false,
+            "contract": "terminal-profile-v1",
+            "status": "additive",
+            "schemaHash": "sha256:560ad136f0619a2a0592151d56e10871c3799ca438163c4e2872381bf5f5159a"
+          }
+        }
+      },
+      "note": "facade.ts capabilitiesBody:仅 sdk1 会话面,其余域未装配"
+    },
+    {
+      "name": "closure-full-enabled",
+      "definition": "CapabilityClosure",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "closureId": "fc9a7b7a38e67ef3bcf0165be04290102628d1fa344b9e4775edad987b609399",
+        "authorizationRevision": "7",
+        "domains": {
+          "session": {
+            "installed": true,
+            "revision": "sdk2-offload-v1"
+          },
+          "execution": {
+            "installed": true,
+            "revision": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "archive": {
+            "installed": true,
+            "revision": "epoch-1"
+          },
+          "archive-sync": {
+            "installed": true,
+            "revision": null
+          },
+          "cache": {
+            "installed": true,
+            "revision": "sdk2-cache-v1"
+          },
+          "terminal": {
+            "installed": true,
+            "revision": "2026-09-26.candidate-7"
+          },
+          "terminal-observation": {
+            "installed": true,
+            "revision": null
+          },
+          "terminal-profile": {
+            "installed": true,
+            "revision": null
+          }
+        },
+        "operations": {
+          "session.create": "enabled",
+          "session.list": "enabled",
+          "session.get": "enabled",
+          "session.close": "enabled",
+          "session.message.send": "enabled",
+          "session.events.observe": "enabled",
+          "session.interrupt": "enabled",
+          "session.history.read": "enabled",
+          "session.tool.result": "enabled",
+          "session.permission.decide": "enabled",
+          "session.question.answer": "enabled",
+          "session.compact": "enabled",
+          "session.checkpoint.list": "enabled",
+          "session.checkpoint.create": "enabled",
+          "session.checkpoint.import": "enabled",
+          "session.checkpoint.restore": "enabled",
+          "session.checkpoint.export": "enabled",
+          "session.checkpoint.delete": "enabled",
+          "session.cwd.set": "enabled",
+          "session.audio.transcribe": "enabled",
+          "session.audio.speak": "enabled",
+          "session.input.capabilities": "enabled",
+          "session.input.submit": "enabled",
+          "session.input.status": "enabled",
+          "approval.credential.submit": "enabled",
+          "execution.initialize": "enabled",
+          "execution.capabilities": "enabled",
+          "execution.boundary": "enabled",
+          "execution.binding.create": "enabled",
+          "execution.status": "enabled",
+          "executor.register": "enabled",
+          "executor.heartbeat": "enabled",
+          "executor.operations.poll": "enabled",
+          "executor.receipt.submit": "enabled",
+          "archive.capabilities": "enabled",
+          "archive.binding.target": "enabled",
+          "archive.binding.create": "enabled",
+          "archive.binding.get": "enabled",
+          "archive.binding.close": "enabled",
+          "archive.status": "enabled",
+          "archive.events.observe": "enabled",
+          "archive.records.read": "enabled",
+          "archive.artifact.read": "enabled",
+          "archive.ack.commit": "enabled",
+          "archive.ack.rebase": "enabled",
+          "archive.operation.query": "enabled",
+          "archive.sync": "enabled",
+          "material.response.submit": "enabled",
+          "material.status": "enabled",
+          "material.upload.status": "enabled",
+          "material.upload.chunk": "enabled",
+          "cache.capabilities": "enabled",
+          "cache.binding.open": "enabled",
+          "cache.binding.get": "enabled",
+          "cache.binding.renew": "enabled",
+          "cache.binding.rebind": "enabled",
+          "cache.binding.rotate": "enabled",
+          "cache.binding.close": "enabled",
+          "cache.operation.query": "enabled",
+          "cache.diagnostics": "enabled",
+          "cache.core.diagnostics": "enabled",
+          "terminal.capabilities": "enabled",
+          "terminal.binding.create": "enabled",
+          "terminal.executor.events.observe": "enabled",
+          "terminal.output.batch": "enabled",
+          "terminal.execution.state": "enabled",
+          "terminal.output.observe": "enabled",
+          "terminal.output.status": "enabled",
+          "terminal.configuration.read": "enabled",
+          "terminal.configuration.commit": "enabled",
+          "terminal.memory.read": "enabled",
+          "terminal.memory.command": "enabled",
+          "terminal.memory.receipt": "enabled",
+          "terminal.observation.resources": "enabled",
+          "terminal.observation.correlations": "enabled",
+          "terminal.profile.catalog": "enabled",
+          "terminal.profile.usage": "enabled"
+        }
+      },
+      "note": "closure.ts computeClosure(全装配 / idle / 全能力源)= 77 条全 enabled"
+    },
+    {
+      "name": "closure-partial-mixed",
+      "definition": "CapabilityClosure",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "closureId": "97f747b6cee3ddccee68b6c74592e239ea86c4637c857e92c0064a5383cffd9d",
+        "authorizationRevision": null,
+        "domains": {
+          "session": {
+            "installed": true,
+            "revision": "sdk1"
+          },
+          "execution": {
+            "installed": false,
+            "revision": null
+          },
+          "archive": {
+            "installed": true,
+            "revision": null
+          },
+          "archive-sync": {
+            "installed": false,
+            "revision": null
+          },
+          "cache": {
+            "installed": false,
+            "revision": null
+          },
+          "terminal": {
+            "installed": true,
+            "revision": "2026-09-26.candidate-7"
+          },
+          "terminal-observation": {
+            "installed": true,
+            "revision": null
+          },
+          "terminal-profile": {
+            "installed": false,
+            "revision": null
+          }
+        },
+        "operations": {
+          "session.create": "enabled",
+          "session.list": "enabled",
+          "session.get": "enabled",
+          "session.close": "disabled",
+          "session.message.send": "disabled",
+          "session.events.observe": "enabled",
+          "session.interrupt": "disabled",
+          "session.history.read": "enabled",
+          "session.tool.result": "disabled",
+          "session.permission.decide": "disabled",
+          "session.question.answer": "disabled",
+          "session.compact": "disabled",
+          "session.checkpoint.list": "enabled",
+          "session.checkpoint.create": "disabled",
+          "session.checkpoint.import": "disabled",
+          "session.checkpoint.restore": "disabled",
+          "session.checkpoint.export": "enabled",
+          "session.checkpoint.delete": "disabled",
+          "session.cwd.set": "disabled",
+          "session.audio.transcribe": "unavailable",
+          "session.audio.speak": "unavailable",
+          "session.input.capabilities": "unavailable",
+          "session.input.submit": "unavailable",
+          "session.input.status": "unavailable",
+          "approval.credential.submit": "enabled",
+          "execution.initialize": "unavailable",
+          "execution.capabilities": "unavailable",
+          "execution.boundary": "unavailable",
+          "execution.binding.create": "unavailable",
+          "execution.status": "unavailable",
+          "executor.register": "unavailable",
+          "executor.heartbeat": "unavailable",
+          "executor.operations.poll": "unavailable",
+          "executor.receipt.submit": "unavailable",
+          "archive.capabilities": "enabled",
+          "archive.binding.target": "enabled",
+          "archive.binding.create": "disabled",
+          "archive.binding.get": "enabled",
+          "archive.binding.close": "disabled",
+          "archive.status": "enabled",
+          "archive.events.observe": "enabled",
+          "archive.records.read": "enabled",
+          "archive.artifact.read": "enabled",
+          "archive.ack.commit": "disabled",
+          "archive.ack.rebase": "disabled",
+          "archive.operation.query": "enabled",
+          "archive.sync": "unavailable",
+          "material.response.submit": "disabled",
+          "material.status": "disabled",
+          "material.upload.status": "disabled",
+          "material.upload.chunk": "disabled",
+          "cache.capabilities": "unavailable",
+          "cache.binding.open": "unavailable",
+          "cache.binding.get": "unavailable",
+          "cache.binding.renew": "unavailable",
+          "cache.binding.rebind": "unavailable",
+          "cache.binding.rotate": "unavailable",
+          "cache.binding.close": "unavailable",
+          "cache.operation.query": "unavailable",
+          "cache.diagnostics": "unavailable",
+          "cache.core.diagnostics": "unavailable",
+          "terminal.capabilities": "enabled",
+          "terminal.binding.create": "disabled",
+          "terminal.executor.events.observe": "enabled",
+          "terminal.output.batch": "disabled",
+          "terminal.execution.state": "enabled",
+          "terminal.output.observe": "enabled",
+          "terminal.output.status": "enabled",
+          "terminal.configuration.read": "enabled",
+          "terminal.configuration.commit": "disabled",
+          "terminal.memory.read": "disabled",
+          "terminal.memory.command": "disabled",
+          "terminal.memory.receipt": "disabled",
+          "terminal.observation.resources": "enabled",
+          "terminal.observation.correlations": "enabled",
+          "terminal.profile.catalog": "unavailable",
+          "terminal.profile.usage": "unavailable"
+        }
+      },
+      "note": "closure.ts computeClosure(sdk1 已结束会话、无执行宿主、档案无 epoch、终端 feature 三态混合、无 INJ / 音频 / 缓存)"
+    },
+    {
+      "name": "facade-error-unauthorized",
+      "definition": "FacadeError",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "traceId": "5f2b0e3c9a7d4b1e8c6f0a2d3e4b5c6d",
+        "requestId": null,
+        "code": "unauthorized",
+        "status": 401,
+        "retryAction": "none",
+        "message": "authentication required"
+      },
+      "note": "facade.ts sendFacadeError 调用点逐字"
+    },
+    {
+      "name": "facade-error-not-found",
+      "definition": "FacadeError",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "traceId": "5f2b0e3c9a7d4b1e8c6f0a2d3e4b5c6d",
+        "requestId": null,
+        "code": "not_found",
+        "status": 404,
+        "retryAction": "none",
+        "message": "no such api resource"
+      },
+      "note": "facade.ts sendFacadeError 调用点逐字"
+    },
+    {
+      "name": "facade-error-method-not-allowed",
+      "definition": "FacadeError",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "traceId": "5f2b0e3c9a7d4b1e8c6f0a2d3e4b5c6d",
+        "requestId": null,
+        "code": "method_not_allowed",
+        "status": 405,
+        "retryAction": "none",
+        "message": "POST not allowed"
+      },
+      "note": "facade.ts sendFacadeError 调用点逐字"
+    },
+    {
+      "name": "facade-error-invalid-request-query",
+      "definition": "FacadeError",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "traceId": "5f2b0e3c9a7d4b1e8c6f0a2d3e4b5c6d",
+        "requestId": null,
+        "code": "invalid_request",
+        "status": 400,
+        "retryAction": "none",
+        "message": "discovery endpoints accept no query string or body"
+      },
+      "note": "facade.ts sendFacadeError 调用点逐字"
+    },
+    {
+      "name": "facade-error-invalid-request-header",
+      "definition": "FacadeError",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "traceId": "5f2b0e3c9a7d4b1e8c6f0a2d3e4b5c6d",
+        "requestId": null,
+        "code": "invalid_request",
+        "status": 400,
+        "retryAction": "none",
+        "message": "tansr-closure-id applies to session-scoped write operations only",
+        "detail": {
+          "header": "tansr-closure-id"
+        }
+      },
+      "note": "facade.ts sendFacadeError 调用点逐字"
+    },
+    {
+      "name": "facade-error-capability-unavailable-not-installed",
+      "definition": "FacadeError",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "traceId": "5f2b0e3c9a7d4b1e8c6f0a2d3e4b5c6d",
+        "requestId": null,
+        "code": "capability_unavailable",
+        "status": 404,
+        "retryAction": "none",
+        "message": "terminal is not installed on this serve",
+        "detail": {
+          "reason": "not_installed"
+        }
+      },
+      "note": "facade.ts sendFacadeError 调用点逐字"
+    },
+    {
+      "name": "facade-error-capability-unavailable-session-family",
+      "definition": "FacadeError",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "traceId": "5f2b0e3c9a7d4b1e8c6f0a2d3e4b5c6d",
+        "requestId": null,
+        "code": "capability_unavailable",
+        "status": 404,
+        "retryAction": "none",
+        "message": "requested session family is not installed on this serve",
+        "detail": {
+          "reason": "not_installed",
+          "header": "tansr-session-family"
+        }
+      },
+      "note": "facade.ts sendFacadeError 调用点逐字"
+    },
+    {
+      "name": "facade-error-capability-unavailable-outside-closure-disabled",
+      "definition": "FacadeError",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "traceId": "5f2b0e3c9a7d4b1e8c6f0a2d3e4b5c6d",
+        "requestId": null,
+        "code": "capability_unavailable",
+        "status": 403,
+        "retryAction": "none",
+        "message": "terminal.memory.command is disabled for this session",
+        "detail": {
+          "reason": "outside_closure",
+          "operation": "terminal.memory.command",
+          "state": "disabled",
+          "closureId": "1d6dcf8d9996b60e4367660f8e0aa509003cab7568334c19cf3777b9ba1376f4"
+        }
+      },
+      "note": "facade.ts sendFacadeError 调用点逐字"
+    },
+    {
+      "name": "facade-error-capability-unavailable-outside-closure-unavailable",
+      "definition": "FacadeError",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "traceId": "5f2b0e3c9a7d4b1e8c6f0a2d3e4b5c6d",
+        "requestId": null,
+        "code": "capability_unavailable",
+        "status": 404,
+        "retryAction": "none",
+        "message": "session.input.submit is unavailable for this session",
+        "detail": {
+          "reason": "outside_closure",
+          "operation": "session.input.submit",
+          "state": "unavailable",
+          "closureId": "1d6dcf8d9996b60e4367660f8e0aa509003cab7568334c19cf3777b9ba1376f4"
+        }
+      },
+      "note": "facade.ts sendFacadeError 调用点逐字"
+    },
+    {
+      "name": "facade-error-capacity-exceeded",
+      "definition": "FacadeError",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "traceId": "5f2b0e3c9a7d4b1e8c6f0a2d3e4b5c6d",
+        "requestId": null,
+        "code": "capacity_exceeded",
+        "status": 503,
+        "retryAction": "same-request",
+        "message": "authentication source unavailable"
+      },
+      "note": "facade.ts sendFacadeError 调用点逐字"
+    },
+    {
+      "name": "facade-error-precondition-failed",
+      "definition": "FacadeError",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "traceId": "5f2b0e3c9a7d4b1e8c6f0a2d3e4b5c6d",
+        "requestId": null,
+        "code": "precondition_failed",
+        "status": 412,
+        "retryAction": "rediscover",
+        "message": "capability closure is stale; rediscover before retrying",
+        "detail": {
+          "domainCode": "closure_stale",
+          "closureId": "3644b2daa415a4093334291091b31f495ff7317d8fe3e4276e5d650189832dfa"
+        }
+      },
+      "note": "facade.ts sendFacadeError 调用点逐字"
+    },
+    {
+      "name": "facade-error-upstream-unavailable",
+      "definition": "FacadeError",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "traceId": "5f2b0e3c9a7d4b1e8c6f0a2d3e4b5c6d",
+        "requestId": null,
+        "code": "upstream_unavailable",
+        "status": 503,
+        "retryAction": "same-request",
+        "message": "capability closure source unavailable"
+      },
+      "note": "facade.ts sendFacadeError 调用点逐字"
+    },
+    {
+      "name": "facade-error-trace-id-uuid",
+      "definition": "FacadeError",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "traceId": "0f4a3c2e-8b7d-4e6f-9a1b-2c3d4e5f6a7b",
+        "requestId": null,
+        "code": "not_found",
+        "status": 404,
+        "retryAction": "none",
+        "message": "no such api resource"
+      },
+      "note": "facade.ts sendFacadeError 调用点逐字"
+    },
+    {
+      "name": "unified-error-sdk2-stale-generation",
+      "definition": "UnifiedError",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "traceId": "5f2b0e3c9a7d4b1e8c6f0a2d3e4b5c6d",
+        "requestId": "req-7c1",
+        "code": "stale_generation",
+        "status": 409,
+        "retryAction": "rebind",
+        "message": "binding generation is stale",
+        "detail": {
+          "domain": "archive",
+          "family": "sdk2-ext-v1",
+          "domainCode": "stale_generation",
+          "domainStatus": 409,
+          "domainRetryAction": "rebind"
+        }
+      },
+      "note": "RFC §2.2 / §2.3 构造"
+    },
+    {
+      "name": "unified-error-cache-result-unknown",
+      "definition": "UnifiedError",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "traceId": "5f2b0e3c9a7d4b1e8c6f0a2d3e4b5c6d",
+        "requestId": "cache-op-19",
+        "code": "result_unknown",
+        "status": 503,
+        "retryAction": "query-status",
+        "message": "commit outcome unknown; query the receipt before retrying",
+        "detail": {
+          "domain": "cache",
+          "family": "sdk2-cache-v1",
+          "domainCode": "result_unknown",
+          "domainStatus": 503,
+          "domainRetryAction": "query-status",
+          "fallback": "none"
+        }
+      },
+      "note": "RFC §2.2 / §2.3 构造"
+    },
+    {
+      "name": "unified-error-terminal-backoff",
+      "definition": "UnifiedError",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "traceId": "5f2b0e3c9a7d4b1e8c6f0a2d3e4b5c6d",
+        "requestId": "term-3",
+        "code": "capacity_exceeded",
+        "status": 429,
+        "retryAction": "same-request",
+        "retryAfterMs": 2000,
+        "message": "request limit reached",
+        "detail": {
+          "domain": "terminal",
+          "family": "terminal-services-v1",
+          "domainCode": "request_limit",
+          "domainStatus": 429,
+          "domainRetryAction": "backoff"
+        }
+      },
+      "note": "RFC §2.2 / §2.3 构造"
+    },
+    {
+      "name": "unified-error-v2-session-ended",
+      "definition": "UnifiedError",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "traceId": "5f2b0e3c9a7d4b1e8c6f0a2d3e4b5c6d",
+        "requestId": null,
+        "code": "gone",
+        "status": 410,
+        "retryAction": "none",
+        "message": "session has ended",
+        "detail": {
+          "domain": "session",
+          "family": "agent-session-v1",
+          "domainCode": "session_ended",
+          "domainStatus": 410
+        }
+      },
+      "note": "RFC §2.2 / §2.3 构造"
+    },
+    {
+      "name": "unified-error-v2-session-not-found-wire",
+      "definition": "UnifiedError",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "traceId": "76e516d4-a0a5-4906-9a70-434dd61d8b5c",
+        "requestId": null,
+        "code": "not_found",
+        "status": 404,
+        "retryAction": "none",
+        "message": "Session not found: nope",
+        "detail": {
+          "domainCode": "session_not_found",
+          "domainStatus": 404,
+          "domainRetryAction": null
+        }
+      },
+      "note": "error-envelope.ts 真实产物(GET /api/sessions/nope;U3-ALIGN 联合断言):/v2 族无动作位 → detail.domainRetryAction = null"
+    },
+    {
+      "name": "unified-error-if-match-conflict",
+      "definition": "UnifiedError",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "traceId": "5f2b0e3c9a7d4b1e8c6f0a2d3e4b5c6d",
+        "requestId": "cfg-42",
+        "code": "precondition_failed",
+        "status": 412,
+        "retryAction": "refresh",
+        "message": "If-Match does not match the current configuration revision",
+        "detail": {
+          "domain": "terminal",
+          "family": "terminal-services-v1",
+          "domainCode": "revision_conflict",
+          "domainStatus": 409,
+          "domainRetryAction": "refresh",
+          "reason": "if_match_stale",
+          "header": "if-match"
+        }
+      },
+      "note": "RFC §1.2 / §2.2 / §2.3;U7-HDR request-headers.ts 真实形(携 If-Match 时域版本冲突改出 412 precondition_failed / refresh,原码留 domainCode,reason if_match_stale;revision 7 由 RFC 构造的 conflict/412 改口)"
+    },
+    {
+      "name": "unified-error-deadline-expired",
+      "definition": "UnifiedError",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "traceId": "5f2b0e3c9a7d4b1e8c6f0a2d3e4b5c6d",
+        "requestId": "msg-9",
+        "code": "invalid_request",
+        "status": 408,
+        "retryAction": "none",
+        "message": "request deadline has passed",
+        "detail": {
+          "reason": "deadline_exceeded",
+          "header": "deadline"
+        }
+      },
+      "note": "RFC §1.2 / §2.2 / §2.3;U7-HDR request-headers.ts 真实形(408 invalid_request / none,reason deadline_exceeded;revision 7 补 reason)"
+    },
+    {
+      "name": "unified-error-idempotency-key-reused",
+      "definition": "UnifiedError",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "traceId": "5f2b0e3c9a7d4b1e8c6f0a2d3e4b5c6d",
+        "requestId": "idem-7",
+        "code": "conflict",
+        "status": 409,
+        "retryAction": "none",
+        "message": "Idempotency-Key was already used with a different request body",
+        "detail": {
+          "reason": "idempotency_key_reused",
+          "header": "idempotency-key"
+        }
+      },
+      "note": "RFC §1.2;U7-HDR request-headers.ts 真实形(同键异义 409 conflict / none;revision 7 登记 reason;三头拒绝按 UnifiedError 校验,不扩 FacadeCode)"
+    },
+    {
+      "name": "unified-error-outside-closure",
+      "definition": "UnifiedError",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "traceId": "5f2b0e3c9a7d4b1e8c6f0a2d3e4b5c6d",
+        "requestId": "ack-1",
+        "code": "capability_unavailable",
+        "status": 403,
+        "retryAction": "none",
+        "message": "archive.ack.commit is disabled for this session",
+        "detail": {
+          "reason": "outside_closure",
+          "operation": "archive.ack.commit",
+          "state": "disabled",
+          "closureId": "1d6dcf8d9996b60e4367660f8e0aa509003cab7568334c19cf3777b9ba1376f4"
+        }
+      },
+      "note": "RFC §2.2 / §2.3 构造"
+    },
+    {
+      "name": "unified-error-precondition-failed-closure",
+      "definition": "UnifiedError",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "traceId": "5f2b0e3c9a7d4b1e8c6f0a2d3e4b5c6d",
+        "requestId": "msg-10",
+        "code": "precondition_failed",
+        "status": 412,
+        "retryAction": "rediscover",
+        "message": "capability closure is stale; rediscover before retrying",
+        "detail": {
+          "domainCode": "closure_stale",
+          "closureId": "3644b2daa415a4093334291091b31f495ff7317d8fe3e4276e5d650189832dfa",
+          "header": "tansr-closure-id"
+        }
+      },
+      "note": "RFC §2.2 / §2.3 构造"
+    },
+    {
+      "name": "unified-error-not-canonical",
+      "definition": "UnifiedError",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "traceId": "5f2b0e3c9a7d4b1e8c6f0a2d3e4b5c6d",
+        "requestId": "ack-2",
+        "code": "not_canonical",
+        "status": 400,
+        "retryAction": "none",
+        "message": "control envelope is not canonical JSON (duplicate key after escape decoding)",
+        "detail": {
+          "domain": "archive",
+          "header": "content-type"
+        }
+      },
+      "note": "RFC §2.2 / §2.3 构造"
+    },
+    {
+      "name": "event-envelope-session-text-delta",
+      "definition": "EventEnvelope",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "eventId": "12",
+        "domain": "session",
+        "type": "msg.text.delta",
+        "cursorSet": {
+          "eventCursor": "12",
+          "archiveCoverage": null,
+          "outputWatermark": null,
+          "materialConsumed": null,
+          "ackReceipt": null
+        },
+        "terminalStatus": null,
+        "raw": {
+          "type": "msg.text.delta",
+          "sessionId": "s-1",
+          "seq": 12,
+          "ts": 1700000000000,
+          "v": "v0",
+          "source": "kernel",
+          "index": 0,
+          "text": "hello"
+        }
+      },
+      "note": "RFC §1.5 / 方案 §0 D18 七键 wire 形(event-envelope.ts 真实产物同形):会话内核帧,eventId = id: = seq,raw = 原事件对象"
+    },
+    {
+      "name": "event-envelope-session-turn-completed",
+      "definition": "EventEnvelope",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "eventId": "13",
+        "domain": "session",
+        "type": "turn.completed",
+        "cursorSet": {
+          "eventCursor": "13",
+          "archiveCoverage": null,
+          "outputWatermark": null,
+          "materialConsumed": null,
+          "ackReceipt": null
+        },
+        "terminalStatus": "completed",
+        "raw": {
+          "type": "turn.completed",
+          "reason": "completed",
+          "sessionId": "s-1",
+          "seq": 13,
+          "ts": 1700000000001,
+          "v": "v0",
+          "source": "kernel"
+        }
+      },
+      "note": "RFC §1.5 / 方案 §0 D18 七键 wire 形(event-envelope.ts 真实产物同形):终态帧 terminalStatus = completed"
+    },
+    {
+      "name": "event-envelope-session-replay-gap",
+      "definition": "EventEnvelope",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "eventId": null,
+        "domain": "session",
+        "type": "server.replay.gap",
+        "cursorSet": {
+          "eventCursor": null,
+          "archiveCoverage": null,
+          "outputWatermark": null,
+          "materialConsumed": null,
+          "ackReceipt": null
+        },
+        "terminalStatus": null,
+        "raw": {
+          "type": "server.replay.gap",
+          "sessionId": "s-1",
+          "requestedAfterSeq": 999,
+          "droppedEvents": 0,
+          "reason": "ahead_of_log"
+        }
+      },
+      "note": "RFC §1.5 / 方案 §0 D18 七键 wire 形(event-envelope.ts 真实产物同形):控制帧无 id: → eventId 与 eventCursor 皆 null,不合成、不继承"
+    },
+    {
+      "name": "event-envelope-archive-status-coverage",
+      "definition": "EventEnvelope",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "eventId": "e1.k1.cursor-1",
+        "domain": "archive",
+        "type": "archive.status",
+        "cursorSet": {
+          "eventCursor": "e1.k1.cursor-1",
+          "archiveCoverage": {
+            "fromSequence": "1",
+            "throughSequence": "9",
+            "headDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "outputWatermark": null,
+          "materialConsumed": null,
+          "ackReceipt": null
+        },
+        "terminalStatus": null,
+        "raw": {
+          "protocol": "sdk2-ext-v1",
+          "bindingId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "eventId": "e1.a.1",
+          "cursor": "e1.k1.cursor-1",
+          "revision": "3",
+          "eventType": "archive.status",
+          "generations": {
+            "historyEpoch": "e",
+            "deletionGeneration": "1",
+            "projectionRevision": "1"
+          },
+          "payload": {
+            "protocol": "sdk2-ext-v1",
+            "bindingId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "revision": "3",
+            "publishedThroughSequence": "9",
+            "acknowledgedCoverage": {
+              "fromSequence": "1",
+              "throughSequence": "9",
+              "headDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            },
+            "releasableThroughSequence": "9",
+            "pendingBytes": 0,
+            "pendingRecords": 0,
+            "sessionPersistence": "unchanged",
+            "state": "active"
+          }
+        }
+      },
+      "note": "RFC §1.5 / 方案 §0 D18 七键 wire 形(event-envelope.ts 真实产物同形):档案域 eventId = 流游标,archiveCoverage = acknowledgedCoverage 的 Coverage 对象(ArchiveCoverage 定义)"
+    },
+    {
+      "name": "event-envelope-archive-material-consumed",
+      "definition": "EventEnvelope",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "eventId": "e1.k1.cursor-2",
+        "domain": "archive",
+        "type": "material.status",
+        "cursorSet": {
+          "eventCursor": "e1.k1.cursor-2",
+          "archiveCoverage": null,
+          "outputWatermark": null,
+          "materialConsumed": "material-1",
+          "ackReceipt": null
+        },
+        "terminalStatus": "completed",
+        "raw": {
+          "protocol": "sdk2-ext-v1",
+          "bindingId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "eventId": "e1.a.2",
+          "cursor": "e1.k1.cursor-2",
+          "revision": "3",
+          "eventType": "material.status",
+          "generations": {
+            "historyEpoch": "e",
+            "deletionGeneration": "1",
+            "projectionRevision": "1"
+          },
+          "payload": {
+            "protocol": "sdk2-ext-v1",
+            "bindingId": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+            "materialRequestId": "material-1",
+            "state": "core-consumed",
+            "revision": "3",
+            "acceptedRecordIds": [
+              "r1"
+            ]
+          }
+        }
+      },
+      "note": "RFC §1.5 / 方案 §0 D18 七键 wire 形(event-envelope.ts 真实产物同形):material.status core-consumed → materialConsumed + completed(received 只表示受理)"
+    },
+    {
+      "name": "event-envelope-terminal-output-block",
+      "definition": "EventEnvelope",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "eventId": null,
+        "domain": "terminal",
+        "type": "output.block",
+        "cursorSet": {
+          "eventCursor": null,
+          "archiveCoverage": null,
+          "outputWatermark": "88",
+          "materialConsumed": null,
+          "ackReceipt": null
+        },
+        "terminalStatus": null,
+        "raw": {
+          "contract": "terminal-services-v1",
+          "type": "output.block",
+          "operation": {
+            "operationId": "op-1",
+            "requestDigest": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+          },
+          "block": {
+            "seq": "88",
+            "byteOffset": "0",
+            "channel": "stdout",
+            "encoding": "utf-8",
+            "byteLength": 3,
+            "payloadDigest": "pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp",
+            "base64": "YWJj"
+          }
+        }
+      },
+      "note": "RFC §1.5 / 方案 §0 D18 七键 wire 形(event-envelope.ts 真实产物同形):tool-output 帧无 id:,outputWatermark = block.seq;type 段含连字符的终端事件名(operation-cancelled 同律)"
+    },
+    {
+      "name": "event-envelope-unknown-type-raw",
+      "definition": "EventEnvelope",
+      "expect": "valid",
+      "value": {
+        "contract": "unified-v1",
+        "eventId": "4",
+        "domain": "session",
+        "type": "x.future.event",
+        "cursorSet": {
+          "eventCursor": "4",
+          "archiveCoverage": null,
+          "outputWatermark": null,
+          "materialConsumed": null,
+          "ackReceipt": null
+        },
+        "terminalStatus": null,
+        "raw": {
+          "type": "x.future.event",
+          "sessionId": "s-1",
+          "seq": 4,
+          "ts": 1700000000004,
+          "v": "v0",
+          "source": "kernel",
+          "extra": {
+            "nested": [
+              1,
+              "two",
+              null
+            ]
+          }
+        }
+      },
+      "note": "RFC §1.5 / 方案 §0 D18 七键 wire 形(event-envelope.ts 真实产物同形):未知 type 仍原样入 raw(对抗单 A12),无 payload 位"
+    },
+    {
+      "name": "request-headers-all-unified",
+      "definition": "RequestHeaders",
+      "expect": "valid",
+      "value": {
+        "authorization": "Bearer eyJhbGciOiJIUzI1NiJ9.token",
+        "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+        "x-request-id": "req_2026-10-01.0001",
+        "idempotency-key": "idem-key~2026",
+        "if-match": "W/\"cfg-3\"",
+        "deadline": "2026-10-01T02:30:00Z",
+        "tansr-session-family": "sdk2-offload-v1",
+        "tansr-closure-id": "3644b2daa415a4093334291091b31f495ff7317d8fe3e4276e5d650189832dfa",
+        "tansr-event-envelope": "unified-v1"
+      },
+      "note": "RFC §1.2 词表(Node 小写头名)"
+    },
+    {
+      "name": "request-headers-minimal",
+      "definition": "RequestHeaders",
+      "expect": "valid",
+      "value": {
+        "authorization": "Bearer t0ken"
+      },
+      "note": "RFC §1.2 词表(Node 小写头名)"
+    },
+    {
+      "name": "response-headers-discovery",
+      "definition": "ResponseHeaders",
+      "expect": "valid",
+      "value": {
+        "tansr-contract": "unified-v1",
+        "tansr-manifest-revision": "4",
+        "tansr-domain": "discovery",
+        "tansr-schema-hash": "sha256:d97e35a97e4e88699b988b56ce56d4420e62f3887c20348c9dc148db4dee74e3",
+        "tansr-closure-id": "3644b2daa415a4093334291091b31f495ff7317d8fe3e4276e5d650189832dfa",
+        "x-request-id": "5f2b0e3c9a7d4b1e8c6f0a2d3e4b5c6d"
+      },
+      "note": "RFC §1.1 四头 + 围栏 / 事件包络 / 观测头"
+    },
+    {
+      "name": "response-headers-domain-none",
+      "definition": "ResponseHeaders",
+      "expect": "valid",
+      "value": {
+        "tansr-contract": "unified-v1",
+        "tansr-manifest-revision": "4",
+        "tansr-domain": "archive-sync",
+        "tansr-schema-hash": "none",
+        "retry-after": "5",
+        "tansr-event-envelope": "unified-v1"
+      },
+      "note": "RFC §1.1 四头 + 围栏 / 事件包络 / 观测头"
+    },
+    {
+      "name": "manifest-extra-top-level-field",
+      "definition": "Manifest",
+      "expect": "invalid",
+      "base": "manifest-runtime-view",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/links",
+          "value": {
+            "self": "/api/manifest"
+          }
+        }
+      ],
+      "note": "多余顶层字段(additionalProperties:false)"
+    },
+    {
+      "name": "manifest-missing-schema-hash",
+      "definition": "Manifest",
+      "expect": "invalid",
+      "base": "manifest-runtime-view",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/schemaHash"
+        }
+      ],
+      "note": "缺 schemaHash"
+    },
+    {
+      "name": "manifest-revision-zero",
+      "definition": "Manifest",
+      "expect": "invalid",
+      "base": "manifest-runtime-view",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/revision",
+          "value": 0
+        }
+      ],
+      "note": "revision 须 ≥ 1"
+    },
+    {
+      "name": "manifest-family-status-unknown",
+      "definition": "Manifest",
+      "expect": "invalid",
+      "base": "manifest-runtime-view",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/families/0/status",
+          "value": "stable"
+        }
+      ],
+      "note": "族状态词表外"
+    },
+    {
+      "name": "manifest-family-sha256-short",
+      "definition": "Manifest",
+      "expect": "invalid",
+      "base": "manifest-runtime-view",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/families/0/sha256",
+          "value": "f530de1096b4f5d56ea688b7f2cec9ae66deb7d3719db85ab1f48287d3bd7ad"
+        }
+      ],
+      "note": "族 sha256 非 64 hex"
+    },
+    {
+      "name": "manifest-family-golden-sha-invalid",
+      "definition": "Manifest",
+      "expect": "invalid",
+      "base": "manifest-runtime-view",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/families/0/golden/doc~1rfc~1x.golden.json",
+          "value": "abc"
+        }
+      ],
+      "note": "golden SHA 非 64 hex"
+    },
+    {
+      "name": "manifest-client-unknown",
+      "definition": "Manifest",
+      "expect": "invalid",
+      "base": "manifest-runtime-view",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/families/0/clients/0/client",
+          "value": "rust"
+        }
+      ],
+      "note": "client 词表外"
+    },
+    {
+      "name": "manifest-operation-name-case",
+      "definition": "Manifest",
+      "expect": "invalid",
+      "base": "manifest-runtime-view",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/operations/1/name",
+          "value": "Session.Message.Send"
+        }
+      ],
+      "note": "操作名非小写点分"
+    },
+    {
+      "name": "manifest-operation-method-put",
+      "definition": "Manifest",
+      "expect": "invalid",
+      "base": "manifest-runtime-view",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/operations/1/method",
+          "value": "PUT"
+        }
+      ],
+      "note": "method 词表外"
+    },
+    {
+      "name": "manifest-operation-stream-without-sse",
+      "definition": "Manifest",
+      "expect": "invalid",
+      "base": "manifest-runtime-view",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/operations/2/sse",
+          "value": false
+        }
+      ],
+      "note": "kind=stream 而 sse=false"
+    },
+    {
+      "name": "manifest-operation-post-read",
+      "definition": "Manifest",
+      "expect": "invalid",
+      "base": "manifest-runtime-view",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/operations/1/kind",
+          "value": "read"
+        }
+      ],
+      "note": "POST 不能是 read"
+    },
+    {
+      "name": "manifest-operation-read-with-expected-revision",
+      "definition": "Manifest",
+      "expect": "invalid",
+      "base": "manifest-runtime-view",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/operations/3/expectedRevision",
+          "value": {
+            "path": [
+              "expectedRevision"
+            ],
+            "kind": "sequence"
+          }
+        }
+      ],
+      "note": "revision 7:If-Match 仅写操作,read 操作 expectedRevision 恒 null"
+    },
+    {
+      "name": "manifest-operation-etag-path-empty",
+      "definition": "Manifest",
+      "expect": "invalid",
+      "base": "manifest-runtime-view",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/operations/3/etagPath",
+          "value": []
+        }
+      ],
+      "note": "revision 7:KeyPath 至少一级键,缺席用 null 不用空数组"
+    },
+    {
+      "name": "manifest-family-request-id-path-string",
+      "definition": "Manifest",
+      "expect": "invalid",
+      "base": "manifest-runtime-view",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/families/0/requestIdPath",
+          "value": "request.requestId"
+        }
+      ],
+      "note": "revision 7:requestIdPath 为键路径数组,不收点分字符串"
+    },
+    {
+      "name": "manifest-discovery-operation-with-family",
+      "definition": "Manifest",
+      "expect": "invalid",
+      "base": "manifest-runtime-view",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/operations/0/family",
+          "value": "agent-session-v1"
+        }
+      ],
+      "note": "门面自有操作 family 须为 null"
+    },
+    {
+      "name": "manifest-operation-api-path-legacy",
+      "definition": "Manifest",
+      "expect": "invalid",
+      "base": "manifest-runtime-view",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/operations/1/apiPath",
+          "value": "/v2/sessions/:id/messages"
+        }
+      ],
+      "note": "apiPath 须以 /api/ 开头"
+    },
+    {
+      "name": "manifest-operation-schema-ref-form",
+      "definition": "Manifest",
+      "expect": "invalid",
+      "base": "manifest-runtime-view",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/operations/1/request",
+          "value": "MessagesBodySchema"
+        }
+      ],
+      "note": "schema 引用须为 <族>#<定义名>"
+    },
+    {
+      "name": "manifest-capability-limit-string-value",
+      "definition": "Manifest",
+      "expect": "invalid",
+      "base": "manifest-runtime-view",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/capabilities/0/value",
+          "value": "262144"
+        }
+      ],
+      "note": "kind=limit 的 value 须为 LimitRange"
+    },
+    {
+      "name": "manifest-capability-feature-object-value",
+      "definition": "Manifest",
+      "expect": "invalid",
+      "base": "manifest-runtime-view",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/capabilities/1/value",
+          "value": {
+            "min": 0,
+            "max": 1,
+            "default": null
+          }
+        }
+      ],
+      "note": "kind=feature 的 value 须为字符串"
+    },
+    {
+      "name": "manifest-runtime-session-family-unknown",
+      "definition": "Manifest",
+      "expect": "invalid",
+      "base": "manifest-runtime-view",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/runtime/installed/session",
+          "value": "sdk3"
+        }
+      ],
+      "note": "runtime.installed.session 词表外"
+    },
+    {
+      "name": "manifest-runtime-missing-domain",
+      "definition": "Manifest",
+      "expect": "invalid",
+      "base": "manifest-runtime-view",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/runtime/installed/cache"
+        }
+      ],
+      "note": "runtime.installed 缺域"
+    },
+    {
+      "name": "manifest-runtime-url-field",
+      "definition": "Manifest",
+      "expect": "invalid",
+      "base": "manifest-runtime-view",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/runtime/entry",
+          "value": "/api"
+        }
+      ],
+      "note": "runtime 段不得带 URL 导航字段"
+    },
+    {
+      "name": "manifest-platform-api-empty-entries",
+      "definition": "Manifest",
+      "expect": "invalid",
+      "base": "manifest-runtime-view",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/platformApi/0/entries",
+          "value": []
+        }
+      ],
+      "note": "平台 API 引用须至少一条入口"
+    },
+    {
+      "name": "capabilities-url-entry-field",
+      "definition": "Capabilities",
+      "expect": "invalid",
+      "base": "capabilities-offload-deployment",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/domains/archive/entry",
+          "value": "/api/archive/bindings"
+        }
+      ],
+      "note": "URL 导航字段 entry 出现(RFC-SDK2-1 §10.5)"
+    },
+    {
+      "name": "capabilities-url-capabilities-field",
+      "definition": "Capabilities",
+      "expect": "invalid",
+      "base": "capabilities-offload-deployment",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/domains/cache/capabilities",
+          "value": "/api/capabilities/cache"
+        }
+      ],
+      "note": "URL 导航字段 capabilities 出现"
+    },
+    {
+      "name": "capabilities-top-level-prefix",
+      "definition": "Capabilities",
+      "expect": "invalid",
+      "base": "capabilities-offload-deployment",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/prefix",
+          "value": "/api"
+        }
+      ],
+      "note": "顶层 URL 前缀字段"
+    },
+    {
+      "name": "capabilities-missing-domain",
+      "definition": "Capabilities",
+      "expect": "invalid",
+      "base": "capabilities-offload-deployment",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/domains/terminal-profile"
+        }
+      ],
+      "note": "缺一个域"
+    },
+    {
+      "name": "capabilities-session-without-family",
+      "definition": "Capabilities",
+      "expect": "invalid",
+      "base": "capabilities-offload-deployment",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/domains/session/family"
+        }
+      ],
+      "note": "session 域缺 family"
+    },
+    {
+      "name": "capabilities-non-session-with-family",
+      "definition": "Capabilities",
+      "expect": "invalid",
+      "base": "capabilities-offload-deployment",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/domains/execution/family",
+          "value": {
+            "preferred": "sdk1",
+            "available": [
+              "sdk1"
+            ]
+          }
+        }
+      ],
+      "note": "非 session 域不得有 family"
+    },
+    {
+      "name": "capabilities-session-available-duplicate",
+      "definition": "Capabilities",
+      "expect": "invalid",
+      "base": "capabilities-offload-deployment",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/domains/session/family/available/1",
+          "value": "sdk1"
+        }
+      ],
+      "note": "available 须唯一"
+    },
+    {
+      "name": "capabilities-session-preferred-unknown",
+      "definition": "Capabilities",
+      "expect": "invalid",
+      "base": "capabilities-offload-deployment",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/domains/session/family/preferred",
+          "value": "sdk3"
+        }
+      ],
+      "note": "preferred 词表外"
+    },
+    {
+      "name": "capabilities-schema-hash-without-prefix",
+      "definition": "Capabilities",
+      "expect": "invalid",
+      "base": "capabilities-offload-deployment",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/domains/terminal/schemaHash",
+          "value": "8cd8c7c55a84c5700373aed75d5653a0737d718bfe0546641be367bda1a11896"
+        }
+      ],
+      "note": "schemaHash 缺 sha256: 前缀"
+    },
+    {
+      "name": "capabilities-aggregate-schema-hash-none",
+      "definition": "Capabilities",
+      "expect": "invalid",
+      "base": "capabilities-offload-deployment",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/schemaHash",
+          "value": "none"
+        }
+      ],
+      "note": "聚合 schemaHash 不得为 none"
+    },
+    {
+      "name": "capabilities-status-unknown",
+      "definition": "Capabilities",
+      "expect": "invalid",
+      "base": "capabilities-offload-deployment",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/domains/cache/status",
+          "value": "stable"
+        }
+      ],
+      "note": "status 词表外"
+    },
+    {
+      "name": "capabilities-session-contract-mismatch",
+      "definition": "Capabilities",
+      "expect": "invalid",
+      "base": "capabilities-offload-deployment",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/domains/session/contract",
+          "value": "sdk2-ext-v1"
+        }
+      ],
+      "note": "session.contract 须为 agent-session-v1(API_DOMAIN_FAMILY)"
+    },
+    {
+      "name": "capabilities-manifest-revision-string",
+      "definition": "Capabilities",
+      "expect": "invalid",
+      "base": "capabilities-offload-deployment",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/manifestRevision",
+          "value": "4"
+        }
+      ],
+      "note": "manifestRevision 须为整数"
+    },
+    {
+      "name": "capabilities-installed-string",
+      "definition": "Capabilities",
+      "expect": "invalid",
+      "base": "capabilities-offload-deployment",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/domains/archive/installed",
+          "value": "true"
+        }
+      ],
+      "note": "installed 须为布尔"
+    },
+    {
+      "name": "closure-id-63-hex",
+      "definition": "CapabilityClosure",
+      "expect": "invalid",
+      "base": "closure-full-enabled",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/closureId",
+          "value": "3644b2daa415a4093334291091b31f495ff7317d8fe3e4276e5d650189832df"
+        }
+      ],
+      "note": "closureId 须为 64 hex"
+    },
+    {
+      "name": "closure-id-uppercase",
+      "definition": "CapabilityClosure",
+      "expect": "invalid",
+      "base": "closure-full-enabled",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/closureId",
+          "value": "3644B2DAA415A4093334291091B31F495FF7317D8FE3E4276E5D650189832DFA"
+        }
+      ],
+      "note": "closureId 须小写 hex"
+    },
+    {
+      "name": "closure-id-prefixed",
+      "definition": "CapabilityClosure",
+      "expect": "invalid",
+      "base": "closure-full-enabled",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/closureId",
+          "value": "sha256:3644b2daa415a4093334291091b31f495ff7317d8fe3e4276e5d650189832dfa"
+        }
+      ],
+      "note": "closureId 不带 sha256: 前缀(与 tansr-schema-hash 不同形)"
+    },
+    {
+      "name": "closure-missing-operation",
+      "definition": "CapabilityClosure",
+      "expect": "invalid",
+      "base": "closure-full-enabled",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/operations/session.message.send"
+        }
+      ],
+      "note": "缺一条操作(须恒全覆盖 77 条)"
+    },
+    {
+      "name": "closure-discovery-read-operation",
+      "definition": "CapabilityClosure",
+      "expect": "invalid",
+      "base": "closure-full-enabled",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/operations/session.capabilities",
+          "value": "enabled"
+        }
+      ],
+      "note": "部署级发现读 session.capabilities 不在围栏内"
+    },
+    {
+      "name": "closure-unknown-operation",
+      "definition": "CapabilityClosure",
+      "expect": "invalid",
+      "base": "closure-full-enabled",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/operations/discovery.manifest",
+          "value": "enabled"
+        }
+      ],
+      "note": "未知 / 门面自有操作名"
+    },
+    {
+      "name": "closure-state-unknown",
+      "definition": "CapabilityClosure",
+      "expect": "invalid",
+      "base": "closure-full-enabled",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/operations/archive.ack.commit",
+          "value": "granted"
+        }
+      ],
+      "note": "三态词表外"
+    },
+    {
+      "name": "closure-state-boolean",
+      "definition": "CapabilityClosure",
+      "expect": "invalid",
+      "base": "closure-full-enabled",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/operations/archive.ack.commit",
+          "value": true
+        }
+      ],
+      "note": "三态不得退化为布尔"
+    },
+    {
+      "name": "closure-missing-domain",
+      "definition": "CapabilityClosure",
+      "expect": "invalid",
+      "base": "closure-full-enabled",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/domains/cache"
+        }
+      ],
+      "note": "缺一个域"
+    },
+    {
+      "name": "closure-discovery-domain",
+      "definition": "CapabilityClosure",
+      "expect": "invalid",
+      "base": "closure-full-enabled",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/domains/discovery",
+          "value": {
+            "installed": true,
+            "revision": null
+          }
+        }
+      ],
+      "note": "围栏域词表不含 discovery"
+    },
+    {
+      "name": "closure-domain-revision-number",
+      "definition": "CapabilityClosure",
+      "expect": "invalid",
+      "base": "closure-full-enabled",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/domains/execution/revision",
+          "value": 7
+        }
+      ],
+      "note": "域 revision 须为字符串或 null"
+    },
+    {
+      "name": "closure-authorization-revision-not-sequence",
+      "definition": "CapabilityClosure",
+      "expect": "invalid",
+      "base": "closure-full-enabled",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/authorizationRevision",
+          "value": "7a"
+        }
+      ],
+      "note": "authorizationRevision 须为 Sequence"
+    },
+    {
+      "name": "closure-authorization-revision-number",
+      "definition": "CapabilityClosure",
+      "expect": "invalid",
+      "base": "closure-full-enabled",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/authorizationRevision",
+          "value": 7
+        }
+      ],
+      "note": "authorizationRevision 不得为 JSON 数字"
+    },
+    {
+      "name": "closure-extra-timestamp",
+      "definition": "CapabilityClosure",
+      "expect": "invalid",
+      "base": "closure-full-enabled",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/sampledAt",
+          "value": "2026-10-01T00:00:00Z"
+        }
+      ],
+      "note": "围栏不含时间(确定性)"
+    },
+    {
+      "name": "closure-identity-field",
+      "definition": "CapabilityClosure",
+      "expect": "invalid",
+      "base": "closure-full-enabled",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/endUserId",
+          "value": "alice"
+        }
+      ],
+      "note": "不含身份字段"
+    },
+    {
+      "name": "closure-contract-mismatch",
+      "definition": "CapabilityClosure",
+      "expect": "invalid",
+      "base": "closure-full-enabled",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "sdk2-ext-v1"
+        }
+      ],
+      "note": "contract 须为 unified-v1"
+    },
+    {
+      "name": "facade-error-request-id-not-null",
+      "definition": "FacadeError",
+      "expect": "invalid",
+      "base": "facade-error-not-found",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/requestId",
+          "value": "req-1"
+        }
+      ],
+      "note": "requestId 恒 null(门面自有错误无请求体;RFC §1.3)"
+    },
+    {
+      "name": "facade-error-request-id-missing",
+      "definition": "FacadeError",
+      "expect": "invalid",
+      "base": "facade-error-not-found",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/requestId"
+        }
+      ],
+      "note": "requestId 位必须在场"
+    },
+    {
+      "name": "facade-error-code-not-facade",
+      "definition": "FacadeError",
+      "expect": "invalid",
+      "base": "facade-error-not-found",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/code",
+          "value": "forbidden"
+        },
+        {
+          "op": "replace",
+          "path": "/status",
+          "value": 403
+        }
+      ],
+      "note": "forbidden 是统一码而非门面自有码"
+    },
+    {
+      "name": "facade-error-status-mismatch",
+      "definition": "FacadeError",
+      "expect": "invalid",
+      "base": "facade-error-unauthorized",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/status",
+          "value": 403
+        }
+      ],
+      "note": "unauthorized 恒 401"
+    },
+    {
+      "name": "facade-error-retry-action-mismatch",
+      "definition": "FacadeError",
+      "expect": "invalid",
+      "base": "facade-error-precondition-failed",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/retryAction",
+          "value": "none"
+        }
+      ],
+      "note": "precondition_failed 恒 rediscover"
+    },
+    {
+      "name": "facade-error-precondition-without-detail",
+      "definition": "FacadeError",
+      "expect": "invalid",
+      "base": "facade-error-precondition-failed",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/detail"
+        }
+      ],
+      "note": "precondition_failed 须带 detail.domainCode / closureId"
+    },
+    {
+      "name": "facade-error-detail-closure-id-invalid",
+      "definition": "FacadeError",
+      "expect": "invalid",
+      "base": "facade-error-precondition-failed",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/detail/closureId",
+          "value": "stale"
+        }
+      ],
+      "note": "detail.closureId 须为 64 hex"
+    },
+    {
+      "name": "facade-error-403-without-outside-closure",
+      "definition": "FacadeError",
+      "expect": "invalid",
+      "base": "facade-error-capability-unavailable-outside-closure-disabled",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/detail/reason",
+          "value": "not_installed"
+        }
+      ],
+      "note": "403 只用于越围栏 disabled"
+    },
+    {
+      "name": "facade-error-outside-closure-enabled",
+      "definition": "FacadeError",
+      "expect": "invalid",
+      "base": "facade-error-capability-unavailable-outside-closure-disabled",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/detail/state",
+          "value": "enabled"
+        }
+      ],
+      "note": "越围栏 state 不得为 enabled"
+    },
+    {
+      "name": "facade-error-404-outside-closure-disabled",
+      "definition": "FacadeError",
+      "expect": "invalid",
+      "base": "facade-error-capability-unavailable-outside-closure-unavailable",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/detail/state",
+          "value": "disabled"
+        }
+      ],
+      "note": "404 越围栏须为 unavailable(disabled → 403)"
+    },
+    {
+      "name": "facade-error-detail-operation-unknown",
+      "definition": "FacadeError",
+      "expect": "invalid",
+      "base": "facade-error-capability-unavailable-outside-closure-disabled",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/detail/operation",
+          "value": "discovery.manifest"
+        }
+      ],
+      "note": "detail.operation 须为围栏操作名"
+    },
+    {
+      "name": "facade-error-trace-id-form",
+      "definition": "FacadeError",
+      "expect": "invalid",
+      "base": "facade-error-not-found",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/traceId",
+          "value": "trace id with spaces"
+        }
+      ],
+      "note": "traceId 须合 x-request-id 形制"
+    },
+    {
+      "name": "facade-error-trace-id-missing",
+      "definition": "FacadeError",
+      "expect": "invalid",
+      "base": "facade-error-not-found",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/traceId"
+        }
+      ],
+      "note": "缺 traceId"
+    },
+    {
+      "name": "facade-error-legacy-error-wrapper",
+      "definition": "FacadeError",
+      "expect": "invalid",
+      "base": "facade-error-not-found",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/error",
+          "value": {
+            "code": "not_found"
+          }
+        }
+      ],
+      "note": "不得混入 /v2 形 error 包裹"
+    },
+    {
+      "name": "facade-error-protocol-field",
+      "definition": "FacadeError",
+      "expect": "invalid",
+      "base": "facade-error-not-found",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/protocol",
+          "value": "sdk2-ext-v1"
+        }
+      ],
+      "note": "不得混入 sdk2 形 protocol 字段"
+    },
+    {
+      "name": "facade-error-retry-after-ms",
+      "definition": "FacadeError",
+      "expect": "invalid",
+      "base": "facade-error-capacity-exceeded",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/retryAfterMs",
+          "value": 5000
+        }
+      ],
+      "note": "门面自有信封无 retryAfterMs(等待秒数在 retry-after 头)"
+    },
+    {
+      "name": "facade-error-empty-message",
+      "definition": "FacadeError",
+      "expect": "invalid",
+      "base": "facade-error-not-found",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/message",
+          "value": ""
+        }
+      ],
+      "note": "message 非空"
+    },
+    {
+      "name": "unified-error-code-outside-19",
+      "definition": "UnifiedError",
+      "expect": "invalid",
+      "base": "unified-error-sdk2-stale-generation",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/code",
+          "value": "closure_stale"
+        },
+        {
+          "op": "replace",
+          "path": "/status",
+          "value": 412
+        }
+      ],
+      "note": "closure_stale 是 detail.domainCode 段的域码,不在 19 统一码"
+    },
+    {
+      "name": "unified-error-domain-code-as-unified",
+      "definition": "UnifiedError",
+      "expect": "invalid",
+      "base": "unified-error-sdk2-stale-generation",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/code",
+          "value": "binding_conflict"
+        }
+      ],
+      "note": "原族码不得出现在 code 位(只能在 detail.domainCode)"
+    },
+    {
+      "name": "unified-error-precondition-failed-status",
+      "definition": "UnifiedError",
+      "expect": "invalid",
+      "base": "unified-error-precondition-failed-closure",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/status",
+          "value": 409
+        }
+      ],
+      "note": "precondition_failed 恒 412(D7 ①)"
+    },
+    {
+      "name": "unified-error-precondition-failed-retry",
+      "definition": "UnifiedError",
+      "expect": "invalid",
+      "base": "unified-error-precondition-failed-closure",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/retryAction",
+          "value": "none"
+        }
+      ],
+      "note": "precondition_failed 恒 rediscover(围栏)或 refresh(If-Match;revision 7),none 不许"
+    },
+    {
+      "name": "unified-error-not-canonical-replay",
+      "definition": "UnifiedError",
+      "expect": "invalid",
+      "base": "unified-error-not-canonical",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/retryAction",
+          "value": "same-request"
+        }
+      ],
+      "note": "not_canonical 恒 none(同字节重放必再拒)"
+    },
+    {
+      "name": "unified-error-not-canonical-status",
+      "definition": "UnifiedError",
+      "expect": "invalid",
+      "base": "unified-error-not-canonical",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/status",
+          "value": 422
+        }
+      ],
+      "note": "not_canonical 恒 400"
+    },
+    {
+      "name": "unified-error-result-unknown-replay",
+      "definition": "UnifiedError",
+      "expect": "invalid",
+      "base": "unified-error-cache-result-unknown",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/retryAction",
+          "value": "same-request"
+        }
+      ],
+      "note": "result_unknown 不许 same-request(RFC §2.3)"
+    },
+    {
+      "name": "unified-error-gone-status-mismatch",
+      "definition": "UnifiedError",
+      "expect": "invalid",
+      "base": "unified-error-v2-session-ended",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/status",
+          "value": 404
+        }
+      ],
+      "note": "gone 恒 410"
+    },
+    {
+      "name": "unified-error-status-2xx",
+      "definition": "UnifiedError",
+      "expect": "invalid",
+      "base": "unified-error-sdk2-stale-generation",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/status",
+          "value": 200
+        }
+      ],
+      "note": "错误信封不得 2xx"
+    },
+    {
+      "name": "unified-error-fallback-unknown",
+      "definition": "UnifiedError",
+      "expect": "invalid",
+      "base": "unified-error-cache-result-unknown",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/detail/fallback",
+          "value": "warm"
+        }
+      ],
+      "note": "fallback 词表外"
+    },
+    {
+      "name": "unified-error-fallback-top-level",
+      "definition": "UnifiedError",
+      "expect": "invalid",
+      "base": "unified-error-cache-result-unknown",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/fallback",
+          "value": "legacy-cold"
+        }
+      ],
+      "note": "fallback 不进统一层顶层(RFC §5)"
+    },
+    {
+      "name": "unified-error-request-id-too-long",
+      "definition": "UnifiedError",
+      "expect": "invalid",
+      "base": "unified-error-sdk2-stale-generation",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/requestId",
+          "value": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        }
+      ],
+      "note": "requestId ≤ 128"
+    },
+    {
+      "name": "unified-error-request-id-space",
+      "definition": "UnifiedError",
+      "expect": "invalid",
+      "base": "unified-error-sdk2-stale-generation",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/requestId",
+          "value": "has space"
+        }
+      ],
+      "note": "requestId 须为可见 ASCII"
+    },
+    {
+      "name": "unified-error-missing-message",
+      "definition": "UnifiedError",
+      "expect": "invalid",
+      "base": "unified-error-sdk2-stale-generation",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/message"
+        }
+      ],
+      "note": "统一信封须带 message(terminal 三面原信封无 message,统一层补齐)"
+    },
+    {
+      "name": "unified-error-retry-after-zero",
+      "definition": "UnifiedError",
+      "expect": "invalid",
+      "base": "unified-error-terminal-backoff",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/retryAfterMs",
+          "value": 0
+        }
+      ],
+      "note": "retryAfterMs ≥ 1"
+    },
+    {
+      "name": "unified-error-domain-retry-action-unknown",
+      "definition": "UnifiedError",
+      "expect": "invalid",
+      "base": "unified-error-sdk2-stale-generation",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/detail/domainRetryAction",
+          "value": "warp-speed"
+        }
+      ],
+      "note": "domainRetryAction 须为四族词表并集"
+    },
+    {
+      "name": "unified-error-domain-status-string",
+      "definition": "UnifiedError",
+      "expect": "invalid",
+      "base": "unified-error-sdk2-stale-generation",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/detail/domainStatus",
+          "value": "409"
+        }
+      ],
+      "note": "domainStatus 须为整数"
+    },
+    {
+      "name": "event-envelope-seq-present",
+      "definition": "EventEnvelope",
+      "expect": "invalid",
+      "base": "event-envelope-session-text-delta",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/seq",
+          "value": "12"
+        }
+      ],
+      "note": "D18:不出 seq(位置由 cursorSet.eventCursor 表达),出现即第八键 → 拒收"
+    },
+    {
+      "name": "event-envelope-payload-present",
+      "definition": "EventEnvelope",
+      "expect": "invalid",
+      "base": "event-envelope-session-text-delta",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/payload",
+          "value": {
+            "text": "hello"
+          }
+        }
+      ],
+      "note": "D18:不出 payload(raw 恒为原事件对象),出现即第八键 → 拒收"
+    },
+    {
+      "name": "event-envelope-event-id-missing",
+      "definition": "EventEnvelope",
+      "expect": "invalid",
+      "base": "event-envelope-session-text-delta",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/eventId"
+        }
+      ],
+      "note": "D18:eventId 位必须在场(无 id: 时显式 null)"
+    },
+    {
+      "name": "event-envelope-event-id-empty",
+      "definition": "EventEnvelope",
+      "expect": "invalid",
+      "base": "event-envelope-session-text-delta",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/eventId",
+          "value": ""
+        }
+      ],
+      "note": "eventId 非空(SSE id: 缺席 → null 而非空串)"
+    },
+    {
+      "name": "event-envelope-event-id-number",
+      "definition": "EventEnvelope",
+      "expect": "invalid",
+      "base": "event-envelope-session-text-delta",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/eventId",
+          "value": 12
+        }
+      ],
+      "note": "eventId 为字符串或 null,不经 IEEE754"
+    },
+    {
+      "name": "event-envelope-raw-missing",
+      "definition": "EventEnvelope",
+      "expect": "invalid",
+      "base": "event-envelope-session-text-delta",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/raw"
+        }
+      ],
+      "note": "raw 位必须在场(每帧恒为原事件对象)"
+    },
+    {
+      "name": "event-envelope-raw-string",
+      "definition": "EventEnvelope",
+      "expect": "invalid",
+      "base": "event-envelope-session-text-delta",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/raw",
+          "value": "{\"type\":\"msg.text.delta\"}"
+        }
+      ],
+      "note": "raw 为原事件对象而非其文本形(D18:payload 原文不再以字符串形入 raw)"
+    },
+    {
+      "name": "event-envelope-raw-null",
+      "definition": "EventEnvelope",
+      "expect": "invalid",
+      "base": "event-envelope-session-text-delta",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/raw",
+          "value": null
+        }
+      ],
+      "note": "raw 不可为 null(不再有\"已知 type 恒 null\"的旧形)"
+    },
+    {
+      "name": "event-envelope-terminal-status-unknown-word",
+      "definition": "EventEnvelope",
+      "expect": "invalid",
+      "base": "event-envelope-session-text-delta",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/terminalStatus",
+          "value": "done"
+        }
+      ],
+      "note": "terminalStatus 词表外"
+    },
+    {
+      "name": "event-envelope-terminal-status-missing",
+      "definition": "EventEnvelope",
+      "expect": "invalid",
+      "base": "event-envelope-session-text-delta",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/terminalStatus"
+        }
+      ],
+      "note": "terminalStatus 位必须在场(null 亦须显式)"
+    },
+    {
+      "name": "event-envelope-cursor-set-missing-position",
+      "definition": "EventEnvelope",
+      "expect": "invalid",
+      "base": "event-envelope-session-text-delta",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/cursorSet/ackReceipt"
+        }
+      ],
+      "note": "cursorSet 五位缺一"
+    },
+    {
+      "name": "event-envelope-cursor-set-extra-position",
+      "definition": "EventEnvelope",
+      "expect": "invalid",
+      "base": "event-envelope-session-text-delta",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/cursorSet/cursor",
+          "value": "12"
+        }
+      ],
+      "note": "cursorSet 不得有第六位 / 通用 cursor"
+    },
+    {
+      "name": "event-envelope-cursor-number",
+      "definition": "EventEnvelope",
+      "expect": "invalid",
+      "base": "event-envelope-session-text-delta",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/cursorSet/eventCursor",
+          "value": 12
+        }
+      ],
+      "note": "游标须为字符串或 null"
+    },
+    {
+      "name": "event-envelope-archive-coverage-partial",
+      "definition": "EventEnvelope",
+      "expect": "invalid",
+      "base": "event-envelope-archive-status-coverage",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/cursorSet/archiveCoverage",
+          "value": {
+            "fromSequence": "1"
+          }
+        }
+      ],
+      "note": "archiveCoverage 对象形须为完整 Coverage(fromSequence / throughSequence / headDigest)"
+    },
+    {
+      "name": "event-envelope-domain-unknown",
+      "definition": "EventEnvelope",
+      "expect": "invalid",
+      "base": "event-envelope-session-text-delta",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/domain",
+          "value": "sdk2"
+        }
+      ],
+      "note": "domain 词表外"
+    },
+    {
+      "name": "event-envelope-contract-other",
+      "definition": "EventEnvelope",
+      "expect": "invalid",
+      "base": "event-envelope-session-text-delta",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/contract",
+          "value": "unified-v2"
+        }
+      ],
+      "note": "contract 必须为 unified-v1"
+    },
+    {
+      "name": "event-envelope-type-case",
+      "definition": "EventEnvelope",
+      "expect": "invalid",
+      "base": "event-envelope-session-text-delta",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/type",
+          "value": "Msg.Text.Delta"
+        }
+      ],
+      "note": "type 须小写点分"
+    },
+    {
+      "name": "event-envelope-identity-field",
+      "definition": "EventEnvelope",
+      "expect": "invalid",
+      "base": "event-envelope-session-text-delta",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/sessionId",
+          "value": "s-1"
+        }
+      ],
+      "note": "包络不含 sessionId(控制信封严格;身份只在 raw 内由域合同约束)"
+    },
+    {
+      "name": "request-headers-session-family-unknown",
+      "definition": "RequestHeaders",
+      "expect": "invalid",
+      "value": {
+        "tansr-session-family": "v9"
+      },
+      "note": "会话族词表外 → 400 invalid_request"
+    },
+    {
+      "name": "request-headers-closure-id-short",
+      "definition": "RequestHeaders",
+      "expect": "invalid",
+      "value": {
+        "tansr-closure-id": "abc"
+      },
+      "note": "closureId 须为 64 hex"
+    },
+    {
+      "name": "request-headers-idempotency-key-too-long",
+      "definition": "RequestHeaders",
+      "expect": "invalid",
+      "value": {
+        "idempotency-key": "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk"
+      },
+      "note": "Idempotency-Key ≤ 128"
+    },
+    {
+      "name": "request-headers-idempotency-key-space",
+      "definition": "RequestHeaders",
+      "expect": "invalid",
+      "value": {
+        "idempotency-key": "key with space"
+      },
+      "note": "Idempotency-Key 须为可见 ASCII"
+    },
+    {
+      "name": "request-headers-deadline-not-rfc3339",
+      "definition": "RequestHeaders",
+      "expect": "invalid",
+      "value": {
+        "deadline": "tomorrow"
+      },
+      "note": "deadline 须为 RFC-3339 date-time"
+    },
+    {
+      "name": "request-headers-if-match-unquoted",
+      "definition": "RequestHeaders",
+      "expect": "invalid",
+      "value": {
+        "if-match": "cfg-3"
+      },
+      "note": "If-Match 须为 entity-tag(带引号)"
+    },
+    {
+      "name": "request-headers-event-envelope-unknown",
+      "definition": "RequestHeaders",
+      "expect": "invalid",
+      "value": {
+        "tansr-event-envelope": "legacy"
+      },
+      "note": "tansr-event-envelope 只接受 unified-v1"
+    },
+    {
+      "name": "request-headers-unknown-tansr-header",
+      "definition": "RequestHeaders",
+      "expect": "invalid",
+      "value": {
+        "tansr-end-user-id": "alice"
+      },
+      "note": "未登记的 tansr-* 头(身份不得自报)"
+    },
+    {
+      "name": "request-headers-traceparent-form",
+      "definition": "RequestHeaders",
+      "expect": "invalid",
+      "value": {
+        "traceparent": "00-abc-def-01"
+      },
+      "note": "traceparent 形制"
+    },
+    {
+      "name": "request-headers-authorization-scheme",
+      "definition": "RequestHeaders",
+      "expect": "invalid",
+      "value": {
+        "authorization": "Basic dXNlcjpwYXNz"
+      },
+      "note": "authorization 须为 Bearer"
+    },
+    {
+      "name": "response-headers-contract-mismatch",
+      "definition": "ResponseHeaders",
+      "expect": "invalid",
+      "base": "response-headers-discovery",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/tansr-contract",
+          "value": "unified-v2"
+        }
+      ],
+      "note": "tansr-contract 恒 unified-v1"
+    },
+    {
+      "name": "response-headers-revision-zero",
+      "definition": "ResponseHeaders",
+      "expect": "invalid",
+      "base": "response-headers-discovery",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/tansr-manifest-revision",
+          "value": "0"
+        }
+      ],
+      "note": "manifest revision ≥ 1"
+    },
+    {
+      "name": "response-headers-revision-number",
+      "definition": "ResponseHeaders",
+      "expect": "invalid",
+      "base": "response-headers-discovery",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/tansr-manifest-revision",
+          "value": 4
+        }
+      ],
+      "note": "头值为字符串"
+    },
+    {
+      "name": "response-headers-domain-unknown",
+      "definition": "ResponseHeaders",
+      "expect": "invalid",
+      "base": "response-headers-discovery",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/tansr-domain",
+          "value": "sdk2"
+        }
+      ],
+      "note": "tansr-domain 词表外"
+    },
+    {
+      "name": "response-headers-schema-hash-algorithm",
+      "definition": "ResponseHeaders",
+      "expect": "invalid",
+      "base": "response-headers-discovery",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/tansr-schema-hash",
+          "value": "sha1:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "note": "tansr-schema-hash 只许 sha256:<hex> 或 none"
+    },
+    {
+      "name": "response-headers-missing-schema-hash",
+      "definition": "ResponseHeaders",
+      "expect": "invalid",
+      "base": "response-headers-discovery",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/tansr-schema-hash"
+        }
+      ],
+      "note": "四头缺一"
+    },
+    {
+      "name": "response-headers-closure-id-short",
+      "definition": "ResponseHeaders",
+      "expect": "invalid",
+      "base": "response-headers-discovery",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/tansr-closure-id",
+          "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      ],
+      "note": "tansr-closure-id 须为 64 hex"
+    },
+    {
+      "name": "response-headers-identity-leak",
+      "definition": "ResponseHeaders",
+      "expect": "invalid",
+      "base": "response-headers-discovery",
+      "patch": [
+        {
+          "op": "add",
+          "path": "/tansr-end-user-id",
+          "value": "alice"
+        }
+      ],
+      "note": "头内不含身份(RFC §1.1)"
+    },
+    {
+      "name": "response-headers-retry-after-zero",
+      "definition": "ResponseHeaders",
+      "expect": "invalid",
+      "base": "response-headers-domain-none",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/retry-after",
+          "value": "0"
+        }
+      ],
+      "note": "retry-after ≥ 1 秒"
+    }
+  ]
+}

@@ -1,0 +1,135 @@
+name: Publish Python packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      ci_run_id:
+        description: Successful main CI run for this exact commit
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: python-pypi-publication
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main' && github.repository == 'tansrai/tansr-python'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment:
+      name: pypi
+      url: https://pypi.org/project/tansr-sdk/
+    permissions:
+      contents: read
+      actions: read
+      id-token: write
+    steps:
+      - name: Require successful main CI at the publishing commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CI_RUN_ID: ${{ inputs.ci_run_id }}
+          EXPECTED_SHA: ${{ github.sha }}
+          EXPECTED_REPOSITORY: ${{ github.repository }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+          import urllib.request
+
+          run_id = os.environ['CI_RUN_ID']
+          if re.fullmatch(r'[1-9][0-9]*', run_id) is None:
+              raise SystemExit('ci_run_id must be a positive decimal run ID')
+          repository = os.environ['EXPECTED_REPOSITORY']
+          def get(path):
+              request = urllib.request.Request(
+                  'https://api.github.com/repos/' + repository + path,
+                  headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+                           'Accept': 'application/vnd.github+json',
+                           'X-GitHub-Api-Version': '2022-11-28'})
+              with urllib.request.urlopen(request, timeout=30) as response:
+                  return json.load(response)
+          run = get('/actions/runs/' + run_id)
+          if (run['head_sha'] != os.environ['EXPECTED_SHA']
+                  or run['head_branch'] != 'main'
+                  or run['head_repository']['full_name'] != repository
+                  or run['path'] != '.github/workflows/ci.yml'
+                  or run['event'] not in ('push', 'workflow_dispatch')
+                  or run['status'] != 'completed' or run['conclusion'] != 'success'):
+              raise SystemExit('CI must have passed for this exact repository/main commit')
+          artifacts = get('/actions/runs/' + run_id + '/artifacts?per_page=100')
+          matches = [a for a in artifacts['artifacts'] if a['name'] == 'pypi-distributions']
+          if len(matches) != 1 or matches[0]['expired']:
+              raise SystemExit('one unexpired pypi-distributions artifact is required')
+          print('Validated CI run', run_id, 'at', run['head_sha'])
+          PY
+      - name: Download the original CI distributions without rebuilding
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: pypi-distributions
+          path: dist-release
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.ci_run_id }}
+      - name: Check the release inventory and metadata
+        run: |
+          python3 - <<'PY'
+          import email.parser
+          import hashlib
+          from pathlib import Path
+          import tarfile
+          import zipfile
+
+          expected = {}
+          for name in ('tansr-sdk', 'tansr-sdk-demo'):
+              stem = name.replace('-', '_') + '-0.1.0'
+              expected[stem + '-py3-none-any.whl'] = name
+              expected[stem + '.tar.gz'] = name
+          files = list(Path('dist-release').iterdir())
+          if {p.name for p in files} != set(expected) or len(files) != 4:
+              raise SystemExit('expected exactly the four 0.1.0 distributions')
+          for path in files:
+              if not path.is_file() or path.is_symlink() or path.stat().st_size > 10_000_000:
+                  raise SystemExit('invalid distribution file')
+              if path.suffix == '.whl':
+                  with zipfile.ZipFile(path) as package:
+                      names = [n for n in package.namelist() if n.endswith('.dist-info/METADATA')]
+                      if len(names) != 1:
+                          raise SystemExit('expected one wheel METADATA')
+                      metadata = package.read(names[0])
+                      licenses = [n for n in package.namelist() if n.endswith('/LICENSE')]
+                      if not licenses or not all(b'MIT License' in package.read(n) for n in licenses):
+                          raise SystemExit('MIT license must be included')
+              else:
+                  with tarfile.open(path, 'r:gz') as package:
+                      members = package.getmembers()
+                      names = [m for m in members if m.name.endswith('/PKG-INFO') and m.name.count('/') == 1]
+                      licenses = [m for m in members if m.name.endswith('/LICENSE') and m.name.count('/') == 1]
+                      if len(names) != 1 or len(licenses) != 1 or not names[0].isfile() or not licenses[0].isfile():
+                          raise SystemExit('sdist metadata/license missing')
+                      metadata = package.extractfile(names[0]).read()
+                      if b'MIT License' not in package.extractfile(licenses[0]).read():
+                          raise SystemExit('MIT license must be included')
+              parsed = email.parser.BytesParser().parsebytes(metadata)
+              if parsed['Name'] != expected[path.name] or parsed['Version'] != '0.1.0':
+                  raise SystemExit('package identity mismatch')
+              expression = parsed.get('License-Expression')
+              if expression != 'MIT' and not (expression is None and str(parsed.get('License', '')).startswith('MIT License')):
+                  raise SystemExit('MIT package license metadata is required')
+              if set(str(parsed.get('Requires-Python', '')).replace(' ', '').split(',')) != {'>=3.7', '!=3.9.0', '!=3.9.1'}:
+                  raise SystemExit('Python compatibility metadata mismatch')
+              if parsed['Name'] == 'tansr-sdk-demo' and 'tansr-sdk==0.1.0' not in parsed.get_all('Requires-Dist', []):
+                  raise SystemExit('Demo must depend on the exact SDK release')
+              print(path.name, hashlib.sha256(path.read_bytes()).hexdigest())
+          PY
+      - name: Publish both packages through PyPI Trusted Publishing
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
+        with:
+          packages-dir: dist-release/
+          verify-metadata: true
+          skip-existing: false
+          print-hash: true
+          attestations: true

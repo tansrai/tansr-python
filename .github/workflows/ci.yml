@@ -1,0 +1,119 @@
+name: Python public CI
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  public:
+    # 手动重跑也仅接受已经收编的主线。
+    if: github.ref == 'refs/heads/main'
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-2022, ubuntu-24.04, macos-15]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    env:
+      PYTHONDONTWRITEBYTECODE: '1'
+      PYTHONNOUSERSITE: '1'
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c # v6.0.0
+        id: python
+        with:
+          python-version: '3.14'
+      - name: Prepare exact wheel-only dependencies
+        run: |
+          mkdir -p "$RUNNER_TEMP/python-ci-setup"
+          python -m pip --isolated --disable-pip-version-check download \
+            --require-hashes --only-binary=:all: --index-url https://pypi.org/simple \
+            -r requirements/runtime-modern.lock -r requirements/tools-modern.lock \
+            -r requirements/quality-modern.lock --dest "$RUNNER_TEMP/python-wheelhouse" \
+            2>&1 | tee "$RUNNER_TEMP/python-ci-setup/download.log"
+          python -m pip --isolated --disable-pip-version-check install \
+            --no-index --find-links "$RUNNER_TEMP/python-wheelhouse" \
+            --require-hashes --only-binary=:all: \
+            -r requirements/runtime-modern.lock -r requirements/tools-modern.lock \
+            -r requirements/quality-modern.lock \
+            2>&1 | tee "$RUNNER_TEMP/python-ci-setup/install.log"
+          python -m pip --isolated check 2>&1 | tee "$RUNNER_TEMP/python-ci-setup/pip-check.log"
+      - name: Public contract, generation, common tests, lint and types
+        run: |
+          python tools/check.py --contract-mode public \
+            --quality-python '${{ steps.python.outputs.python-path }}' \
+            --evidence "$RUNNER_TEMP/python-ci"
+      - name: Build SDK and Demo wheel and sdist with locked PEP 517 backends
+        env:
+          PIP_NO_INDEX: '1'
+          PIP_FIND_LINKS: ${{ runner.temp }}/python-wheelhouse
+        run: |
+          python -m build --outdir dist-release . 2>&1 | tee "$RUNNER_TEMP/python-ci/build-sdk.log"
+          python -m build --outdir dist-release demo 2>&1 | tee "$RUNNER_TEMP/python-ci/build-demo.log"
+          python - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import tomllib
+
+          expected = set()
+          for project_file in (Path('pyproject.toml'), Path('demo/pyproject.toml')):
+              project = tomllib.loads(project_file.read_text(encoding='utf-8'))['project']
+              stem = project['name'].replace('-', '_') + '-' + project['version']
+              expected.update((stem + '-py3-none-any.whl', stem + '.tar.gz'))
+          distributions = sorted(Path('dist-release').iterdir())
+          if len(expected) != 4 or {path.name for path in distributions} != expected:
+              raise SystemExit('expected exactly one wheel and one sdist for SDK and Demo')
+          receipt = {
+              'sourceCommit': os.environ['GITHUB_SHA'],
+              'files': [
+                  {'path': path.name, 'bytes': path.stat().st_size,
+                   'sha256': hashlib.sha256(path.read_bytes()).hexdigest()}
+                  for path in distributions
+              ],
+          }
+          output = Path(os.environ['RUNNER_TEMP']) / 'python-ci' / 'distributions.json'
+          output.write_text(json.dumps(receipt, indent=2) + '\n', encoding='utf-8')
+          print(json.dumps(receipt, indent=2))
+          PY
+      - name: Preserve the four original PyPI distributions from Ubuntu
+        if: runner.os == 'Linux' && success()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: pypi-distributions
+          path: dist-release/*
+          retention-days: 30
+          if-no-files-found: error
+      - name: Report validation scope
+        if: always()
+        run: |
+          {
+            printf '%s\n' '### Python public CI'
+            printf '%s\n' 'Public contract/generation, common and public tests, lint, types and SDK/Demo builds.'
+            printf '%s\n' 'Internal tests/test_contract_assets.py is explicitly excluded by --contract-mode public.'
+            printf '%s\n' 'Real Serve: **not run**. Its private fixture is not distributed or downloaded by this workflow.'
+            printf '%s\n' 'Source tests and package builds do not replace the separate installed-consumer and real Serve gates.'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Preserve platform receipts and logs
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: python-public-${{ matrix.os }}
+          retention-days: 7
+          if-no-files-found: warn
+          path: |
+            ${{ runner.temp }}/python-ci-setup/*.log
+            ${{ runner.temp }}/python-ci/receipt.json
+            ${{ runner.temp }}/python-ci/distributions.json
+            ${{ runner.temp }}/python-ci/*.xml
+            ${{ runner.temp }}/python-ci/*.log

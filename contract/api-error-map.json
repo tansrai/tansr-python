@@ -1,0 +1,358 @@
+{
+  "format": "tansr-api-error-map-v1",
+  "contract": "unified-v1",
+  "revision": 3,
+  "factsHash": "f96d7f559561e7565adfbca24685d21d8aa1e9fe3776ce09f014e9aa8bbbf0cc",
+  "unifiedCodes": {
+    "invalid_request": {
+      "status": 400,
+      "retryAction": "none"
+    },
+    "protocol_mismatch": {
+      "status": 400,
+      "retryAction": "none"
+    },
+    "unauthorized": {
+      "status": 401,
+      "retryAction": "none"
+    },
+    "forbidden": {
+      "status": 403,
+      "retryAction": "none"
+    },
+    "not_found": {
+      "status": 404,
+      "retryAction": "none"
+    },
+    "method_not_allowed": {
+      "status": 405,
+      "retryAction": "none"
+    },
+    "gone": {
+      "status": 410,
+      "retryAction": "none"
+    },
+    "conflict": {
+      "status": 409,
+      "retryAction": "none"
+    },
+    "stale_generation": {
+      "status": 409,
+      "retryAction": "rebind"
+    },
+    "gap": {
+      "status": 409,
+      "retryAction": "none"
+    },
+    "capability_unavailable": {
+      "status": 404,
+      "retryAction": "none"
+    },
+    "capacity_exceeded": {
+      "status": 429,
+      "retryAction": "same-request"
+    },
+    "payload_too_large": {
+      "status": 413,
+      "retryAction": "none"
+    },
+    "upstream_unavailable": {
+      "status": 503,
+      "retryAction": "same-request"
+    },
+    "result_unknown": {
+      "status": 503,
+      "retryAction": "query-status"
+    },
+    "rejected": {
+      "status": 422,
+      "retryAction": "none"
+    },
+    "internal_error": {
+      "status": 500,
+      "retryAction": "none"
+    }
+  },
+  "retryActions": [
+    "none",
+    "same-request",
+    "query-status",
+    "rebind",
+    "refresh",
+    "rediscover"
+  ],
+  "families": {
+    "agent-session-v1": {
+      "source": "packages/server/src/v2/contract.ts",
+      "codes": [
+        "call_already_resolved",
+        "call_expired",
+        "call_not_found",
+        "capability_disabled",
+        "checkpoint_import_invalid",
+        "checkpoint_not_found",
+        "checkpoints_not_wired",
+        "create_failed",
+        "cwd_invalid",
+        "cwd_not_allowed",
+        "cwd_switch_unsupported",
+        "cwd_unavailable",
+        "digest_mismatch",
+        "draining",
+        "forbidden",
+        "fork_source_not_found",
+        "internal_error",
+        "invalid_json",
+        "method_not_allowed",
+        "midturn_blocks_rejected",
+        "not_found",
+        "overloaded",
+        "payload_too_large",
+        "platform_unavailable",
+        "rate_limited",
+        "request_already_resolved",
+        "request_expired",
+        "request_not_found",
+        "resume_unavailable",
+        "session_ended",
+        "session_limit_exceeded",
+        "session_mismatch",
+        "session_not_found",
+        "store_corrupted",
+        "turn_running",
+        "unauthorized",
+        "upstream_unavailable",
+        "validation_failed"
+      ],
+      "retryActions": [],
+      "errorMap": {
+        "call_already_resolved": "conflict",
+        "call_expired": "gone",
+        "call_not_found": "not_found",
+        "capability_disabled": "capability_unavailable",
+        "checkpoint_import_invalid": "invalid_request",
+        "checkpoint_not_found": "not_found",
+        "checkpoints_not_wired": "capability_unavailable",
+        "create_failed": "internal_error",
+        "cwd_invalid": "invalid_request",
+        "cwd_not_allowed": "forbidden",
+        "cwd_switch_unsupported": "capability_unavailable",
+        "cwd_unavailable": "conflict",
+        "digest_mismatch": "conflict",
+        "draining": "capacity_exceeded",
+        "forbidden": "forbidden",
+        "fork_source_not_found": "not_found",
+        "internal_error": "internal_error",
+        "invalid_json": "invalid_request",
+        "method_not_allowed": "method_not_allowed",
+        "midturn_blocks_rejected": "invalid_request",
+        "not_found": "not_found",
+        "overloaded": "capacity_exceeded",
+        "payload_too_large": "payload_too_large",
+        "platform_unavailable": "capability_unavailable",
+        "rate_limited": "capacity_exceeded",
+        "request_already_resolved": "conflict",
+        "request_expired": "gone",
+        "request_not_found": "not_found",
+        "resume_unavailable": "conflict",
+        "session_ended": "gone",
+        "session_limit_exceeded": "capacity_exceeded",
+        "session_mismatch": "conflict",
+        "session_not_found": "not_found",
+        "store_corrupted": "internal_error",
+        "turn_running": "conflict",
+        "unauthorized": "unauthorized",
+        "upstream_unavailable": "upstream_unavailable",
+        "validation_failed": "invalid_request"
+      },
+      "retryMap": {}
+    },
+    "sdk2-ext-v1": {
+      "source": "doc/rfc/sdk2-ext-v1.schema.json",
+      "codes": [
+        "archive_gap",
+        "binding_closed",
+        "binding_conflict",
+        "capability_unconfirmed",
+        "capacity_exceeded",
+        "epoch_unavailable",
+        "forbidden",
+        "internal_error",
+        "invalid_coverage",
+        "invalid_request",
+        "material_rejected",
+        "payload_too_large",
+        "protocol_version_mismatch",
+        "receipt_expired",
+        "request_expired",
+        "request_id_conflict",
+        "source_unavailable",
+        "stale_generation",
+        "stream_cursor_expired",
+        "stream_cursor_unknown",
+        "stream_gap",
+        "unauthorized",
+        "unsupported_capability"
+      ],
+      "retryActions": [
+        "none",
+        "query-status",
+        "rebind",
+        "same-request"
+      ],
+      "errorMap": {
+        "archive_gap": "gap",
+        "binding_closed": "gone",
+        "binding_conflict": "conflict",
+        "capability_unconfirmed": "upstream_unavailable",
+        "capacity_exceeded": "capacity_exceeded",
+        "epoch_unavailable": "upstream_unavailable",
+        "forbidden": "forbidden",
+        "internal_error": "internal_error",
+        "invalid_coverage": "invalid_request",
+        "invalid_request": "invalid_request",
+        "material_rejected": "rejected",
+        "payload_too_large": "payload_too_large",
+        "protocol_version_mismatch": "protocol_mismatch",
+        "receipt_expired": "gone",
+        "request_expired": "gone",
+        "request_id_conflict": "conflict",
+        "source_unavailable": "upstream_unavailable",
+        "stale_generation": "stale_generation",
+        "stream_cursor_expired": "gone",
+        "stream_cursor_unknown": "gap",
+        "stream_gap": "gap",
+        "unauthorized": "unauthorized",
+        "unsupported_capability": "capability_unavailable"
+      },
+      "retryMap": {
+        "none": "none",
+        "query-status": "query-status",
+        "rebind": "rebind",
+        "same-request": "same-request"
+      }
+    },
+    "sdk2-cache-v1": {
+      "source": "doc/rfc/sdk2-cache-v1.schema.json",
+      "codes": [
+        "capacity_exceeded",
+        "epoch_unavailable",
+        "forbidden",
+        "invalid_request",
+        "mapping_expired",
+        "mapping_unavailable",
+        "payload_too_large",
+        "projection_stale",
+        "protocol_version_mismatch",
+        "receipt_expired",
+        "request_id_conflict",
+        "result_unknown",
+        "stale_generation",
+        "stale_revision",
+        "ticket_expired",
+        "unauthorized",
+        "unsupported_capability"
+      ],
+      "retryActions": [
+        "none",
+        "query-status",
+        "refresh-projection",
+        "same-request"
+      ],
+      "fallbacks": [
+        "legacy-cold",
+        "none"
+      ],
+      "errorMap": {
+        "capacity_exceeded": "capacity_exceeded",
+        "epoch_unavailable": "upstream_unavailable",
+        "forbidden": "forbidden",
+        "invalid_request": "invalid_request",
+        "mapping_expired": "gone",
+        "mapping_unavailable": "not_found",
+        "payload_too_large": "payload_too_large",
+        "projection_stale": "stale_generation",
+        "protocol_version_mismatch": "protocol_mismatch",
+        "receipt_expired": "gone",
+        "request_id_conflict": "conflict",
+        "result_unknown": "result_unknown",
+        "stale_generation": "stale_generation",
+        "stale_revision": "conflict",
+        "ticket_expired": "gone",
+        "unauthorized": "unauthorized",
+        "unsupported_capability": "capability_unavailable"
+      },
+      "retryMap": {
+        "none": "none",
+        "query-status": "query-status",
+        "refresh-projection": "refresh",
+        "same-request": "same-request"
+      }
+    },
+    "terminal-services-v1": {
+      "source": "doc/rfc/terminal-services-v1.schema.json",
+      "sharedSources": [
+        "doc/rfc/terminal-observation-v1.schema.json",
+        "doc/rfc/terminal-profile-v1.schema.json"
+      ],
+      "codes": [
+        "binding_conflict",
+        "busy",
+        "capability_unconfirmed",
+        "capacity_exceeded",
+        "commit_unknown",
+        "context_transition_required",
+        "forbidden",
+        "integrity_mismatch",
+        "invalid_request",
+        "not_found",
+        "output_gap",
+        "payload_too_large",
+        "protocol_version_mismatch",
+        "request_conflict",
+        "request_limit",
+        "revision_conflict",
+        "source_unavailable",
+        "stale_generation",
+        "unauthorized",
+        "unsupported_capability"
+      ],
+      "retryActions": [
+        "backoff",
+        "discover",
+        "none",
+        "reconcile",
+        "refresh"
+      ],
+      "errorMap": {
+        "binding_conflict": "conflict",
+        "busy": "conflict",
+        "capability_unconfirmed": "upstream_unavailable",
+        "capacity_exceeded": "capacity_exceeded",
+        "commit_unknown": "result_unknown",
+        "context_transition_required": "stale_generation",
+        "forbidden": "forbidden",
+        "integrity_mismatch": "conflict",
+        "invalid_request": "invalid_request",
+        "not_found": "not_found",
+        "output_gap": "gap",
+        "payload_too_large": "payload_too_large",
+        "protocol_version_mismatch": "protocol_mismatch",
+        "request_conflict": "conflict",
+        "request_limit": "capacity_exceeded",
+        "revision_conflict": "conflict",
+        "source_unavailable": "upstream_unavailable",
+        "stale_generation": "stale_generation",
+        "unauthorized": "unauthorized",
+        "unsupported_capability": "capability_unavailable"
+      },
+      "retryMap": {
+        "backoff": "same-request",
+        "discover": "rediscover",
+        "none": "none",
+        "reconcile": "query-status",
+        "refresh": "refresh"
+      }
+    }
+  }
+}

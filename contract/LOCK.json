@@ -1,0 +1,249 @@
+{
+  "format": "tansr-python-contract-lock-v1",
+  "baseline": "sdk2-uapi-2026-10-07",
+  "consumer": "tansr-python",
+  "sourceRepo": "cpple/tansr",
+  "sourceBranch": "main",
+  "sourceCommit": "83c64b2c519623a79994c942a5132300eb8174d4",
+  "manifestRevision": 7,
+  "schemaHash": "b60e77ffcbf08d985a993dbdbd4cf610f12f7c7e70f090aee5ff8d523f70bb57",
+  "operationCount": 81,
+  "familyCount": 11,
+  "policy": "Python内部消费锁；39份原资产固定于指定Git对象，不自动更新。尚无Python公开授权，内部reference及历史不得外发。来源文件不转移实现所有权或分发权。",
+  "files": [
+    {
+      "path": "reference/doc/98-Agent会话服务v2契约冻结件.md",
+      "source": "doc/98-Agent会话服务v2契约冻结件.md",
+      "sha256": "4e29820957fbb0ba0a8f0b0098e6ae8c2afd487ed7d8137dcc97a1b6d3ffef80",
+      "role": "semantics"
+    },
+    {
+      "path": "archive-sync-v1.schema.json",
+      "source": "doc/rfc/archive-sync-v1.schema.json",
+      "sha256": "7468fb72c80ce8d0bbe298219c894578020f249d7532c63cad91e8dad4a412bb",
+      "role": "contract"
+    },
+    {
+      "path": "reference/doc/rfc/RFC-INJ-1-同轮输入接纳与跨端回执.md",
+      "source": "doc/rfc/RFC-INJ-1-同轮输入接纳与跨端回执.md",
+      "sha256": "0758809608fe400a8a8a0943203203124c01a88f3d5071135cfe635225b5fca6",
+      "role": "semantics"
+    },
+    {
+      "path": "reference/doc/rfc/RFC-SDK2-1-兼容SDK1的扩展协议.md",
+      "source": "doc/rfc/RFC-SDK2-1-兼容SDK1的扩展协议.md",
+      "sha256": "732bc67686f8c67b6874e121153033b496db5b8800d1b11c72ea6b2a503b0e43",
+      "role": "semantics"
+    },
+    {
+      "path": "reference/doc/rfc/RFC-SDK2-ACK-recovery-v1.md",
+      "source": "doc/rfc/RFC-SDK2-ACK-recovery-v1.md",
+      "sha256": "b17a87bbd024d9558db1b376adc892bfc16ee6252f6be8a3a9c8957ecc26a273",
+      "role": "semantics"
+    },
+    {
+      "path": "reference/doc/rfc/RFC-SDK2-可信运行接续.md",
+      "source": "doc/rfc/RFC-SDK2-可信运行接续.md",
+      "sha256": "405f82760fdfe350c2598e843078a40bc4397a7275c10db3b08d9caa752529e5",
+      "role": "semantics"
+    },
+    {
+      "path": "reference/doc/rfc/RFC-SDK2-缓存连续性.md",
+      "source": "doc/rfc/RFC-SDK2-缓存连续性.md",
+      "sha256": "34bdcb921561bc0cec84ead3f860214ccb55a3a19a8a5fa7f8d66ad108620181",
+      "role": "semantics"
+    },
+    {
+      "path": "reference/doc/rfc/RFC-SERVE-NET-1-终端增量工具与记忆协议.md",
+      "source": "doc/rfc/RFC-SERVE-NET-1-终端增量工具与记忆协议.md",
+      "sha256": "b7682e1d8b67d143adb29064071ac692a46dd035c393a6e1cda35982775ec1c5",
+      "role": "semantics"
+    },
+    {
+      "path": "reference/doc/rfc/RFC-UAPI-1-统一信封与canonical单模块.md",
+      "source": "doc/rfc/RFC-UAPI-1-统一信封与canonical单模块.md",
+      "sha256": "687f2172b1d289d3113a11200a4034f58f062ce1f11864539c512d7c0b539fc5",
+      "role": "semantics"
+    },
+    {
+      "path": "reference/doc/rfc/RFC-USDK-1-运行端与终端执行契约.md",
+      "source": "doc/rfc/RFC-USDK-1-运行端与终端执行契约.md",
+      "sha256": "286445d6b14af0eec0a69c80384af8e20b9182a54553a81a7cccfe568ea74aa5",
+      "role": "semantics"
+    },
+    {
+      "path": "sdk2-archive-recovery-v1.golden.json",
+      "source": "doc/rfc/sdk2-archive-recovery-v1.golden.json",
+      "sha256": "614adf2088585a6213d010acde29598d40757d0f2d7b4608f1670ccbde3a5553",
+      "role": "contract"
+    },
+    {
+      "path": "sdk2-archive-recovery-v1.schema.json",
+      "source": "doc/rfc/sdk2-archive-recovery-v1.schema.json",
+      "sha256": "f530de1096b4f5d56ea688b7f2cec9ae66deb7d3719db85ab1f48287d3bd7ad4",
+      "role": "contract"
+    },
+    {
+      "path": "sdk2-archive-recovery-v1.sqlite.sql",
+      "source": "doc/rfc/sdk2-archive-recovery-v1.sqlite.sql",
+      "sha256": "a6fcfef2458cb0dcf9788af2385573c85b238dc875dee7ffc144f27dcc28028b",
+      "role": "reference"
+    },
+    {
+      "path": "reference/doc/rfc/sdk2-cache-core-v1.md",
+      "source": "doc/rfc/sdk2-cache-core-v1.md",
+      "sha256": "9e7c209626fdb1b6d18c967195948edbcee738c172b4b3051cf7a0d34c25a7e1",
+      "role": "semantics"
+    },
+    {
+      "path": "sdk2-cache-core-v1.schema.json",
+      "source": "doc/rfc/sdk2-cache-core-v1.schema.json",
+      "sha256": "5b052117919f3ef751310a36db3a2c1dac96daeda2f10a4bb78028edc0d5cbff",
+      "role": "contract"
+    },
+    {
+      "path": "sdk2-cache-v1.schema.json",
+      "source": "doc/rfc/sdk2-cache-v1.schema.json",
+      "sha256": "88e7941861fab1a6380b9226e3a42adb8c872efdf720dc36e92ffa42da43d818",
+      "role": "contract"
+    },
+    {
+      "path": "reference/doc/rfc/SDK2-ext-v1-wire.md",
+      "source": "doc/rfc/SDK2-ext-v1-wire.md",
+      "sha256": "c49ca1cbf9ea0672ee536e4096dab3eb7852b0c3913c6f69882586d063403c3d",
+      "role": "semantics"
+    },
+    {
+      "path": "sdk2-ext-v1.schema.json",
+      "source": "doc/rfc/sdk2-ext-v1.schema.json",
+      "sha256": "969273844ca9196f19dd71b292b65a49307d63be0d20a0caf557e105ba6d8605",
+      "role": "contract"
+    },
+    {
+      "path": "reference/doc/rfc/SDK2-档案同步与保留扩展.md",
+      "source": "doc/rfc/SDK2-档案同步与保留扩展.md",
+      "sha256": "0ec9736910a253e37f764362982a36d8f6a8704c52fed13eea499e3c3f82008a",
+      "role": "semantics"
+    },
+    {
+      "path": "terminal-observation-v1.golden.json",
+      "source": "doc/rfc/terminal-observation-v1.golden.json",
+      "sha256": "2148eb11fb4538736cd244b17e5ba135bc26919081105fd1018ff884ab364e1a",
+      "role": "contract"
+    },
+    {
+      "path": "terminal-observation-v1.schema.json",
+      "source": "doc/rfc/terminal-observation-v1.schema.json",
+      "sha256": "b6668463458e78b2cfe23baa72d9d9ac6263a248467dd8aeb60387fc2f67c28a",
+      "role": "contract"
+    },
+    {
+      "path": "terminal-profile-v1.golden.json",
+      "source": "doc/rfc/terminal-profile-v1.golden.json",
+      "sha256": "6ecfea5872a8cb2052d35cb908839c7ab07c11d77f65dc7e9a230494a2cf8ea4",
+      "role": "contract"
+    },
+    {
+      "path": "terminal-profile-v1.schema.json",
+      "source": "doc/rfc/terminal-profile-v1.schema.json",
+      "sha256": "560ad136f0619a2a0592151d56e10871c3799ca438163c4e2872381bf5f5159a",
+      "role": "contract"
+    },
+    {
+      "path": "terminal-services-v1.golden.json",
+      "source": "doc/rfc/terminal-services-v1.golden.json",
+      "sha256": "a19ee430360ca883723bb5836e8966e51e83f9831c57b1da3c1368cd3ef5e66a",
+      "role": "contract"
+    },
+    {
+      "path": "terminal-services-v1.schema.json",
+      "source": "doc/rfc/terminal-services-v1.schema.json",
+      "sha256": "8cd8c7c55a84c5700373aed75d5653a0737d718bfe0546641be367bda1a11896",
+      "role": "contract"
+    },
+    {
+      "path": "terminal-shell-sandbox-v1.golden.json",
+      "source": "doc/rfc/terminal-shell-sandbox-v1.golden.json",
+      "sha256": "ad76d8eae6970835a0995475ce4cb6e0a58ded5bc7b4e50bf01a3e5dc0212563",
+      "role": "contract"
+    },
+    {
+      "path": "terminal-shell-sandbox-v1.schema.json",
+      "source": "doc/rfc/terminal-shell-sandbox-v1.schema.json",
+      "sha256": "be3ebcf6dc650844319a18a15f6abbefb9316f704410b591f9ba6dcab7620fe1",
+      "role": "contract"
+    },
+    {
+      "path": "unified-v1.golden.json",
+      "source": "doc/rfc/unified-v1.golden.json",
+      "sha256": "42531a3937563d8c0d719c5970629b25bbabf3a8ea8436550db5bfddf9d206fd",
+      "role": "contract"
+    },
+    {
+      "path": "unified-v1.schema.json",
+      "source": "doc/rfc/unified-v1.schema.json",
+      "sha256": "fd07962916f7662ecc69c3f8c8d2b79aa5b99f542cbfd310a50f56777e51f117",
+      "role": "contract"
+    },
+    {
+      "path": "reference/packages/api-client/src/sdk2/http-semantics.ts",
+      "source": "packages/api-client/src/sdk2/http-semantics.ts",
+      "sha256": "10eb4f838583113f31318d54b972301487bac50a83e19e07c0730d5bf7fa2cc2",
+      "role": "reference"
+    },
+    {
+      "path": "reference/packages/cli/test/fixtures/agent-v2-frames/frames.json",
+      "source": "packages/cli/test/fixtures/agent-v2-frames/frames.json",
+      "sha256": "5d3a40dcfea3709a06b78dd9a0066f68194efff96ebc4defc79476a589161d50",
+      "role": "contract"
+    },
+    {
+      "path": "reference/packages/protocol/schemas/kernel-event.schema.json",
+      "source": "packages/protocol/schemas/kernel-event.schema.json",
+      "sha256": "54b587ade59bf20a3d55647a160c3d857dbf2fa73730d82cf7811b7ee4097501",
+      "role": "contract"
+    },
+    {
+      "path": "reference/packages/sdk/contract/MANIFEST.json",
+      "source": "packages/sdk/contract/MANIFEST.json",
+      "sha256": "1d0f6e1cc848c9ced7275ebd5eb4cef6dfa432f1c3fb50e6e3d08575e101905d",
+      "role": "contract"
+    },
+    {
+      "path": "api-error-map.json",
+      "source": "packages/server/contract/api-error-map.json",
+      "sha256": "6bdccf9c9b6475bac64253595908a1e42948de9699beddc6540a404a08a4ea25",
+      "role": "contract"
+    },
+    {
+      "path": "api-manifest.json",
+      "source": "packages/server/contract/api-manifest.json",
+      "sha256": "f6255bc868b4de5cb2af759a55069ab4651027d4125ef86d37f14a91d3307288",
+      "role": "contract"
+    },
+    {
+      "path": "reference/packages/server/src/api/event-envelope.ts",
+      "source": "packages/server/src/api/event-envelope.ts",
+      "sha256": "c5b53b35419a83a0907bba22311672c89fc9b9cf81430e6a6487921a84807d2d",
+      "role": "reference"
+    },
+    {
+      "path": "reference/packages/server/src/v2/contract.ts",
+      "source": "packages/server/src/v2/contract.ts",
+      "sha256": "6e1876edc476322e2fc3613958f5b44700bb80ea23550fa794f5729220674f3e",
+      "role": "contract"
+    },
+    {
+      "path": "canonical-cross-vectors.json",
+      "source": "scripts/api/fixtures/canonical-cross-vectors.json",
+      "sha256": "aba7c6daab723e058d7d8cda6c95f8d8cbb091b516b457c3994bd024ea2de619",
+      "role": "contract"
+    },
+    {
+      "path": "sdk2-wire-v1.json",
+      "source": "scripts/sdk2/fixtures/sdk2-wire-v1.json",
+      "sha256": "d911959c91182834af396e09c523a14f223a65871588561dff5faf1d0ba27930",
+      "role": "contract"
+    }
+  ]
+}

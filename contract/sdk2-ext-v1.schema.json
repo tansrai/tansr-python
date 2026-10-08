@@ -1,0 +1,3953 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://schemas.tansr.com/drafts/sdk2-ext-v1.schema.json",
+  "title": "SDK2 extension v1 protocol: SDK1-compatible archive and execution-boundary overlays",
+  "description": "SDK2 extension v1 is an additive protocol surface. SDK2-10 adds an opt-in execution boundary view; existing SDK1 API, SessionStore, IR, SSE, cache behavior and frozen protocol contracts remain unchanged. HTTP handlers validate their named definition, not the root union.",
+  "$comment": "Route namespace /v3/sdk2. Schema validates one DTO, never authenticity, authorization, UTF-8 total bytes, referenced IR payload semantics or persistent CAS/state. Those are mandatory normative checks in RFC-SDK2-1 and the contract fixtures; passing this schema is not product acceptance. New requests reject unknown keys. Referenced body attachments use controlled source/ID access only. No host-control or arbitrary filesystem/URL data source exists.",
+  "anyOf": [
+    {
+      "$ref": "#/definitions/CapabilitiesResponse"
+    },
+    {
+      "$ref": "#/definitions/BindingCreateRequest"
+    },
+    {
+      "$ref": "#/definitions/BindingView"
+    },
+    {
+      "$ref": "#/definitions/ArchiveReadRequest"
+    },
+    {
+      "$ref": "#/definitions/ArchivePage"
+    },
+    {
+      "$ref": "#/definitions/ArtifactReadRequest"
+    },
+    {
+      "$ref": "#/definitions/ArtifactChunk"
+    },
+    {
+      "$ref": "#/definitions/ArchiveAckRequest"
+    },
+    {
+      "$ref": "#/definitions/ArchiveStatus"
+    },
+    {
+      "$ref": "#/definitions/MaterialRequest"
+    },
+    {
+      "$ref": "#/definitions/MaterialResponseRequest"
+    },
+    {
+      "$ref": "#/definitions/MaterialReceipt"
+    },
+    {
+      "$ref": "#/definitions/BindingCloseRequest"
+    },
+    {
+      "$ref": "#/definitions/MutationReceipt"
+    },
+    {
+      "$ref": "#/definitions/OperationStatusRequest"
+    },
+    {
+      "$ref": "#/definitions/EventFrame"
+    },
+    {
+      "$ref": "#/definitions/ErrorResponse"
+    },
+    {
+      "$ref": "#/definitions/BindingTargetRequest"
+    },
+    {
+      "$ref": "#/definitions/BindingTargetView"
+    },
+    {
+      "$ref": "#/definitions/MaterialUploadChunkRequest"
+    },
+    {
+      "$ref": "#/definitions/MaterialUploadStatusRequest"
+    },
+    {
+      "$ref": "#/definitions/MaterialUploadStatus"
+    },
+    {
+      "$ref": "#/definitions/MaterialStatusRequest"
+    },
+    {
+      "$ref": "#/definitions/ExecutionBoundary"
+    }
+  ],
+  "definitions": {
+    "Id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._~-]*$"
+    },
+    "LegacyId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "description": "Existing opaque ID; no trimming, case folding or Unicode normalization. Do not mint authority from this string."
+    },
+    "Sequence": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,17}|[1-8][0-9]{18}|9[0-1][0-9]{17}|92[0-1][0-9]{16}|922[0-2][0-9]{15}|9223[0-2][0-9]{14}|92233[0-6][0-9]{13}|922337[0-1][0-9]{12}|92233720[0-2][0-9]{10}|922337203[0-5][0-9]{9}|9223372036[0-7][0-9]{8}|92233720368[0-4][0-9]{7}|922337203685[0-3][0-9]{6}|9223372036854[0-6][0-9]{5}|92233720368547[0-6][0-9]{4}|922337203685477[0-4][0-9]{3}|9223372036854775[0-7][0-9]{2}|922337203685477580[0-6]|9223372036854775807)$",
+      "maxLength": 19,
+      "description": "Canonical unsigned decimal 0..2^63-1. Never parse through IEEE754 Number."
+    },
+    "Digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "Capability": {
+      "type": "string",
+      "enum": [
+        "archive-transfer-v1",
+        "context-materials-v1"
+      ]
+    },
+    "Scope": {
+      "type": "object",
+      "properties": {
+        "applicationScopeId": {
+          "$ref": "#/definitions/Id"
+        },
+        "endUserId": {
+          "$ref": "#/definitions/LegacyId"
+        },
+        "authorizationRevision": {
+          "$ref": "#/definitions/Sequence"
+        }
+      },
+      "required": [
+        "applicationScopeId",
+        "endUserId",
+        "authorizationRevision"
+      ],
+      "additionalProperties": false,
+      "$comment": "Response/host-adapter only. Client requests have no Scope field. Reauthenticate and authorize every operation; archive roles never imply approve or execute."
+    },
+    "RequestIdentity": {
+      "type": "object",
+      "properties": {
+        "requestId": {
+          "$ref": "#/definitions/Id"
+        },
+        "operationEpoch": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "requestId",
+        "operationEpoch"
+      ],
+      "additionalProperties": false,
+      "$comment": "Epoch is issued and retired by the trusted host. Same scope/resource/operation/epoch/requestId and semantic content returns its original receipt, different content conflicts. Retired epochs never become fresh; unknown or expired results require query-status, not a new operation. Semantic digest uses SHA256(UTF8(tansr.sdk2.operation.v1)+NUL+canonical({scope:[trustedApp,trustedUser],operation,semantic})), semantic is immutable request body excluding request identity and transport/auth envelope. expectedRevision belongs to semantic content. Fresh auth/epoch validation gates NEW admission; existing-operation status remains queryable under current permission after epoch retirement."
+    },
+    "Generations": {
+      "type": "object",
+      "properties": {
+        "historyEpoch": {
+          "$ref": "#/definitions/LegacyId"
+        },
+        "deletionGeneration": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "projectionRevision": {
+          "$ref": "#/definitions/Sequence"
+        }
+      },
+      "required": [
+        "historyEpoch",
+        "deletionGeneration",
+        "projectionRevision"
+      ],
+      "additionalProperties": false
+    },
+    "Target": {
+      "type": "object",
+      "properties": {
+        "sessionId": {
+          "$ref": "#/definitions/LegacyId"
+        },
+        "generations": {
+          "$ref": "#/definitions/Generations"
+        },
+        "sourceSnapshotDigest": {
+          "$ref": "#/definitions/Digest"
+        }
+      },
+      "required": [
+        "sessionId",
+        "generations",
+        "sourceSnapshotDigest"
+      ],
+      "additionalProperties": false,
+      "$comment": "Read-only host observation of current effective history. sourceSnapshotDigest=SHA256(UTF8(tansr.sdk2.source-snapshot.v1)+NUL+snapshotBytes). Trusted host fixes snapshotBytes with the existing SDK1 IR serializer under the session exclusion boundary; do not reencode IR with the new control-metadata canonicalizer or strip/normalize floats, opaque values or provider-owned data to compute this witness. It is only a CAS witness, never client-provided authority or permission to export hidden content. Binding POST recomputes under the same boundary as send/rewrite/restore; unchanged extension revision alone cannot prove history unchanged."
+    },
+    "Limits": {
+      "type": "object",
+      "properties": {
+        "controlBytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 262144,
+          "default": 262144
+        },
+        "recordBytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 262144,
+          "default": 262144
+        },
+        "pageRecords": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 128,
+          "default": 128
+        },
+        "pageBytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 1048576,
+          "default": 1048576
+        },
+        "attachmentBytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 33554432,
+          "default": 33554432
+        },
+        "chunkBytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 262144,
+          "default": 262144
+        },
+        "materialConcurrent": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2,
+          "default": 2
+        },
+        "materialQueue": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16,
+          "default": 16
+        },
+        "materialCandidates": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 32,
+          "default": 32
+        },
+        "materialBytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 1048576,
+          "default": 1048576
+        },
+        "materialDeadlineMs": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 30000,
+          "default": 30000
+        },
+        "pendingRecords": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096,
+          "default": 4096
+        },
+        "pendingBytes": {
+          "type": "integer",
+          "minimum": 1048576,
+          "maximum": 67108864,
+          "default": 67108864
+        },
+        "inflightReserveBytes": {
+          "type": "integer",
+          "minimum": 1048576,
+          "maximum": 16777216,
+          "default": 16777216
+        },
+        "offlineMs": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 86400000,
+          "default": 86400000
+        },
+        "eventRetentionMs": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 600000,
+          "default": 600000
+        },
+        "eventRetentionFrames": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4096,
+          "default": 4096
+        },
+        "eventRetentionBytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 8388608,
+          "default": 8388608
+        },
+        "terminalReceiptRetentionMs": {
+          "type": "integer",
+          "minimum": 60000,
+          "maximum": 604800000,
+          "default": 604800000
+        },
+        "epochLifetimeMs": {
+          "type": "integer",
+          "minimum": 60000,
+          "maximum": 86400000,
+          "default": 3600000
+        },
+        "materialChunkBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536,
+          "default": 65536
+        }
+      },
+      "required": [
+        "controlBytes",
+        "recordBytes",
+        "pageRecords",
+        "pageBytes",
+        "attachmentBytes",
+        "chunkBytes",
+        "materialConcurrent",
+        "materialQueue",
+        "materialCandidates",
+        "materialBytes",
+        "materialDeadlineMs",
+        "pendingRecords",
+        "pendingBytes",
+        "inflightReserveBytes",
+        "offlineMs",
+        "eventRetentionMs",
+        "eventRetentionFrames",
+        "eventRetentionBytes",
+        "terminalReceiptRetentionMs",
+        "epochLifetimeMs",
+        "materialChunkBytes"
+      ],
+      "additionalProperties": false,
+      "$comment": "UTF-8 decoded bytes, not character counts. Apply per-binding AND host/app/user quotas. Reserve must be <= pendingBytes and cover admitted inflight results. Pending records cannot be evicted by receipt/event/offline TTL; stop new admission and drain safely. These caps never modify legacy SessionStore retention or old v2 limits."
+    },
+    "CapabilitiesResponse": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "availability": {
+          "const": "legacy-complete"
+        },
+        "capabilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Capability"
+          },
+          "minItems": 1,
+          "maxItems": 2,
+          "uniqueItems": true
+        },
+        "limits": {
+          "$ref": "#/definitions/Limits"
+        },
+        "operationEpoch": {
+          "$ref": "#/definitions/EpochView"
+        },
+        "archiveAckFormats": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ArchiveAckFormat"
+          },
+          "minItems": 0,
+          "maxItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "protocol",
+        "availability",
+        "capabilities",
+        "limits",
+        "operationEpoch",
+        "archiveAckFormats"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "capabilities": {
+                "contains": {
+                  "const": "archive-transfer-v1"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "archiveAckFormats": {
+                "minItems": 1
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "archiveAckFormats": {
+                "maxItems": 0
+              }
+            }
+          }
+        }
+      ],
+      "$comment": "archiveAckFormats is exact discovery support, not authorization. No archive capability means an empty list. Binding selects one recognized format; never infer support from protocol family alone."
+    },
+    "BindingCreateRequest": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "request": {
+          "$ref": "#/definitions/RequestIdentity"
+        },
+        "target": {
+          "$ref": "#/definitions/Target"
+        },
+        "expectedRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "requiredCapabilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Capability"
+          },
+          "minItems": 1,
+          "maxItems": 2,
+          "uniqueItems": true
+        },
+        "optionalCapabilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Capability"
+          },
+          "minItems": 0,
+          "maxItems": 2,
+          "uniqueItems": true
+        },
+        "archive": {
+          "type": "object",
+          "properties": {
+            "strategy": {
+              "const": "single-authorized-source"
+            },
+            "sourceId": {
+              "$ref": "#/definitions/Id"
+            },
+            "durability": {
+              "const": "source-ack-with-durable-spool"
+            },
+            "delivery": {
+              "const": "required"
+            },
+            "sessionAvailability": {
+              "const": "legacy-complete"
+            },
+            "ackFormat": {
+              "$ref": "#/definitions/ArchiveAckFormat"
+            }
+          },
+          "required": [
+            "strategy",
+            "sourceId",
+            "durability",
+            "delivery",
+            "sessionAvailability",
+            "ackFormat"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "protocol",
+        "request",
+        "target",
+        "expectedRevision",
+        "requiredCapabilities",
+        "optionalCapabilities",
+        "archive"
+      ],
+      "additionalProperties": false,
+      "$comment": "Only idle safe-point bind. Expected revision is the trusted per-session extension slot revision, initially 0. Required/optional capability sets must be disjoint; unavailable required capability is atomic failure. Source must be host-registered for principal; request never carries a path, module, connector URL or provider credential. archive.ackFormat explicitly selects the only recognized draft format. If archive is required, unsupported format/capability fails atomically; optional archive rejection must not suppress separately accepted context-materials capability. Before required delivery, negotiated controlBytes must support a whole-record split ACK with the actual identity envelope and permitted artifact references.",
+      "allOf": [
+        {
+          "not": {
+            "type": "object",
+            "properties": {
+              "requiredCapabilities": {
+                "contains": {
+                  "const": "archive-transfer-v1"
+                }
+              },
+              "optionalCapabilities": {
+                "contains": {
+                  "const": "archive-transfer-v1"
+                }
+              }
+            }
+          }
+        },
+        {
+          "not": {
+            "type": "object",
+            "properties": {
+              "requiredCapabilities": {
+                "contains": {
+                  "const": "context-materials-v1"
+                }
+              },
+              "optionalCapabilities": {
+                "contains": {
+                  "const": "context-materials-v1"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "BindingState": {
+      "type": "string",
+      "enum": [
+        "active",
+        "backpressured",
+        "closing",
+        "closed"
+      ]
+    },
+    "BindingView": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "scope": {
+          "$ref": "#/definitions/Scope"
+        },
+        "target": {
+          "$ref": "#/definitions/Target"
+        },
+        "revision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "state": {
+          "$ref": "#/definitions/BindingState"
+        },
+        "sourceId": {
+          "$ref": "#/definitions/Id"
+        },
+        "acceptedCapabilities": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Capability"
+          },
+          "minItems": 1,
+          "maxItems": 2,
+          "uniqueItems": true
+        },
+        "rejectedCapabilities": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "capability": {
+                "$ref": "#/definitions/Capability"
+              },
+              "reason": {
+                "type": "string",
+                "enum": [
+                  "unsupported_capability",
+                  "not_authorized"
+                ]
+              }
+            },
+            "required": [
+              "capability",
+              "reason"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0,
+          "maxItems": 2
+        },
+        "availability": {
+          "const": "legacy-complete"
+        },
+        "operationEpoch": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/EpochView"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "limits": {
+          "$ref": "#/definitions/Limits"
+        },
+        "archiveAckFormat": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ArchiveAckFormat"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "protocol",
+        "bindingId",
+        "scope",
+        "target",
+        "revision",
+        "state",
+        "sourceId",
+        "acceptedCapabilities",
+        "rejectedCapabilities",
+        "availability",
+        "operationEpoch",
+        "limits",
+        "archiveAckFormat"
+      ],
+      "additionalProperties": false,
+      "$comment": "Read/query remains available without an accepting epoch. operationEpoch=null means no new write admission, not loss of stored receipts or current legacy history. archiveAckFormat is the immutable selected format iff archive-transfer-v1 was accepted; otherwise null. It must match discovery and the create request.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "acceptedCapabilities": {
+                "contains": {
+                  "const": "archive-transfer-v1"
+                }
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "archiveAckFormat": {
+                "$ref": "#/definitions/ArchiveAckFormat"
+              }
+            }
+          },
+          "else": {
+            "properties": {
+              "archiveAckFormat": {
+                "type": "null"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ArtifactRef": {
+      "type": "object",
+      "properties": {
+        "artifactId": {
+          "$ref": "#/definitions/Id"
+        },
+        "sourceId": {
+          "$ref": "#/definitions/Id"
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 33554432
+        },
+        "sha256": {
+          "$ref": "#/definitions/Digest"
+        },
+        "mediaType": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9!#$&^_.+/-]*$"
+        }
+      },
+      "required": [
+        "artifactId",
+        "sourceId",
+        "bytes",
+        "sha256",
+        "mediaType"
+      ],
+      "additionalProperties": false
+    },
+    "Coverage": {
+      "type": "object",
+      "properties": {
+        "fromSequence": {
+          "$ref": "#/definitions/RecordSequence"
+        },
+        "throughSequence": {
+          "$ref": "#/definitions/RecordSequence"
+        },
+        "headDigest": {
+          "$ref": "#/definitions/Digest"
+        }
+      },
+      "required": [
+        "fromSequence",
+        "throughSequence",
+        "headDigest"
+      ],
+      "additionalProperties": false,
+      "$comment": "Closed inclusive interval, from<=through. Head is a host-known contiguous chain commitment for this source and generation, not a client assertion. SSE cursor is never archive coverage."
+    },
+    "ArchiveRecord": {
+      "type": "object",
+      "properties": {
+        "recordId": {
+          "$ref": "#/definitions/Id"
+        },
+        "sequence": {
+          "$ref": "#/definitions/RecordSequence"
+        },
+        "target": {
+          "$ref": "#/definitions/Target"
+        },
+        "turnId": {
+          "$ref": "#/definitions/LegacyId"
+        },
+        "recordKind": {
+          "type": "string",
+          "enum": [
+            "turn",
+            "projection",
+            "terminal"
+          ]
+        },
+        "turnState": {
+          "type": "string",
+          "enum": [
+            "completed",
+            "cancelled",
+            "incomplete"
+          ]
+        },
+        "predecessorDigest": {
+          "$ref": "#/definitions/Digest"
+        },
+        "recordDigest": {
+          "$ref": "#/definitions/Digest"
+        },
+        "payload": {
+          "$ref": "#/definitions/ArtifactRef"
+        },
+        "attachments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ArtifactRef"
+          },
+          "minItems": 0,
+          "maxItems": 128
+        },
+        "sourceEventRange": {
+          "type": "object",
+          "properties": {
+            "firstSeq": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "lastSeq": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": [
+            "firstSeq",
+            "lastSeq"
+          ],
+          "additionalProperties": false
+        },
+        "projection": {
+          "type": "object",
+          "properties": {
+            "coverage": {
+              "$ref": "#/definitions/Coverage"
+            },
+            "assemblerVersion": {
+              "$ref": "#/definitions/Id"
+            },
+            "sourceHeadDigest": {
+              "$ref": "#/definitions/Digest"
+            }
+          },
+          "required": [
+            "coverage",
+            "assemblerVersion",
+            "sourceHeadDigest"
+          ],
+          "additionalProperties": false
+        },
+        "payloadDigest": {
+          "$ref": "#/definitions/Digest"
+        }
+      },
+      "required": [
+        "recordId",
+        "sequence",
+        "target",
+        "turnId",
+        "recordKind",
+        "turnState",
+        "predecessorDigest",
+        "recordDigest",
+        "payload",
+        "attachments",
+        "payloadDigest"
+      ],
+      "additionalProperties": false,
+      "$comment": "Only the core capture chain publishes authority. Payload preserves immutable original bytes from the frozen SDK1 IR serializer or the agreed core projection format; it is not reencoded or constrained by the new control-metadata canonical subset, referenced without filesystem paths/URLs. Decode through that frozen schema and validate complete tool pairs and lifecycle before core use. recordDigest covers immutable envelope+payload/attachment witnesses, excluding transport cursor. Projection fields are required exactly for recordKind=projection. ArtifactRef.sha256 is raw-byte integrity only. payloadDigest=SHA256(UTF8(tansr.sdk2.payload.v1)+NUL+payloadBytes). recordDigest=SHA256(UTF8(tansr.sdk2.record.v1)+NUL+canonical(record excluding recordDigest)); predecessorDigest links prior host recordDigest, first predecessor is 64 zeroes. Record metadata <=recordBytes, referenced payload and attachments use separate attachmentBytes/chunkBytes caps. Host capture removes non-deliverable hidden reasoning/secrets before this commitment; consumer must never reinterpret opaque provider payload as prompt authority.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "recordKind": {
+                "const": "projection"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "projection"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "projection"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "ArchiveReadRequest": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "generations": {
+          "$ref": "#/definitions/Generations"
+        },
+        "afterSequence": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Sequence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 128
+        },
+        "maxBytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 1048576
+        }
+      },
+      "required": [
+        "protocol",
+        "bindingId",
+        "generations",
+        "afterSequence",
+        "limit",
+        "maxBytes"
+      ],
+      "additionalProperties": false
+    },
+    "ArchivePage": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "generations": {
+          "$ref": "#/definitions/Generations"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ArchiveRecord"
+          },
+          "minItems": 0,
+          "maxItems": 128
+        },
+        "nextAfterSequence": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Sequence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "complete": {
+          "type": "boolean"
+        },
+        "publishedThroughSequence": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Sequence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "protocol",
+        "bindingId",
+        "generations",
+        "records",
+        "nextAfterSequence",
+        "complete",
+        "publishedThroughSequence"
+      ],
+      "additionalProperties": false,
+      "$comment": "Pages carry whole record metadata; referenced payload is read separately in bounded chunks. Null afterSequence means before first record, never missing data. Records ordered and continuous from requested position. complete indicates snapshot page completion only, not future archive completion. A gap is an ErrorResponse, never an empty success page."
+    },
+    "ArtifactReadRequest": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "generations": {
+          "$ref": "#/definitions/Generations"
+        },
+        "artifactId": {
+          "$ref": "#/definitions/Id"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 33554431
+        },
+        "maxBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 262144
+        }
+      },
+      "required": [
+        "protocol",
+        "bindingId",
+        "generations",
+        "artifactId",
+        "offset",
+        "maxBytes"
+      ],
+      "additionalProperties": false
+    },
+    "ArtifactChunk": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "artifactId": {
+          "$ref": "#/definitions/Id"
+        },
+        "sourceId": {
+          "$ref": "#/definitions/Id"
+        },
+        "generations": {
+          "$ref": "#/definitions/Generations"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 33554431
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 262144
+        },
+        "totalBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 33554432
+        },
+        "sha256": {
+          "$ref": "#/definitions/Digest"
+        },
+        "chunkSha256": {
+          "$ref": "#/definitions/Digest"
+        },
+        "base64": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 349528,
+          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+        }
+      },
+      "required": [
+        "protocol",
+        "bindingId",
+        "artifactId",
+        "sourceId",
+        "generations",
+        "offset",
+        "bytes",
+        "totalBytes",
+        "sha256",
+        "chunkSha256",
+        "base64"
+      ],
+      "additionalProperties": false,
+      "$comment": "Validate decoded length, canonical base64, offset+bytes<=totalBytes, chunk hash and final complete artifact hash. Reference is ACL-scoped, not a bearer or URL. No general outbound fetch or host path resolver."
+    },
+    "ArchiveAckRequest": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "request": {
+          "$ref": "#/definitions/RequestIdentity"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "expectedRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "generations": {
+          "$ref": "#/definitions/Generations"
+        },
+        "sourceId": {
+          "$ref": "#/definitions/Id"
+        },
+        "sourceGeneration": {
+          "$ref": "#/definitions/Id"
+        },
+        "coverage": {
+          "$ref": "#/definitions/Coverage"
+        },
+        "attachments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ArchiveArtifactReceipt"
+          },
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "ackFormat": {
+          "$ref": "#/definitions/ArchiveAckFormat"
+        },
+        "payloads": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ArchiveArtifactReceipt"
+          },
+          "minItems": 1,
+          "maxItems": 128,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "protocol",
+        "request",
+        "bindingId",
+        "expectedRevision",
+        "generations",
+        "sourceId",
+        "sourceGeneration",
+        "coverage",
+        "attachments",
+        "ackFormat",
+        "payloads"
+      ],
+      "additionalProperties": false,
+      "$comment": "split-receipts-v1 only: payloads and extra attachments are separate exact first-occurrence receipt sets over the entire closed coverage (including overlap), at most 128 whole contiguous records and at most 128 receipts per category. Same artifact in both categories requires matching witnesses but physical accounting occurs once. Check raw request/control UTF-8 byte limit plus canonical envelope before side effects. Source atomically commits record metadata, body, attachments, contiguous head and original ACK outbox intent before claiming durably-stored. Current authorization then original same-key semantic receipt precedes new epoch/CAS/generation checks. New ACK atomically commits fact, watermark, revision and receipt, never partial records. ACK alone does not release dependencies, old SessionStore, or authorize core execution."
+    },
+    "ArchiveStatus": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "revision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "generations": {
+          "$ref": "#/definitions/Generations"
+        },
+        "sourceId": {
+          "$ref": "#/definitions/Id"
+        },
+        "sourceGeneration": {
+          "$ref": "#/definitions/Id"
+        },
+        "publishedThroughSequence": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Sequence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "acknowledgedCoverage": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Coverage"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "releasableThroughSequence": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Sequence"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pendingBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 67108864
+        },
+        "pendingRecords": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 4096
+        },
+        "sessionPersistence": {
+          "const": "unchanged"
+        },
+        "state": {
+          "$ref": "#/definitions/BindingState"
+        }
+      },
+      "required": [
+        "protocol",
+        "bindingId",
+        "revision",
+        "generations",
+        "sourceId",
+        "sourceGeneration",
+        "publishedThroughSequence",
+        "acknowledgedCoverage",
+        "releasableThroughSequence",
+        "pendingBytes",
+        "pendingRecords",
+        "sessionPersistence",
+        "state"
+      ],
+      "additionalProperties": false,
+      "$comment": "ACK <= published head; releasable <= ACK and rewrite/active-run dependencies. Current effective legacy history is never released by archive ACK. Old Store commit and archive status are independent; no cross-store success substitution."
+    },
+    "MaterialRequest": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "materialRequestId": {
+          "$ref": "#/definitions/Id"
+        },
+        "target": {
+          "$ref": "#/definitions/Target"
+        },
+        "sourceId": {
+          "$ref": "#/definitions/Id"
+        },
+        "sourceGeneration": {
+          "$ref": "#/definitions/Id"
+        },
+        "requestedRecords": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "recordId": {
+                "$ref": "#/definitions/Id"
+              },
+              "digest": {
+                "$ref": "#/definitions/Digest"
+              },
+              "payload": {
+                "$ref": "#/definitions/ArtifactRef"
+              },
+              "attachments": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/ArtifactRef"
+                },
+                "maxItems": 32,
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "recordId",
+              "digest",
+              "payload",
+              "attachments"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "purpose": {
+          "type": "string",
+          "enum": [
+            "context-recall",
+            "projection-verification"
+          ]
+        },
+        "maxBytes": {
+          "type": "integer",
+          "minimum": 1024,
+          "maximum": 1048576
+        },
+        "remainingTtlMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 30000
+        },
+        "chunkBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        }
+      },
+      "required": [
+        "protocol",
+        "bindingId",
+        "materialRequestId",
+        "target",
+        "sourceId",
+        "sourceGeneration",
+        "requestedRecords",
+        "purpose",
+        "maxBytes",
+        "remainingTtlMs",
+        "chunkBytes"
+      ],
+      "additionalProperties": false,
+      "$comment": "Core-minted immutable request. Save exact target, source identity/generation, record digest, complete payload/attachment ArtifactRef witnesses, original deadline and maxBytes before emission. Request bytes are the sum of distinct requested artifact bytes and must fit maxBytes and materialBytes (1 MiB hard cap); never request a partial arbitrary slice as if it were the committed original. Fixed upload slots are 65536 bytes, or a smaller positive negotiated materialChunkBytes. Replays do not renew the deadline. One pending->received CAS competes with timeout, revocation and binding close on this request, not unrelated binding revisions. No client prompt authority or host path. chunkBytes freezes this issued request's upload slot width from its effective Limits; each requested artifact must fit at most 16 slots. Later limits changes cannot resize issued slots. The host persists the actual original issuedAt/deadline, using the request's effective lifetime rather than a hard-coded 30-second deadline. remainingTtlMs is a decreasing transport observation, never a new lifetime on replay."
+    },
+    "MaterialResponseRequest": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "request": {
+          "$ref": "#/definitions/RequestIdentity"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "materialRequestId": {
+          "$ref": "#/definitions/Id"
+        },
+        "target": {
+          "$ref": "#/definitions/Target"
+        },
+        "sourceId": {
+          "$ref": "#/definitions/Id"
+        },
+        "sourceGeneration": {
+          "$ref": "#/definitions/Id"
+        },
+        "results": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "recordId": {
+                "$ref": "#/definitions/Id"
+              },
+              "digest": {
+                "$ref": "#/definitions/Digest"
+              },
+              "payload": {
+                "$ref": "#/definitions/MaterialUploadRef"
+              },
+              "attachments": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/definitions/MaterialUploadRef"
+                },
+                "maxItems": 32,
+                "uniqueItems": true
+              }
+            },
+            "required": [
+              "recordId",
+              "digest",
+              "payload",
+              "attachments"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 32
+        }
+      },
+      "required": [
+        "protocol",
+        "request",
+        "bindingId",
+        "materialRequestId",
+        "target",
+        "sourceId",
+        "sourceGeneration",
+        "results"
+      ],
+      "additionalProperties": false,
+      "$comment": "Only references to this request's committed uploads. Recheck auth, saved target/sourceGeneration/witnesses/deadline and pending->received CAS atomically with admission receipt. Every returned record must match its saved digest and all requested payload/attachment witnesses; distinct record IDs only. Unrelated archive ACK/binding revision changes cannot reject a valid response. Same admitted operation replay returns its receipt without another transition; a competing different response after receipt is rejected. No self-reported role, trust, priority, permission, paths or original body. Follow the common operation epoch gate: authenticate current scope, look up the original operation key and compare semantic witness first; an already-admitted identical replay returns its original receipt without new effects even after epoch retirement. Unknown/expired/retired epoch cannot admit a new operation. Explicit operation-status reads remain available for retained receipts; a missing receipt never proves non-execution."
+    },
+    "MaterialReceipt": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "materialRequestId": {
+          "$ref": "#/definitions/Id"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "pending",
+            "received",
+            "verified",
+            "core-consumed",
+            "rejected"
+          ]
+        },
+        "revision": {
+          "allOf": [
+            {
+              "$ref": "#/definitions/Sequence"
+            }
+          ],
+          "$comment": "Material-request-local monotone observation version, not binding revision and never a required response CAS input."
+        },
+        "acceptedRecordIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Id"
+          },
+          "minItems": 0,
+          "maxItems": 32,
+          "uniqueItems": true
+        },
+        "reason": {
+          "type": "string",
+          "enum": [
+            "source_unavailable",
+            "stale_generation",
+            "invalid_coverage",
+            "request_expired",
+            "material_rejected",
+            "forbidden",
+            "binding_closed"
+          ]
+        }
+      },
+      "required": [
+        "protocol",
+        "bindingId",
+        "materialRequestId",
+        "state",
+        "revision",
+        "acceptedRecordIds"
+      ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "rejected"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "reason"
+            ]
+          },
+          "else": {
+            "not": {
+              "required": [
+                "reason"
+              ]
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "pending"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "acceptedRecordIds": {
+                "maxItems": 0
+              },
+              "revision": {
+                "const": "0"
+              }
+            }
+          }
+        }
+      ],
+      "$comment": "pending is an issued request, received is durable ingestion, verified is successful core validation, core-consumed is actual use. None means release: while core has a reference/assembly/read lease, artifacts stay pinned. Close/revoke prevent new core admission and preserve already-held bytes until core cancellation/drain releases all holds. Rejection is terminal and carries reason; timeout/revoke/close must win the same request CAS as response. On every NEW core read/assembly lease, atomically recheck current authorization, target/history/deletion/projection witnesses and source identity/generation against the saved request under the same exclusion boundary as lease acquisition. A received/verified receipt cannot authorize a new lease after restore/delete/revocation/source restart. Existing holders are cancelled/drained before release, never freed by changing generations."
+    },
+    "BindingCloseRequest": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "request": {
+          "$ref": "#/definitions/RequestIdentity"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "expectedRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "generations": {
+          "$ref": "#/definitions/Generations"
+        }
+      },
+      "required": [
+        "protocol",
+        "request",
+        "bindingId",
+        "expectedRevision",
+        "generations"
+      ],
+      "additionalProperties": false,
+      "$comment": "Atomically commit a closing intent and completed operation receipt, stop new capture/material admission and cancel pending material requests. Binding state remains closing until archive drain, accepted work and core-held artifacts fully settle; inspect BindingView, not pending operation receipt. Preserve old current history and source copies. Not deletion or rollback."
+    },
+    "MutationReceipt": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "request": {
+          "$ref": "#/definitions/RequestIdentity"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation": {
+          "type": "string",
+          "enum": [
+            "binding-create",
+            "archive-ack",
+            "material-response",
+            "binding-close"
+          ]
+        },
+        "semanticDigest": {
+          "$ref": "#/definitions/Digest"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "accepted",
+            "completed",
+            "rejected"
+          ]
+        },
+        "revision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "outcomeRef": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "protocol",
+        "request",
+        "bindingId",
+        "operation",
+        "semanticDigest",
+        "state",
+        "revision",
+        "outcomeRef"
+      ],
+      "additionalProperties": false,
+      "$comment": "Persist admission+semantic witness before side effects. Recover uncertain admissions from durable receipt, never create another operation. accepted does not imply source durable or core consumed. Same request replay returns this same operation identity after authorization recheck. binding-close completed means its durable close intent was committed, not that all resource drain has finished. Final ACK also completes its operation independently of binding resource state. Terminal operation receipts are retained until both their terminal TTL and admission epoch expire; unresolved actual work has separate durable state and cannot be GCed merely because the close receipt expires. Current authorization precedes replay; retained same-key/same-semantics receipt lookup precedes the fresh epoch admission gate. Epoch retirement rejects only new admissions, not truthful recovery of already-admitted same-operation results.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "binding-close"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "completed",
+                  "rejected"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "OperationStatusRequest": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "protocol": {
+              "const": "sdk2-ext-v1"
+            },
+            "operation": {
+              "const": "binding-create"
+            },
+            "sessionId": {
+              "$ref": "#/definitions/LegacyId"
+            },
+            "request": {
+              "$ref": "#/definitions/RequestIdentity"
+            }
+          },
+          "required": [
+            "protocol",
+            "operation",
+            "sessionId",
+            "request"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "protocol": {
+              "const": "sdk2-ext-v1"
+            },
+            "operation": {
+              "enum": [
+                "archive-ack",
+                "material-response",
+                "binding-close"
+              ]
+            },
+            "bindingId": {
+              "$ref": "#/definitions/Id"
+            },
+            "request": {
+              "$ref": "#/definitions/RequestIdentity"
+            }
+          },
+          "required": [
+            "protocol",
+            "operation",
+            "bindingId",
+            "request"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "$comment": "GET /v3/sdk2/operations selects binding-create by authenticated scope+original sessionId+operationEpoch+requestId even if response lost before bindingId was known. Other operations use bindingId plus exact operation+original identity. No scope from body/query. Retired epoch does not suppress admitted status; missing/cleared receipt means receipt_expired, never not executed. Decode queries into this strict DTO before lookup."
+    },
+    "EventFrame": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "eventId": {
+          "$ref": "#/definitions/Id"
+        },
+        "cursor": {
+          "$ref": "#/definitions/Id"
+        },
+        "revision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "generations": {
+          "$ref": "#/definitions/Generations"
+        },
+        "eventType": {
+          "type": "string",
+          "enum": [
+            "archive.records-available",
+            "archive.status",
+            "material.request",
+            "material.status",
+            "binding.status"
+          ]
+        },
+        "payload": {
+          "type": "object"
+        }
+      },
+      "required": [
+        "protocol",
+        "bindingId",
+        "eventId",
+        "cursor",
+        "revision",
+        "generations",
+        "eventType",
+        "payload"
+      ],
+      "additionalProperties": false,
+      "$comment": "Only independent /v3/sdk2/bindings/:id/events, independent replay log/cursor; never emit through KernelEvent, legacy AgentStreamEvent or stdout. Unknown required event stops extension and cannot advance archive ACK.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "eventType": {
+                "const": "archive.records-available"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "type": "object",
+                "properties": {
+                  "publishedThroughSequence": {
+                    "$ref": "#/definitions/Sequence"
+                  }
+                },
+                "required": [
+                  "publishedThroughSequence"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "eventType": {
+                "const": "archive.status"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "$ref": "#/definitions/ArchiveStatus"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "eventType": {
+                "const": "material.request"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "$ref": "#/definitions/MaterialRequest"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "eventType": {
+                "const": "material.status"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "$ref": "#/definitions/MaterialReceipt"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "eventType": {
+                "const": "binding.status"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "payload": {
+                "$ref": "#/definitions/BindingView"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "requestId": {
+          "$ref": "#/definitions/Id"
+        },
+        "code": {
+          "type": "string",
+          "enum": [
+            "invalid_request",
+            "protocol_version_mismatch",
+            "unauthorized",
+            "forbidden",
+            "unsupported_capability",
+            "capability_unconfirmed",
+            "binding_conflict",
+            "stale_generation",
+            "archive_gap",
+            "source_unavailable",
+            "invalid_coverage",
+            "capacity_exceeded",
+            "request_id_conflict",
+            "request_expired",
+            "receipt_expired",
+            "payload_too_large",
+            "material_rejected",
+            "binding_closed",
+            "internal_error",
+            "epoch_unavailable",
+            "stream_cursor_unknown",
+            "stream_cursor_expired",
+            "stream_gap"
+          ]
+        },
+        "status": {
+          "type": "integer",
+          "enum": [
+            400,
+            401,
+            403,
+            409,
+            410,
+            413,
+            422,
+            429,
+            500,
+            503
+          ]
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 1024
+        },
+        "retryAction": {
+          "type": "string",
+          "enum": [
+            "none",
+            "same-request",
+            "query-status",
+            "rebind"
+          ]
+        },
+        "retryAfterMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 60000
+        }
+      },
+      "required": [
+        "protocol",
+        "requestId",
+        "code",
+        "status",
+        "message",
+        "retryAction"
+      ],
+      "additionalProperties": false,
+      "$comment": "Independent envelope; never leak new code/enum onto legacy errors or SSE. Timeout/connection loss means outcome unconfirmed. query-status retains the original request identity. Messages contain no paths, credentials, raw materials or cross-principal resource details.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "invalid_request"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 400
+              },
+              "retryAction": {
+                "type": "string",
+                "enum": [
+                  "none"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "protocol_version_mismatch"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 400
+              },
+              "retryAction": {
+                "type": "string",
+                "enum": [
+                  "none"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "unauthorized"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 401
+              },
+              "retryAction": {
+                "type": "string",
+                "enum": [
+                  "none"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "forbidden"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 403
+              },
+              "retryAction": {
+                "type": "string",
+                "enum": [
+                  "none"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "unsupported_capability"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 422
+              },
+              "retryAction": {
+                "type": "string",
+                "enum": [
+                  "none"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "capability_unconfirmed"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 503
+              },
+              "retryAction": {
+                "type": "string",
+                "enum": [
+                  "query-status"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "binding_conflict"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 409
+              },
+              "retryAction": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "rebind"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "stale_generation"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 409
+              },
+              "retryAction": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "rebind"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "archive_gap"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 409
+              },
+              "retryAction": {
+                "type": "string",
+                "enum": [
+                  "none"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "source_unavailable"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 503
+              },
+              "retryAction": {
+                "type": "string",
+                "enum": [
+                  "same-request",
+                  "query-status"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "invalid_coverage"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 422
+              },
+              "retryAction": {
+                "type": "string",
+                "enum": [
+                  "none"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "capacity_exceeded"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 429
+              },
+              "retryAction": {
+                "type": "string",
+                "enum": [
+                  "same-request",
+                  "query-status"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "request_id_conflict"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 409
+              },
+              "retryAction": {
+                "type": "string",
+                "enum": [
+                  "none"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "request_expired"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 410
+              },
+              "retryAction": {
+                "type": "string",
+                "enum": [
+                  "none"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "receipt_expired"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 410
+              },
+              "retryAction": {
+                "type": "string",
+                "enum": [
+                  "none"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "payload_too_large"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 413
+              },
+              "retryAction": {
+                "type": "string",
+                "enum": [
+                  "none"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "material_rejected"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 422
+              },
+              "retryAction": {
+                "type": "string",
+                "enum": [
+                  "none"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "binding_closed"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 409
+              },
+              "retryAction": {
+                "type": "string",
+                "enum": [
+                  "none"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "internal_error"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 500
+              },
+              "retryAction": {
+                "type": "string",
+                "enum": [
+                  "query-status"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "epoch_unavailable"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 503
+              },
+              "retryAction": {
+                "const": "same-request"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "stream_cursor_unknown"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 409
+              },
+              "retryAction": {
+                "const": "none"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "stream_cursor_expired"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 410
+              },
+              "retryAction": {
+                "const": "none"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "code": {
+                "const": "stream_gap"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "status": {
+                "const": 409
+              },
+              "retryAction": {
+                "const": "none"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "EpochView": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "issuedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "state": {
+          "const": "active"
+        }
+      },
+      "required": [
+        "id",
+        "issuedAt",
+        "expiresAt",
+        "state"
+      ],
+      "additionalProperties": false,
+      "$comment": "Trusted host initialization/independent rotator durably prepares current epoch. GET reads snapshot and never mints/renews one. No current live epoch => epoch_unavailable for admission. Rotation disables old write admission, never hides already admitted operation status; retired/unknown IDs cannot be recreated from requests. S1 epoch lifetime defaults to 3600000ms, hard maximum 86400000ms; trusted host validates 0<expiresAt-issuedAt<=effective epochLifetimeMs. Terminal receipt cannot be collected before BOTH epoch expiry and terminal retention expiry; unresolved operations remain. An active epoch is never a license to recreate a collected request ID."
+    },
+    "BindingTargetRequest": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "sessionId": {
+          "$ref": "#/definitions/LegacyId"
+        }
+      },
+      "required": [
+        "protocol",
+        "sessionId"
+      ],
+      "additionalProperties": false
+    },
+    "BindingTargetView": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "target": {
+          "$ref": "#/definitions/Target"
+        },
+        "revision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "bindingId": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/Id"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "operationEpoch": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/EpochView"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "protocol",
+        "target",
+        "revision",
+        "bindingId",
+        "operationEpoch"
+      ],
+      "additionalProperties": false,
+      "$comment": "GET /v3/sdk2/sessions/:sessionId/binding-target reads owned legacy session snapshot only; no archive/epoch creation. No extension state returns explicit host-observed unbound revision 0 and null bindingId. POST checks target generation AND sourceSnapshotDigest and extension-slot expectedRevision atomically. Snapshot source unavailable returns error, never synthetic empty history."
+    },
+    "RecordSequence": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/Sequence"
+        },
+        {
+          "not": {
+            "const": "0"
+          }
+        }
+      ],
+      "$comment": "Record ordinals start at 1. Zero is only an empty published/acknowledged watermark, never a record ordinal."
+    },
+    "MaterialUploadRef": {
+      "type": "object",
+      "properties": {
+        "uploadId": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "uploadId"
+      ],
+      "additionalProperties": false,
+      "$comment": "Opaque server-issued ID. Resolve only a committed upload belonging to this authenticated scope, binding and still-valid materialRequestId, whose full bytes/SHA/ID exactly match the originally saved ArtifactRef witness. Never accept an arbitrary external ArtifactRef or client-chosen new body."
+    },
+    "MaterialUploadChunkRequest": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "materialRequestId": {
+          "$ref": "#/definitions/Id"
+        },
+        "target": {
+          "$ref": "#/definitions/Target"
+        },
+        "sourceId": {
+          "$ref": "#/definitions/Id"
+        },
+        "sourceGeneration": {
+          "$ref": "#/definitions/Id"
+        },
+        "artifactId": {
+          "$ref": "#/definitions/Id"
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1048576,
+          "multipleOf": 1
+        },
+        "bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65536
+        },
+        "chunkSha256": {
+          "$ref": "#/definitions/Digest"
+        },
+        "base64": {
+          "type": "string",
+          "maxLength": 87384,
+          "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+        }
+      },
+      "required": [
+        "protocol",
+        "bindingId",
+        "materialRequestId",
+        "target",
+        "sourceId",
+        "sourceGeneration",
+        "artifactId",
+        "offset",
+        "bytes",
+        "chunkSha256",
+        "base64"
+      ],
+      "additionalProperties": false,
+      "$comment": "POST /v3/sdk2/bindings/:bindingId/materials/:materialRequestId/uploads/:artifactId/chunks. Only a saved issued request authorizes upload; GET/POST never invent a missing request. Scope+binding+materialRequestId+artifactId+fixed slot offset is the idempotency key, not a new operation epoch. Slot width is the request's frozen effective materialChunkBytes (<=65536); offset=i*width; non-final chunks equal width, final equals remaining witnessed bytes. Empty artifact has exactly offset=0/bytes=0/empty base64 and empty SHA. Validate canonical base64, decoded byte count and chunk SHA before storing. Same slot/same bytes is idempotent and not recharged; conflicting bytes fail request_id_conflict. No overlap, gaps at commit, new bytes/witness or arbitrary offset. Whole distinct-upload bytes are reserved once per request within 1MiB and app/user/host quotas. Complete SHA over ordered original bytes must equal saved witness before state committed. TTL is original request TTL, no chunk/reset/replay renewal; late/unknown requests never reopen."
+    },
+    "MaterialUploadStatusRequest": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "materialRequestId": {
+          "$ref": "#/definitions/Id"
+        },
+        "artifactId": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "protocol",
+        "bindingId",
+        "materialRequestId",
+        "artifactId"
+      ],
+      "additionalProperties": false,
+      "$comment": "GET the upload resource by originally issued materialRequestId+artifactId even when first chunk response was lost. Authenticated read only, no allocation, TTL renewal or upload restart. No upload yet is a source_unavailable error, never an empty committed result."
+    },
+    "MaterialUploadStatus": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "materialRequestId": {
+          "$ref": "#/definitions/Id"
+        },
+        "uploadId": {
+          "$ref": "#/definitions/Id"
+        },
+        "artifact": {
+          "$ref": "#/definitions/ArtifactRef"
+        },
+        "state": {
+          "enum": [
+            "receiving",
+            "committed"
+          ]
+        },
+        "chunkBytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "receivedOffsets": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1048576
+          },
+          "minItems": 1,
+          "maxItems": 16,
+          "uniqueItems": true
+        },
+        "receivedBytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1048576
+        },
+        "remainingTtlMs": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 30000
+        }
+      },
+      "required": [
+        "protocol",
+        "bindingId",
+        "materialRequestId",
+        "uploadId",
+        "artifact",
+        "state",
+        "chunkBytes",
+        "receivedOffsets",
+        "receivedBytes",
+        "remainingTtlMs"
+      ],
+      "additionalProperties": false,
+      "$comment": "POST chunk and GET status response. At most 16 fixed slots in S1 at the frozen 65536-byte width (request issuance rejects any artifact needing more than 16 slots at its frozen width). Artifact is copied from saved server witness, never from client bytes. offsets sorted, aligned, unique; bytes equals actual distinct chunks. committed requires every slot, exact total bytes and whole SHA. State is upload receipt, not material received/core use. Entire response must remain under controlBytes."
+    },
+    "MaterialStatusRequest": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "materialRequestId": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "protocol",
+        "bindingId",
+        "materialRequestId"
+      ],
+      "additionalProperties": false,
+      "$comment": "GET /v3/sdk2/bindings/:bindingId/materials/:materialRequestId returns latest MaterialReceipt for this authenticated scope. Read only; no reissue or deadline refresh. Query after extension SSE loss does not resubmit material or change old stream."
+    },
+    "ArchiveAckFormat": {
+      "type": "string",
+      "const": "split-receipts-v1"
+    },
+    "ArchiveArtifactReceipt": {
+      "type": "object",
+      "properties": {
+        "artifactId": {
+          "$ref": "#/definitions/Id"
+        },
+        "sha256": {
+          "$ref": "#/definitions/Digest"
+        },
+        "state": {
+          "const": "durably-stored"
+        }
+      },
+      "required": [
+        "artifactId",
+        "sha256",
+        "state"
+      ],
+      "additionalProperties": false,
+      "$comment": "Raw artifact SHA, never payloadDigest/recordDigest. Exact per-category first-occurrence sets are derived from every whole record in the requested coverage. No duplicate IDs, foreign objects or divergent witnesses."
+    },
+    "ClientPlatform": {
+      "type": "object",
+      "properties": {
+        "platform": {
+          "enum": [
+            "windows",
+            "linux",
+            "macos",
+            "android",
+            "ios",
+            "harmony"
+          ]
+        },
+        "arch": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "language": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64
+        },
+        "runtimeVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "adapterVersion": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      },
+      "required": [
+        "platform",
+        "arch",
+        "language",
+        "runtimeVersion",
+        "adapterVersion"
+      ],
+      "additionalProperties": false
+    },
+    "ExecutionTarget": {
+      "type": "object",
+      "properties": {
+        "executorId": {
+          "$ref": "#/definitions/Id"
+        },
+        "connectionId": {
+          "$ref": "#/definitions/Id"
+        },
+        "connectionRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "workspaceId": {
+          "$ref": "#/definitions/Id"
+        },
+        "workspaceRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "interpreter": {
+          "$ref": "#/definitions/ExecutionInterpreter"
+        }
+      },
+      "required": [
+        "executorId",
+        "connectionId",
+        "connectionRevision",
+        "workspaceId",
+        "workspaceRevision"
+      ],
+      "additionalProperties": false
+    },
+    "ExecutionBinding": {
+      "type": "object",
+      "properties": {
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "revision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "target": {
+          "$ref": "#/definitions/ExecutionTarget"
+        }
+      },
+      "required": [
+        "bindingId",
+        "revision",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "EffectiveTool": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "executionKind": {
+          "enum": [
+            "managed-service",
+            "bound-device"
+          ]
+        },
+        "available": {
+          "type": "boolean"
+        },
+        "unavailableReason": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "executionKind",
+        "available",
+        "unavailableReason"
+      ],
+      "additionalProperties": false
+    },
+    "SessionInitializeRequest": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "sessionId": {
+          "$ref": "#/definitions/LegacyId"
+        },
+        "platform": {
+          "$ref": "#/definitions/ClientPlatform"
+        },
+        "requestedTools": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "maxItems": 128
+        }
+      },
+      "required": [
+        "protocol",
+        "sessionId",
+        "platform"
+      ],
+      "additionalProperties": false
+    },
+    "SessionExecutionCapabilities": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "sessionId": {
+          "$ref": "#/definitions/LegacyId"
+        },
+        "platform": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ClientPlatform"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "capabilityRevision": {
+          "$ref": "#/definitions/Digest"
+        },
+        "effectiveTools": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/EffectiveTool"
+          },
+          "maxItems": 128
+        },
+        "binding": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ExecutionBinding"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "protocol",
+        "sessionId",
+        "platform",
+        "capabilityRevision",
+        "effectiveTools",
+        "binding"
+      ],
+      "additionalProperties": false
+    },
+    "ExecutorRegistrationRequest": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "executorId": {
+          "$ref": "#/definitions/Id"
+        },
+        "platform": {
+          "$ref": "#/definitions/ClientPlatform"
+        },
+        "workspaces": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "workspaceId": {
+                "$ref": "#/definitions/Id"
+              },
+              "revision": {
+                "$ref": "#/definitions/Sequence"
+              }
+            },
+            "required": [
+              "workspaceId",
+              "revision"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 32
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "fs.inspect",
+              "fs.read",
+              "fs.write",
+              "fs.mkdir",
+              "fs.list",
+              "process.exec",
+              "tool.invoke"
+            ]
+          },
+          "maxItems": 7,
+          "uniqueItems": true
+        },
+        "tools": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "definitionDigest": {
+                "$ref": "#/definitions/Digest"
+              }
+            },
+            "required": [
+              "name",
+              "definitionDigest"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "interpreter": {
+          "$ref": "#/definitions/ExecutionInterpreter"
+        }
+      },
+      "required": [
+        "protocol",
+        "executorId",
+        "platform",
+        "workspaces",
+        "operations"
+      ],
+      "additionalProperties": false
+    },
+    "ExecutorConnection": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "executorId": {
+          "$ref": "#/definitions/Id"
+        },
+        "connectionId": {
+          "$ref": "#/definitions/Id"
+        },
+        "connectionRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "heartbeatAfterMs": {
+          "type": "integer",
+          "minimum": 1000,
+          "maximum": 30000
+        }
+      },
+      "required": [
+        "protocol",
+        "executorId",
+        "connectionId",
+        "connectionRevision",
+        "expiresAt",
+        "heartbeatAfterMs"
+      ],
+      "additionalProperties": false
+    },
+    "ExecutorHeartbeatRequest": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "executorId": {
+          "$ref": "#/definitions/Id"
+        },
+        "connectionId": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "protocol",
+        "executorId",
+        "connectionId"
+      ],
+      "additionalProperties": false
+    },
+    "ExecutionBindingRequest": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "sessionId": {
+          "$ref": "#/definitions/LegacyId"
+        },
+        "executorId": {
+          "$ref": "#/definitions/Id"
+        },
+        "connectionId": {
+          "$ref": "#/definitions/Id"
+        },
+        "workspaceId": {
+          "$ref": "#/definitions/Id"
+        },
+        "expectedCapabilityRevision": {
+          "$ref": "#/definitions/Digest"
+        }
+      },
+      "required": [
+        "protocol",
+        "sessionId",
+        "executorId",
+        "connectionId",
+        "workspaceId",
+        "expectedCapabilityRevision"
+      ],
+      "additionalProperties": false
+    },
+    "ResourceRequest": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "fs.inspect"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "maxLength": 4096
+                },
+                "followLinks": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "path",
+                "followLinks"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "fs.read"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "maxLength": 4096
+                },
+                "offset": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "length": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 65536
+                }
+              },
+              "required": [
+                "path",
+                "offset",
+                "length"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "fs.write"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "maxLength": 4096
+                },
+                "expectedHash": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/definitions/Digest"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "bytesBase64": {
+                  "type": "string",
+                  "maxLength": 174764,
+                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                }
+              },
+              "required": [
+                "path",
+                "expectedHash",
+                "bytesBase64"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "fs.mkdir"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "maxLength": 4096
+                }
+              },
+              "required": [
+                "path"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "fs.list"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string",
+                  "maxLength": 4096
+                }
+              },
+              "required": [
+                "path"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "process.exec"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "command": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32768
+                },
+                "cwd": {
+                  "type": "string",
+                  "maxLength": 4096
+                },
+                "timeoutMs": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 120000
+                },
+                "maxOutputBytes": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 65536
+                },
+                "interpreter": {
+                  "$ref": "#/definitions/ExecutionInterpreter"
+                }
+              },
+              "required": [
+                "command",
+                "cwd",
+                "timeoutMs",
+                "maxOutputBytes",
+                "interpreter"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "tool.invoke"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "definitionDigest": {
+                  "$ref": "#/definitions/Digest"
+                },
+                "argsJson": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32768
+                }
+              },
+              "required": [
+                "name",
+                "definitionDigest",
+                "argsJson"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ResourceResult": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "fs.inspect"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "file",
+                    "directory",
+                    "symlink"
+                  ]
+                },
+                "size": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "mtimeMs": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32,
+                  "pattern": "^(0|[1-9][0-9]*)(\\.[0-9]+)?$"
+                },
+                "realpath": {
+                  "type": "string",
+                  "maxLength": 4096
+                }
+              },
+              "required": [
+                "kind",
+                "size",
+                "mtimeMs",
+                "realpath"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "fs.read"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "bytesBase64": {
+                  "type": "string",
+                  "maxLength": 87384,
+                  "pattern": "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$"
+                }
+              },
+              "required": [
+                "bytesBase64"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "fs.write"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "hash": {
+                  "$ref": "#/definitions/Digest"
+                }
+              },
+              "required": [
+                "hash"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "fs.mkdir"
+            },
+            "args": {
+              "type": "object",
+              "properties": {},
+              "required": [],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "fs.list"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "entries": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 255
+                      },
+                      "kind": {
+                        "enum": [
+                          "file",
+                          "directory",
+                          "symlink"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "kind"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "maxItems": 501
+                }
+              },
+              "required": [
+                "entries"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "process.exec"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "stdout": {
+                  "type": "string",
+                  "maxLength": 65536
+                },
+                "stderr": {
+                  "type": "string",
+                  "maxLength": 65536
+                },
+                "exitCode": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 11,
+                      "pattern": "^(0|[1-9][0-9]*|-[1-9][0-9]*)$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "signalName": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 32
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "durationMs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "timedOut": {
+                  "type": "boolean"
+                },
+                "aborted": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "stdout",
+                "stderr",
+                "exitCode",
+                "signalName",
+                "durationMs",
+                "timedOut",
+                "aborted"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "operation": {
+              "const": "tool.invoke"
+            },
+            "args": {
+              "type": "object",
+              "properties": {
+                "resultJson": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 32768
+                }
+              },
+              "required": [
+                "resultJson"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "operation",
+            "args"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "ExecutionOperation": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "operationId": {
+          "$ref": "#/definitions/Id"
+        },
+        "sessionId": {
+          "$ref": "#/definitions/LegacyId"
+        },
+        "scope": {
+          "$ref": "#/definitions/Scope"
+        },
+        "binding": {
+          "$ref": "#/definitions/ExecutionBinding"
+        },
+        "toolName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "request": {
+          "$ref": "#/definitions/ResourceRequest"
+        },
+        "digest": {
+          "$ref": "#/definitions/Digest"
+        },
+        "expiresAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "protocol",
+        "operationId",
+        "sessionId",
+        "scope",
+        "binding",
+        "toolName",
+        "request",
+        "digest",
+        "expiresAt"
+      ],
+      "additionalProperties": false
+    },
+    "ExecutionBatch": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "executorId": {
+          "$ref": "#/definitions/Id"
+        },
+        "connectionId": {
+          "$ref": "#/definitions/Id"
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ExecutionOperation"
+          },
+          "maxItems": 16
+        }
+      },
+      "required": [
+        "protocol",
+        "executorId",
+        "connectionId",
+        "operations"
+      ],
+      "additionalProperties": false
+    },
+    "ExecutionReceiptRequest": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "executorId": {
+          "$ref": "#/definitions/Id"
+        },
+        "connectionId": {
+          "$ref": "#/definitions/Id"
+        },
+        "operationId": {
+          "$ref": "#/definitions/Id"
+        },
+        "digest": {
+          "$ref": "#/definitions/Digest"
+        },
+        "status": {
+          "enum": [
+            "completed",
+            "failed",
+            "unknown"
+          ]
+        },
+        "result": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ResourceResult"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "errorCode": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 128
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "protocol",
+        "executorId",
+        "connectionId",
+        "operationId",
+        "digest",
+        "status",
+        "result",
+        "errorCode"
+      ],
+      "additionalProperties": false
+    },
+    "ExecutionStatus": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "operation": {
+          "$ref": "#/definitions/ExecutionOperation"
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "completed",
+            "failed",
+            "unknown"
+          ]
+        },
+        "receipt": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ExecutionReceiptRequest"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "protocol",
+        "operation",
+        "status",
+        "receipt"
+      ],
+      "additionalProperties": false
+    },
+    "ExecutionInterpreter": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/definitions/Id"
+        },
+        "revision": {
+          "$ref": "#/definitions/Id"
+        },
+        "hostShell": {
+          "enum": [
+            "posix",
+            "powershell"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "revision",
+        "hostShell"
+      ],
+      "additionalProperties": false
+    },
+    "ExecutionBoundaryApplication": {
+      "type": "object",
+      "properties": {
+        "authorizationRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "policyTools": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "platformCapabilities": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "imageGen",
+              "videoGen",
+              "webSearch",
+              "speechToText",
+              "textToSpeech"
+            ]
+          },
+          "maxItems": 5,
+          "uniqueItems": true
+        },
+        "executionProfile": {
+          "enum": [
+            "legacy",
+            "bound-device-v1"
+          ]
+        }
+      },
+      "required": [
+        "authorizationRevision",
+        "policyTools",
+        "platformCapabilities",
+        "executionProfile"
+      ],
+      "additionalProperties": false
+    },
+    "ExecutionBoundaryExecutor": {
+      "type": "object",
+      "properties": {
+        "executorId": {
+          "$ref": "#/definitions/Id"
+        },
+        "connectionId": {
+          "$ref": "#/definitions/Id"
+        },
+        "connectionRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "platform": {
+          "$ref": "#/definitions/ClientPlatform"
+        },
+        "operations": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "fs.inspect",
+              "fs.read",
+              "fs.write",
+              "fs.mkdir",
+              "fs.list",
+              "process.exec",
+              "tool.invoke"
+            ]
+          },
+          "maxItems": 7,
+          "uniqueItems": true
+        },
+        "workspaces": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "workspaceId": {
+                "$ref": "#/definitions/Id"
+              },
+              "revision": {
+                "$ref": "#/definitions/Sequence"
+              }
+            },
+            "required": [
+              "workspaceId",
+              "revision"
+            ],
+            "additionalProperties": false
+          },
+          "maxItems": 32
+        }
+      },
+      "required": [
+        "executorId",
+        "connectionId",
+        "connectionRevision",
+        "platform",
+        "operations",
+        "workspaces"
+      ],
+      "additionalProperties": false
+    },
+    "ExecutionBoundary": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "sessionId": {
+          "$ref": "#/definitions/LegacyId"
+        },
+        "revision": {
+          "$ref": "#/definitions/Digest"
+        },
+        "clientPlatform": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ClientPlatform"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "application": {
+          "$ref": "#/definitions/ExecutionBoundaryApplication"
+        },
+        "requestedTools": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "maxItems": 128,
+              "uniqueItems": true
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "executor": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ExecutionBoundaryExecutor"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effectiveTools": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/EffectiveTool"
+          },
+          "maxItems": 128
+        },
+        "binding": {
+          "anyOf": [
+            {
+              "$ref": "#/definitions/ExecutionBinding"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "protocol",
+        "sessionId",
+        "revision",
+        "clientPlatform",
+        "application",
+        "requestedTools",
+        "executor",
+        "effectiveTools",
+        "binding"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

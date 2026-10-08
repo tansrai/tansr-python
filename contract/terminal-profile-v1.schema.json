@@ -1,0 +1,484 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://tansr.com/contracts/terminal-profile-v1.schema.json",
+  "title": "Terminal profile v1",
+  "description": "Independent read-only app_user catalog and own 1d usage. No price, money, numerical quota or budget.",
+  "definitions": {
+    "Contract": {
+      "const": "terminal-profile-v1"
+    },
+    "Text": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "NullableText": {
+      "anyOf": [
+        {
+          "$ref": "#/definitions/Text"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "Id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._~-]*$"
+    },
+    "SessionContract": {
+      "enum": [
+        "sdk1",
+        "sdk2-offload-v1"
+      ]
+    },
+    "SessionReference": {
+      "type": "object",
+      "properties": {
+        "sessionContract": {
+          "$ref": "#/definitions/SessionContract"
+        },
+        "sessionId": {
+          "$ref": "#/definitions/Text"
+        }
+      },
+      "required": [
+        "sessionContract",
+        "sessionId"
+      ],
+      "additionalProperties": false
+    },
+    "Model": {
+      "type": "object",
+      "properties": {
+        "handle": {
+          "$ref": "#/definitions/Text"
+        },
+        "displayName": {
+          "$ref": "#/definitions/Text"
+        },
+        "manufacturer": {
+          "$ref": "#/definitions/NullableText"
+        },
+        "family": {
+          "$ref": "#/definitions/NullableText"
+        }
+      },
+      "required": [
+        "handle",
+        "displayName",
+        "manufacturer",
+        "family"
+      ],
+      "additionalProperties": false
+    },
+    "Aliases": {
+      "type": "object",
+      "maxProperties": 1024,
+      "propertyNames": {
+        "$ref": "#/definitions/Text"
+      },
+      "additionalProperties": {
+        "$ref": "#/definitions/Text"
+      }
+    },
+    "Catalog": {
+      "type": "object",
+      "properties": {
+        "models": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "$ref": "#/definitions/Model"
+          }
+        },
+        "aliases": {
+          "$ref": "#/definitions/Aliases"
+        },
+        "capabilities": {
+          "$ref": "#/definitions/Capabilities"
+        }
+      },
+      "required": [
+        "models",
+        "aliases",
+        "capabilities"
+      ],
+      "additionalProperties": false
+    },
+    "Quota": {
+      "type": "object",
+      "properties": {
+        "state": {
+          "const": "not_exposed"
+        },
+        "enforcement": {
+          "const": "gateway"
+        }
+      },
+      "required": [
+        "state",
+        "enforcement"
+      ],
+      "additionalProperties": false
+    },
+    "Counter": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "Usage": {
+      "type": "object",
+      "properties": {
+        "window": {
+          "const": "1d"
+        },
+        "endUserId": {
+          "$ref": "#/definitions/Text"
+        },
+        "requests": {
+          "$ref": "#/definitions/Counter"
+        },
+        "inTokens": {
+          "$ref": "#/definitions/Counter"
+        },
+        "outTokens": {
+          "$ref": "#/definitions/Counter"
+        },
+        "cacheRTokens": {
+          "$ref": "#/definitions/Counter"
+        },
+        "cacheWTokens": {
+          "$ref": "#/definitions/Counter"
+        }
+      },
+      "required": [
+        "window",
+        "endUserId",
+        "requests",
+        "inTokens",
+        "outTokens",
+        "cacheRTokens",
+        "cacheWTokens"
+      ],
+      "additionalProperties": false
+    },
+    "CatalogResponse": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "session": {
+          "$ref": "#/definitions/SessionReference"
+        },
+        "models": {
+          "type": "array",
+          "maxItems": 1024,
+          "items": {
+            "$ref": "#/definitions/Model"
+          }
+        },
+        "aliases": {
+          "$ref": "#/definitions/Aliases"
+        },
+        "quota": {
+          "$ref": "#/definitions/Quota"
+        },
+        "capabilities": {
+          "$ref": "#/definitions/Capabilities"
+        }
+      },
+      "required": [
+        "contract",
+        "session",
+        "models",
+        "aliases",
+        "quota",
+        "capabilities"
+      ],
+      "additionalProperties": false
+    },
+    "UsageResponse": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "session": {
+          "$ref": "#/definitions/SessionReference"
+        },
+        "usage": {
+          "$ref": "#/definitions/Usage"
+        },
+        "quota": {
+          "$ref": "#/definitions/Quota"
+        }
+      },
+      "required": [
+        "contract",
+        "session",
+        "usage",
+        "quota"
+      ],
+      "additionalProperties": false
+    },
+    "ErrorCode": {
+      "enum": [
+        "invalid_request",
+        "protocol_version_mismatch",
+        "unauthorized",
+        "forbidden",
+        "not_found",
+        "unsupported_capability",
+        "capability_unconfirmed",
+        "source_unavailable",
+        "stale_generation",
+        "binding_conflict",
+        "revision_conflict",
+        "busy",
+        "capacity_exceeded",
+        "payload_too_large",
+        "output_gap",
+        "integrity_mismatch",
+        "commit_unknown",
+        "context_transition_required",
+        "request_conflict",
+        "request_limit"
+      ]
+    },
+    "ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "contract": {
+          "$ref": "#/definitions/Contract"
+        },
+        "requestId": {
+          "$ref": "#/definitions/Id"
+        },
+        "code": {
+          "$ref": "#/definitions/ErrorCode"
+        },
+        "status": {
+          "enum": [
+            400,
+            401,
+            403,
+            404,
+            409,
+            413,
+            429,
+            503
+          ]
+        },
+        "retryAction": {
+          "enum": [
+            "none",
+            "discover",
+            "refresh",
+            "reconcile",
+            "backoff"
+          ]
+        }
+      },
+      "required": [
+        "contract",
+        "requestId",
+        "code",
+        "status",
+        "retryAction"
+      ],
+      "additionalProperties": false
+    },
+    "CapabilityTools": {
+      "type": "object",
+      "properties": {
+        "read": {
+          "type": "boolean"
+        },
+        "write": {
+          "type": "boolean"
+        },
+        "edit": {
+          "type": "boolean"
+        },
+        "glob": {
+          "type": "boolean"
+        },
+        "grep": {
+          "type": "boolean"
+        },
+        "list": {
+          "type": "boolean"
+        },
+        "shell": {
+          "type": "boolean"
+        },
+        "process": {
+          "type": "boolean"
+        },
+        "webFetch": {
+          "type": "boolean"
+        },
+        "webSearch": {
+          "type": "boolean"
+        },
+        "http": {
+          "type": "boolean"
+        },
+        "todoWrite": {
+          "type": "boolean"
+        },
+        "askUser": {
+          "type": "boolean"
+        },
+        "agent": {
+          "type": "boolean"
+        },
+        "skills": {
+          "type": "boolean"
+        },
+        "mcp": {
+          "type": "boolean"
+        },
+        "customTools": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "read",
+        "write",
+        "edit",
+        "glob",
+        "grep",
+        "list",
+        "shell",
+        "process",
+        "webFetch",
+        "webSearch",
+        "http",
+        "todoWrite",
+        "askUser",
+        "agent",
+        "skills",
+        "mcp",
+        "customTools"
+      ],
+      "additionalProperties": false
+    },
+    "CapabilityPlatform": {
+      "type": "object",
+      "properties": {
+        "imageGen": {
+          "type": "boolean"
+        },
+        "videoGen": {
+          "type": "boolean"
+        },
+        "webSearch": {
+          "type": "boolean"
+        },
+        "speechToText": {
+          "type": "boolean"
+        },
+        "textToSpeech": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "imageGen",
+        "videoGen",
+        "webSearch",
+        "speechToText",
+        "textToSpeech"
+      ],
+      "additionalProperties": false
+    },
+    "BoundDeviceTools": {
+      "type": "object",
+      "properties": {
+        "read": {
+          "type": "boolean"
+        },
+        "write": {
+          "type": "boolean"
+        },
+        "edit": {
+          "type": "boolean"
+        },
+        "glob": {
+          "type": "boolean"
+        },
+        "grep": {
+          "type": "boolean"
+        },
+        "list": {
+          "type": "boolean"
+        },
+        "shell": {
+          "type": "boolean"
+        },
+        "process": {
+          "type": "boolean"
+        },
+        "skills": {
+          "type": "boolean"
+        },
+        "mcp": {
+          "type": "boolean"
+        },
+        "customTools": {
+          "type": "boolean"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "ExecutionCapabilities": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "const": "bound-device-v1"
+        },
+        "boundDevice": {
+          "type": "object",
+          "properties": {
+            "tools": {
+              "$ref": "#/definitions/BoundDeviceTools"
+            }
+          },
+          "required": [
+            "tools"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "version",
+        "boundDevice"
+      ],
+      "additionalProperties": false
+    },
+    "Capabilities": {
+      "type": "object",
+      "properties": {
+        "tools": {
+          "$ref": "#/definitions/CapabilityTools"
+        },
+        "platform": {
+          "$ref": "#/definitions/CapabilityPlatform"
+        },
+        "execution": {
+          "$ref": "#/definitions/ExecutionCapabilities"
+        }
+      },
+      "required": [
+        "tools",
+        "platform"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

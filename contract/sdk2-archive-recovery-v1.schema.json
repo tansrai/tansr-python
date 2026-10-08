@@ -1,0 +1,336 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://tansr.com/schemas/sdk2-archive-recovery-v1.schema.json",
+  "title": "SDK2 authenticated archive ACK recovery v1",
+  "description": "Independent additive recovery contract. The caller durably fixes request before transmission. A completed receipt proves the same archive bytes accepted under the original binding idle lease; it does not rerun a model or rewrite the frozen ACK DTO.",
+  "oneOf": [
+    {
+      "$ref": "#/definitions/AckRebaseRequest"
+    },
+    {
+      "$ref": "#/definitions/AckRebaseReceipt"
+    }
+  ],
+  "definitions": {
+    "ArchiveAckRequest": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "request": {
+          "$ref": "#/definitions/RequestIdentity"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "expectedRevision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "generations": {
+          "$ref": "#/definitions/Generations"
+        },
+        "sourceId": {
+          "$ref": "#/definitions/Id"
+        },
+        "sourceGeneration": {
+          "$ref": "#/definitions/Id"
+        },
+        "coverage": {
+          "$ref": "#/definitions/Coverage"
+        },
+        "attachments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ArchiveArtifactReceipt"
+          },
+          "minItems": 0,
+          "maxItems": 128,
+          "uniqueItems": true
+        },
+        "ackFormat": {
+          "$ref": "#/definitions/ArchiveAckFormat"
+        },
+        "payloads": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/ArchiveArtifactReceipt"
+          },
+          "minItems": 1,
+          "maxItems": 128,
+          "uniqueItems": true
+        }
+      },
+      "required": [
+        "protocol",
+        "request",
+        "bindingId",
+        "expectedRevision",
+        "generations",
+        "sourceId",
+        "sourceGeneration",
+        "coverage",
+        "attachments",
+        "ackFormat",
+        "payloads"
+      ],
+      "additionalProperties": false,
+      "$comment": "split-receipts-v1 only: payloads and extra attachments are separate exact first-occurrence receipt sets over the entire closed coverage (including overlap), at most 128 whole contiguous records and at most 128 receipts per category. Same artifact in both categories requires matching witnesses but physical accounting occurs once. Check raw request/control UTF-8 byte limit plus canonical envelope before side effects. Source atomically commits record metadata, body, attachments, contiguous head and original ACK outbox intent before claiming durably-stored. Current authorization then original same-key semantic receipt precedes new epoch/CAS/generation checks. New ACK atomically commits fact, watermark, revision and receipt, never partial records. ACK alone does not release dependencies, old SessionStore, or authorize core execution."
+    },
+    "RequestIdentity": {
+      "type": "object",
+      "properties": {
+        "requestId": {
+          "$ref": "#/definitions/Id"
+        },
+        "operationEpoch": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "requestId",
+        "operationEpoch"
+      ],
+      "additionalProperties": false,
+      "$comment": "Epoch is issued and retired by the trusted host. Same scope/resource/operation/epoch/requestId and semantic content returns its original receipt, different content conflicts. Retired epochs never become fresh; unknown or expired results require query-status, not a new operation. Semantic digest uses SHA256(UTF8(tansr.sdk2.operation.v1)+NUL+canonical({scope:[trustedApp,trustedUser],operation,semantic})), semantic is immutable request body excluding request identity and transport/auth envelope. expectedRevision belongs to semantic content. Fresh auth/epoch validation gates NEW admission; existing-operation status remains queryable under current permission after epoch retirement."
+    },
+    "Id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._~-]*$"
+    },
+    "Sequence": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]{0,17}|[1-8][0-9]{18}|9[0-1][0-9]{17}|92[0-1][0-9]{16}|922[0-2][0-9]{15}|9223[0-2][0-9]{14}|92233[0-6][0-9]{13}|922337[0-1][0-9]{12}|92233720[0-2][0-9]{10}|922337203[0-5][0-9]{9}|9223372036[0-7][0-9]{8}|92233720368[0-4][0-9]{7}|922337203685[0-3][0-9]{6}|9223372036854[0-6][0-9]{5}|92233720368547[0-6][0-9]{4}|922337203685477[0-4][0-9]{3}|9223372036854775[0-7][0-9]{2}|922337203685477580[0-6]|9223372036854775807)$",
+      "maxLength": 19,
+      "description": "Canonical unsigned decimal 0..2^63-1. Never parse through IEEE754 Number."
+    },
+    "Generations": {
+      "type": "object",
+      "properties": {
+        "historyEpoch": {
+          "$ref": "#/definitions/LegacyId"
+        },
+        "deletionGeneration": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "projectionRevision": {
+          "$ref": "#/definitions/Sequence"
+        }
+      },
+      "required": [
+        "historyEpoch",
+        "deletionGeneration",
+        "projectionRevision"
+      ],
+      "additionalProperties": false
+    },
+    "LegacyId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "description": "Existing opaque ID; no trimming, case folding or Unicode normalization. Do not mint authority from this string."
+    },
+    "Coverage": {
+      "type": "object",
+      "properties": {
+        "fromSequence": {
+          "$ref": "#/definitions/RecordSequence"
+        },
+        "throughSequence": {
+          "$ref": "#/definitions/RecordSequence"
+        },
+        "headDigest": {
+          "$ref": "#/definitions/Digest"
+        }
+      },
+      "required": [
+        "fromSequence",
+        "throughSequence",
+        "headDigest"
+      ],
+      "additionalProperties": false,
+      "$comment": "Closed inclusive interval, from<=through. Head is a host-known contiguous chain commitment for this source and generation, not a client assertion. SSE cursor is never archive coverage."
+    },
+    "RecordSequence": {
+      "allOf": [
+        {
+          "$ref": "#/definitions/Sequence"
+        },
+        {
+          "not": {
+            "const": "0"
+          }
+        }
+      ],
+      "$comment": "Record ordinals start at 1. Zero is only an empty published/acknowledged watermark, never a record ordinal."
+    },
+    "Digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "ArchiveArtifactReceipt": {
+      "type": "object",
+      "properties": {
+        "artifactId": {
+          "$ref": "#/definitions/Id"
+        },
+        "sha256": {
+          "$ref": "#/definitions/Digest"
+        },
+        "state": {
+          "const": "durably-stored"
+        }
+      },
+      "required": [
+        "artifactId",
+        "sha256",
+        "state"
+      ],
+      "additionalProperties": false,
+      "$comment": "Raw artifact SHA, never payloadDigest/recordDigest. Exact per-category first-occurrence sets are derived from every whole record in the requested coverage. No duplicate IDs, foreign objects or divergent witnesses."
+    },
+    "ArchiveAckFormat": {
+      "type": "string",
+      "const": "split-receipts-v1"
+    },
+    "MutationReceipt": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "request": {
+          "$ref": "#/definitions/RequestIdentity"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "operation": {
+          "type": "string",
+          "enum": [
+            "binding-create",
+            "archive-ack",
+            "material-response",
+            "binding-close"
+          ]
+        },
+        "semanticDigest": {
+          "$ref": "#/definitions/Digest"
+        },
+        "state": {
+          "type": "string",
+          "enum": [
+            "accepted",
+            "completed",
+            "rejected"
+          ]
+        },
+        "revision": {
+          "$ref": "#/definitions/Sequence"
+        },
+        "outcomeRef": {
+          "$ref": "#/definitions/Id"
+        }
+      },
+      "required": [
+        "protocol",
+        "request",
+        "bindingId",
+        "operation",
+        "semanticDigest",
+        "state",
+        "revision",
+        "outcomeRef"
+      ],
+      "additionalProperties": false,
+      "$comment": "Persist admission+semantic witness before side effects. Recover uncertain admissions from durable receipt, never create another operation. accepted does not imply source durable or core consumed. Same request replay returns this same operation identity after authorization recheck. binding-close completed means its durable close intent was committed, not that all resource drain has finished. Final ACK also completes its operation independently of binding resource state. Terminal operation receipts are retained until both their terminal TTL and admission epoch expire; unresolved actual work has separate durable state and cannot be GCed merely because the close receipt expires. Current authorization precedes replay; retained same-key/same-semantics receipt lookup precedes the fresh epoch admission gate. Epoch retirement rejects only new admissions, not truthful recovery of already-admitted same-operation results.",
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "operation": {
+                "const": "binding-close"
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "completed",
+                  "rejected"
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "AckRebaseRequest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol",
+        "bindingId",
+        "previous",
+        "request"
+      ],
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "previous": {
+          "$ref": "#/definitions/ArchiveAckRequest"
+        },
+        "request": {
+          "$ref": "#/definitions/RequestIdentity"
+        }
+      }
+    },
+    "AckRebaseReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol",
+        "bindingId",
+        "previous",
+        "request",
+        "next",
+        "receipt"
+      ],
+      "properties": {
+        "protocol": {
+          "const": "sdk2-ext-v1"
+        },
+        "bindingId": {
+          "$ref": "#/definitions/Id"
+        },
+        "previous": {
+          "$ref": "#/definitions/ArchiveAckRequest"
+        },
+        "request": {
+          "$ref": "#/definitions/RequestIdentity"
+        },
+        "next": {
+          "$ref": "#/definitions/ArchiveAckRequest"
+        },
+        "receipt": {
+          "$ref": "#/definitions/MutationReceipt"
+        }
+      }
+    }
+  },
+  "x-wire-limits": {
+    "ackBytes": 262144,
+    "requestEnvelopeBytes": 1024,
+    "responseEnvelopeBytes": 4096,
+    "requestBytes": 263168,
+    "responseBytes": 528384
+  },
+  "$comment": "POST /v3/sdk2/bindings/{bindingId}/archive/ack-rebases. Canonical UTF-8 control JSON, sorted keys and no whitespace. previous is the immutable durable pending ACK; caller must persist request before transmission. This v1 requires a different requestId in the same still-active operationEpoch. Source validates original unaccepted ACK, exact same bytes, required replica, owner/scope/generations, then accepts next and its previous mapping atomically with the original binding idle lease. Only request and expectedRevision may differ. On lost response repeat the exact request; never generate a replacement key or rerun the model. If previous was already completed, rebase conflicts: query the original archive-ack operation and confirm its original receipt. Receiver recovery format is explicit with durable old-to-next ledger and atomic migration of the one current operation/checkpoint, never duplicate coverage or fabricated old receipt. Old ACK DTO and old receiver factories are unchanged."
+}
