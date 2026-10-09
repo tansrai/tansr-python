@@ -4,23 +4,37 @@
 
 This guide describes version `0.1.0` and its three executable Demos. The SDK and Demo use the [MIT license](https://github.com/tansrai/tansr-python/blob/main/LICENSE), with PyPI as the package distribution channel. See the [release notes](https://github.com/tansrai/tansr-python/blob/main/doc/%E5%8F%91%E8%A1%8C%E8%AF%B4%E6%98%8E.md) for installation, tested environments and platform limits.
 
+Start here: [First SDK request](#sdk-first-request) · [Serve and application responsibilities](#sdk-host-boundary) · [Demo credentials](#sdk-authentication) · [Sync/async lifetimes](#sdk-lifecycle) · [Troubleshooting](#sdk-troubleshooting)
+
 ## Installation and responsibilities
 
 Runtime source supports CPython 3.7+, excluding 3.9.0/3.9.1. Compatibility does not restore upstream maintenance of older interpreters. Serve owns the run loop, context, memory, permissions and tool scheduling. The Python host supplies identity, explicitly registered business tools and private local archives. The SDK does not provide a general Shell/PTY, audio recorder/player or multi-device synchronization.
 
-In a virtual environment, install the SDK with `python -m pip install tansr-sdk==0.1.0`, and optionally run `python -m pip install tansr-sdk-demo==0.1.0`. For offline use, install verified matching wheels, replacing these absolute paths. The separate Demo package requires exactly the same SDK version:
+The release packages are [tansr-sdk 0.1.0](https://pypi.org/project/tansr-sdk/0.1.0/) and [tansr-sdk-demo 0.1.0](https://pypi.org/project/tansr-sdk-demo/0.1.0/). Every `python` below refers to your selected, activated and compatible virtual environment. Install the SDK first and check its import location:
 
 ```text
-python -m pip install /absolute/artifacts/tansr_sdk-0.1.0-py3-none-any.whl /absolute/artifacts/tansr_sdk_demo-0.1.0-py3-none-any.whl
+python -m pip install tansr-sdk==0.1.0
+python -m pip check
+python -c "import sys, tansr_sdk; print(sys.executable); print(tansr_sdk.__file__)"
+```
+
+The executable and module paths should belong to the same target venv. Run outside the checkout; do not substitute a source path or editable install for the release package. Add `python -m pip install tansr-sdk-demo==0.1.0` only for the CLI examples. For offline use, install verified matching wheels, replacing these absolute paths. The separate Demo package requires exactly the same SDK version:
+
+```text
+python -m pip install --no-index --find-links /absolute/wheelhouse /absolute/artifacts/tansr_sdk-0.1.0-py3-none-any.whl /absolute/artifacts/tansr_sdk_demo-0.1.0-py3-none-any.whl
 python -m pip check
 tansr-py-chat --help
 tansr-py-tools --help
 tansr-py-archive --help
 ```
 
+The offline wheelhouse must contain the complete runtime dependency set for the target Python, OS and CPU, including `cryptography` and the applicable native wheels. `--no-index` prevents fetching missing dependencies from a package index; an incomplete wheelhouse causes installation to fail.
+
 Equivalent module entries are `python -m tansr_demo.chat`, `python -m tansr_demo.tools` and `python -m tansr_demo.archive`. Help does not read credentials or contact Serve. To build source in a prepared modern environment, run `python -m build --wheel --sdist` and `python -m build --wheel --sdist demo` from the repository root. See [environment and packaging notes](https://github.com/tansrai/tansr-python/blob/main/requirements/README.md) for dependency locks and independent wheel/sdist consumption. Source import, successful builds and clean installed consumption are separate checks.
 
 Demos connect to an existing Serve; they neither download nor start it. The host must configure Serve, a model provider, terminal identity and any required archive source. The default contract family is `sdk1`; pass `--family sdk2-offload-v1` to every relevant command when using offload.
+
+<a id="sdk-host-boundary"></a>
 
 ## Wiring your application
 
@@ -44,7 +58,52 @@ Choose the family when constructing `Client`; it is not negotiated into a differ
 
 An `AuthToken` contains a token and stable principal. Keep the principal identical when rotating a token for the same application/user/authorization scope. A different principal requires a new Client and reauthorization; a saved session ID or local file cannot authorize a different user.
 
+<a id="sdk-first-request"></a>
+
+## First SDK request: a read-only connection check
+
+This standalone script needs only the SDK, without the Demo package, Node or token/scope files. Obtain the Serve origin, an existing session ID, a valid terminal token and a stable principal for the same application/user/authorization scope from the trusted application host. Do not use an upstream model API key as the terminal token or invent a principal. Select the session's actual family; an existing offload session also depends on its authorized Source configuration on Serve.
+
+The script reads metadata for the same session through synchronous and asyncio APIs and prints the `last_seq` observed by each request. It does not create a session, send a message, end the remote session or determine that a chat turn completed:
+
+```python
+import asyncio
+from getpass import getpass
+from tansr_sdk import AuthToken, Client
+from tansr_sdk.session import AsyncSessionClient, SessionClient
+
+base_url = input("Serve origin: ").strip()
+session_id = input("Existing session ID: ").strip()
+principal = input("Host-issued stable principal: ").strip()
+token = getpass("Issued Serve token: ")
+family = input("Session family [sdk1]: ").strip() or "sdk1"
+
+def token_provider(cancel):
+    cancel.check()
+    return AuthToken(token, principal)
+
+def read_sync(api, session_id):
+    return SessionClient(api).attach(session_id).created.last_seq
+
+async def read_async(api, session_id):
+    async with AsyncSessionClient(api) as sessions:
+        session = await sessions.attach(session_id)
+        return session.created.last_seq
+
+with Client(base_url, token_provider, family=family) as api:
+    print("sync last_seq:", read_sync(api, session_id))
+    print("async last_seq:", asyncio.run(read_async(api, session_id)))
+```
+
+This is a one-time connection check: the entered token stays in this process. Long-running applications should replace `token_provider` with their current credential provider while retaining cancellation, stable-principal and bounded-wait rules. The SDK does not implicitly read these inputs or any `TANSR_*` environment variables. Here, `AsyncSessionClient` borrows the synchronous `Client`; its scheduling resources close before the outer `with Client` closes the transport. Hosts with an existing event loop should directly `await read_async(api, session_id)` rather than nest `asyncio.run`. Reuse the [complete file-credential and lifecycle example](#sdk-lifecycle) below when integrating existing credential files.
+
+To **send a message and wait for its turn to finish**, continue with the [Chat Demo and approval/question handling](#sdk-chat), or follow the send/event tracking sequence in [sync chat](https://github.com/tansrai/tansr-python/blob/main/demo/src/tansr_demo/chat.py) / [async chat](https://github.com/tansrai/tansr-python/blob/main/demo/src/tansr_demo/async_chat.py). They open the event stream before sending and use `TurnTracker` to match the current turn. `attach()`, history reads, HTTP 202 and SSE EOF cannot replace that terminal-outcome check. For connection-check failures, start with [troubleshooting](#sdk-troubleshooting).
+
+<a id="sdk-authentication"></a>
+
 ## Credentials and shared options
+
+The file layout, `TANSR_*` environment variables and CLI options in this section are conventions of the Demos and the file-credential example below. They are not mandatory configuration for applications using the SDK directly. Pass the service origin and `token_provider` explicitly to `Client`; the SDK neither issues identities nor performs the host application's login or authorization.
 
 Token and scope must be different files in the same private directory. Paths must be absolute with no `.` or `..` components. The scope document has exactly these three fields, each a nonempty host-issued string of at most 128 characters. Do not invent identity values:
 
@@ -111,6 +170,8 @@ The new interpreter remains linked to the existing OpenSSL prefix. The old Conda
 The Demo rechecks current scope whenever obtaining a token or accessing private state. Scope changes invalidate the current instance; archived identity cannot restore authorization. Tokens can rotate within the same scope. Saved intents retain their original absolute deadline: a longer new process timeout does not extend it. Ctrl+C stops local work; only explicit `/interrupt` requests remote interruption.
 
 Exit 0 means the stage stated by that command succeeded. Exit 1 means runtime failure, cancellation or unknown outcome; argument errors exit 2, and directly caught `KeyboardInterrupt` exits 130. Host usually turns Ctrl+C into cancellation and exit 1. Errors expose only sanitized error codes and HTTP status, never tokens, server detail or exception chains. Conversation text and explicitly requested query results are displayed in the terminal.
+
+<a id="sdk-chat"></a>
 
 ## Chat Demo
 
@@ -240,6 +301,8 @@ The Python host retains long history and supplies named materials; Serve decides
 
 For an existing session, read memory state using `api.call("terminal.memory.read", CallOptions(parameters={"id": session_id}))`; import `CallOptions` from `tansr_sdk`. Writes require the original schema, actual revision/requestId and authorization context. Do not copy another session's data. Availability of configuration, memory and cache depends on Serve's host configuration and negotiation, not a client-side unlock.
 
+<a id="sdk-lifecycle"></a>
+
 ## Sync, asyncio and resource lifetimes
 
 The three console commands use synchronous public APIs. An additional executable async single-turn example is provided:
@@ -308,6 +371,8 @@ Use with/async with or explicitly close streams. A False return from close(timeo
 Executor APIs also include AsyncRunner and adapt_async_handler; archives expose AsyncArchiveClient. Sessions additionally offer multimodal send_blocks, input status, checkpoint byte import/export, compact/cwd and transcribe/speak requests. Text Demos do not exercise the entire API. Audio requests do not automatically record, play or send transcription as chat, and HTTP 200 does not replace response-content validation.
 
 `Session.close()` / `await AsyncSession.close()` is a write that **ends the remote session**. `Client.close()`, async facade `aclose()`, event-stream close and `Runner.close()` reclaim local resources; these operations are not interchangeable. Stop new work, close streams and runners/facades, wait for actual disk/handler completion, then release journals, archives and finally Client. `AsyncRunner.aclose()` also stops its wrapped synchronous Runner, so pass only a Runner it is allowed to stop.
+
+<a id="sdk-troubleshooting"></a>
 
 ## Errors and troubleshooting
 

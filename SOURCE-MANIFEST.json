@@ -42,8 +42,8 @@
     },
     {
       "path": "README.md",
-      "bytes": 6386,
-      "sha256": "fc1d9f4c2c1f71621a02d6f4b80ae1f59566e00aebdb57a5f8739320709ce5e6"
+      "bytes": 8891,
+      "sha256": "b9f9e2413c6b5befad396ed4c3b6a813891c8da84e95f127146f893be176b4f6"
     },
     {
       "path": "contract/DISTRIBUTION.json",
@@ -182,8 +182,8 @@
     },
     {
       "path": "demo/README.md",
-      "bytes": 3886,
-      "sha256": "8fffafcb947cd6bb875758ae1bdb11777c1641a4acd4fbb31f0ab15be2743455"
+      "bytes": 8553,
+      "sha256": "7cd780450276453c418fd26f54fa4ecbbe9d81e99aadd9c3f6bff9dfbc52b755"
     },
     {
       "path": "demo/pyproject.toml",
@@ -227,18 +227,18 @@
     },
     {
       "path": "doc/guide.md",
-      "bytes": 37691,
-      "sha256": "2f3811e94b4d14271138763ca40f455cdbfd38549bf0e979248bcd0b6adc3e22"
+      "bytes": 42524,
+      "sha256": "03362fb2c46fad5d817223526adc063bcf5d7fa7c720e242d5e06c81c5e028e6"
     },
     {
       "path": "doc/使用指南.md",
-      "bytes": 33808,
-      "sha256": "9b880411c0e19f3432fd656910edd385d1391de8d5b93e02f65dea0524fd8ca0"
+      "bytes": 38132,
+      "sha256": "42a68ff062351c198080848b4955f7560075a0986c1996320803cacf68cc0518"
     },
     {
       "path": "doc/发行说明.md",
-      "bytes": 25029,
-      "sha256": "50d44cbe0213e68d775a842cb01461b606fe126a2b5ca42d66a90ce6e2624aab"
+      "bytes": 28949,
+      "sha256": "54e32fff8f2c92469bbcd634c3b3f5f5ecf6ab8880cba7d8b80cc7070c3d463c"
     },
     {
       "path": "integration/archive.py",
