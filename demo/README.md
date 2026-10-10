@@ -104,3 +104,45 @@ python -m tansr_demo.archive --mode recover --binding BINDING_ID --file ABSOLUTE
 These commands connect to an existing Serve and use the public SDK only. The SDK package can be installed without this Demo package. Keep credentials separate from transaction state, retain original identities after unknown outcomes, and distinguish business completion from output confirmation and material consumption. See the bilingual guides for exact commands, resource ownership and troubleshooting. Version 0.1.0 of the SDK and Demo uses the [MIT license](https://github.com/tansrai/tansr-python/blob/main/LICENSE). Tested platform combinations and their limits are listed in the release notes.
 
 For first use, create a venv, install `tansr-sdk-demo==0.1.0`, and run the four module `--help` commands above. Configure your own Serve origin and issued credentials using the [English guide](https://github.com/tansrai/tansr-python/blob/main/doc/guide.md). Start with the chat example; for tools, keep executor terminal A running and attach terminal B to the exact printed session. Archive operations additionally require an authorized Source, binding and retained key. Uppercase values in the commands are placeholders, not supplied service credentials or generated IDs.
+
+### 专用 publication host（PST 候选）
+
+新增模块 `python -m tansr_demo.publication --help`，消费 SDK 的 FileStore/Host/EncryptedJournal。未新增模型工具、云存储服务或 Source 注册入口；此候选尚未发布。
+
+受信 Serve 宿主先按原协议安装 provider、登记 `Host.registration()` 所示保留工具、建立connection/workspace/session/binding，并提供私有JSON配置：`identity`（scope的app/user及sourceId/sourceGeneration/domainKey）、`sessionId`、完整 `binding`、有效 `connection`、`workspace` 五字段。`connection`须包含原expiresAt/heartbeatAfterMs，workspace含workspaceId/revision；不要凭文档示例捏造授权。配置只是恢复锚，Runner继续核当前scope、代际、远端operation状态和许可。
+
+```powershell
+python -m tansr_demo.publication --base http://127.0.0.1:8787 --family sdk1 `
+  --token-file C:/private/auth/token.txt --scope-file C:/private/auth/scope.json `
+  --config C:/private/config/publication-host.json `
+  --file C:/private/publication/body.enc --journal-file C:/private/publication-journal/receipts.enc `
+  --key-file C:/private/keys/body.key --key-id body-v1 `
+  --journal-key-file C:/private/keys/journal.key --journal-key-id journal-v1 `
+  --mode create
+```
+
+两密钥文件均为64位hex、来自宿主既有私有密钥设施，必须不同，不在输出中打印。父目录由宿主建立，末级存储目录可由SDK创建；凭据、配置、密钥与存储使用分别的私有目录。已存在的原文件用 `--mode reopen`；只读容量用 `--mode capacity`。新建中途失败保留已创建的原件，经SDK以分别的create/reopen模式核对缺失介质后再启动，不能清目录重试。容量参数重开必须不变。
+
+每条操作打印安全receipt状态及原operationId/digest/action/transferId，不打印请求、正文或完整回执JSON。unknown后停止接新操作并以outcome_unknown退出，保留原双卷和原键；查询原operation与transfer，不能改写unknown或换键重做。Ctrl+C合作停止、等Runner实际静止再关闭介质；取消不等于已提交CAS回滚。重连配置由可信宿主更新，旧transfer只读恢复须在SDK明确提供authorize_recovery；Demo不自动批准跨owner恢复、不生成新binding或清锚。通用terminal.memory成功与本机正文耐久是不同事实。控制端需先按原协议协商terminal.binding的memory-lifecycle-v1；真实Serve验证与多OS、安装消费分别记证据。
+
+
+第四批新增显式保源操作：在上述完整凭据/配置/原路径/原密钥参数上，将 `--mode` 改为 `copy-publication` 或 `copy-journal`，并追加 `--target-file C:/private/next/body.enc --target-key-file C:/private/config/next-key.hex --target-key-id next-v2`。目标位于源目录之外，文件必须不存在。旧明文日志使用 `migrate-journal`，另传 `--legacy-journal C:/private/old-journal --operations-file C:/private/config/all-original-operations.json`；必须完整列出原 operation，不能遗漏 pending 或永久回执。先停止全部写者；两个介质分别复制、分别以原键对账，再由宿主切换配置。失败保留原件及可能已提交的目标。
+
+Preserved-source modes are `copy-publication`, `copy-journal`, and `migrate-journal`. Supply an explicit new target path/key/key ID; legacy migration also needs the existing source directory and full original operation inventory. Quiesce writers, copy each store, reopen and reconcile original keys, then explicitly change host configuration. Existing `rotate_key` remains in-place. These Demo modes perform local storage operations and do not start the executor loop.
+
+The host must negotiate the original terminal memory-lifecycle-v1 binding before driving terminal.memory.read. Receipt output includes original operation/digest/action/transfer metadata without sensitive bodies. An unknown receipt stops polling and exits with outcome_unknown; reopen both original stores and reconcile the original operation and transfer. A committed transfer does not authorize rewriting a permanent unknown receipt. Wait for actual Runner quiescence before releasing storage; local cancellation is not a remote session close or CAS rollback.
+
+本地 completed 不代表 Serve 已受理；`Runner.run` 沿原 poll 操作提交及失回对账，启动不扫全部历史 journal。`reopen` 只重开介质，不自动恢复已关闭会话。可信控制端明确恢复原会话时，先调用现有 SessionClient.resume 原 ID 再按原 operationId/digest 查询；缺 runtime 的 source_unavailable 不证明未执行，resume 不恢复旧 binding 授权。保留永久 unknown 与原文件，不以历史审计阻塞无关新会话。
+
+Local completed receipts do not prove Serve acceptance. Runner follows original polled operations and reconciles lost submissions without a startup history sweep. Demo reopen reopens storage only. An authorized controller explicitly resumes the original session before reconciling original operation IDs/digests; source_unavailable is not proof of no execution, and resume does not restore binding authority. Keep unknown receipts and original media; unrelated new sessions do not wait for a full history audit.
+
+### 显式 terminal-persistence-v1
+
+`from tansr_sdk.terminal_persistence import FileStore, Host` 提供独立的 v1 原子存储。可信宿主以 `FileStore(path, key, key_id, identity, read_context, mode="create"|"reopen")` 创建或重开，`identity` 是精确五字段 `{applicationScopeId,endUserId,sourceId,sourceGeneration,domainKey}`；`read_context` 读取当下已认证 scope。用 `Host(store, require_encryption=True)` 与 `Runner(..., terminal_persistence=host)` 显式装配，加密 journal 用另一把钥。不能同时装配旧 `memory_publication` Host，也不能把保留工具注册成普通业务工具。
+
+Demo 加 `--profile terminal-persistence-v1`，原可信 identity 配置经明确五字段投影，旧 profile 默认不变；新文件路径必须独立。协议正文支持任意 bytes，终端不解析记忆业务 JSON。Store 执行 `head/read/lookup/begin/put/commit/query`，begin 和 commit 的 intent/完整 root CAS、双键索引与原 transfer 结果在同一密文快照提交。query-only 恢复回调不授新 owner 写资格；unknown 需原路径/钥重开并按原键查询。
+
+head 实际配额最高 active=8、staging=16MiB、receiptEntries=8192、transferFacts=4096、objects=16384、retainedBytes=32MiB，用户只可降低；单密文快照另有128MiB帽。每次写整份重写、冷开整份审计，不宣称 O(1)。已无共同引用的正文/页在同一提交中回收；永久索引 value 和 transfer 不删除。新格式尚无 copy/轮钥/旧库转换入口，不能使用旧 Demo 迁移模式。逻辑预留不保证实际磁盘/掉电成功；没有备份或跨机接管承诺。新profile Python实际Serve HTTP与非Windows原生运行尚未验证。
+
+
+新 `terminal-persistence-v1` 同格式维护使用原 `--mode copy-publication`，显式传入新目标和不同的 fresh key/key ID。目标经完整冷重开验证但持久只读，输出 `readOnly=true/cutover=pending`；不能用普通 Demo 启动写入，源不被自动封存。旧库导入、writer cutover 和两库原子切换未提供。故障保留源和已发布目标，按原路径/钥查验，重复目标拒绝。完整参数沿上方旧维护示例，再显式加 `--profile terminal-persistence-v1`。

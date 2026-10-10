@@ -42,8 +42,23 @@
     },
     {
       "path": "README.md",
-      "bytes": 8891,
-      "sha256": "b9f9e2413c6b5befad396ed4c3b6a813891c8da84e95f127146f893be176b4f6"
+      "bytes": 9367,
+      "sha256": "aa5ccfe4b71396d43daaaf1576dd80c0eab1772166fdb1e1a6cd059d8d2bdc5c"
+    },
+    {
+      "path": "contract-persistence/TERMINAL-PERSISTENCE.json",
+      "bytes": 533,
+      "sha256": "9c7bf7915ec85c7cb9bc56b0e5a1d3349074b6156ba0c1c9366ea2f79fe3059c"
+    },
+    {
+      "path": "contract-persistence/terminal-persistence-v1.golden.json",
+      "bytes": 135472,
+      "sha256": "4b2c492ae590fda9447a5a53d13f3f7a935956c929cc23441a765947e3ef6503"
+    },
+    {
+      "path": "contract-persistence/terminal-persistence-v1.schema.json",
+      "bytes": 38585,
+      "sha256": "47387fb03308d00244e876a3bb429e24b81ac8d94d5f611aeda43e03b7c8b16c"
     },
     {
       "path": "contract/DISTRIBUTION.json",
@@ -182,8 +197,8 @@
     },
     {
       "path": "demo/README.md",
-      "bytes": 8553,
-      "sha256": "7cd780450276453c418fd26f54fa4ecbbe9d81e99aadd9c3f6bff9dfbc52b755"
+      "bytes": 16067,
+      "sha256": "54a316abd6cf10c925f2455c4c333a97be83a63f75365f5b0b8ac83b946f5960"
     },
     {
       "path": "demo/pyproject.toml",
@@ -216,6 +231,11 @@
       "sha256": "2d817311b3976b58cbeff5f62160f3056c73a6cfcf626226c4d151414c336d64"
     },
     {
+      "path": "demo/src/tansr_demo/publication.py",
+      "bytes": 9863,
+      "sha256": "570978d025cf0bc5cbe57592137ed72f74ad3e2970a870591ebf6fd69b9522e1"
+    },
+    {
       "path": "demo/src/tansr_demo/py.typed",
       "bytes": 0,
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -227,13 +247,13 @@
     },
     {
       "path": "doc/guide.md",
-      "bytes": 42524,
-      "sha256": "03362fb2c46fad5d817223526adc063bcf5d7fa7c720e242d5e06c81c5e028e6"
+      "bytes": 56793,
+      "sha256": "37eace41cb0f6d1439a66ad50d4789db7a77c72c055f4762e04fab8066bc520c"
     },
     {
       "path": "doc/使用指南.md",
-      "bytes": 38132,
-      "sha256": "42a68ff062351c198080848b4955f7560075a0986c1996320803cacf68cc0518"
+      "bytes": 51414,
+      "sha256": "abb06cb1ada7eae8447a561fa7bb94b11d8f3a84d325361faf1a3a983ccf75b4"
     },
     {
       "path": "doc/发行说明.md",
@@ -257,8 +277,8 @@
     },
     {
       "path": "integration/host.py",
-      "bytes": 6012,
-      "sha256": "3820e968d1893c9179a52bb93facde955ff356969e8477f84f83bf4fdef256b0"
+      "bytes": 6139,
+      "sha256": "b3457a9c7c3b0673f39fffe92f76abbc522e507056ecd00db16f48296df74f3e"
     },
     {
       "path": "integration/session.py",
@@ -417,13 +437,13 @@
     },
     {
       "path": "src/tansr_sdk/executor/__init__.py",
-      "bytes": 1117,
-      "sha256": "191f842985840f7b6565e8c3fff6549c75659a7e5d4a57b95363d4aaec7ce092"
+      "bytes": 1185,
+      "sha256": "84c6cabcd1fa124ae9d45b1226272e565c1c7cb4028b2430392a3d204de21df8"
     },
     {
       "path": "src/tansr_sdk/executor/_common.py",
-      "bytes": 4320,
-      "sha256": "aeebe4fb2b0e225b2b7f6e5866dabd6884942ae65386160f112b660363fba20a"
+      "bytes": 4919,
+      "sha256": "02681d25cc8e3f9ca682819d029eeab9c051ca7f4d7cc82bbc66deb8593f982b"
     },
     {
       "path": "src/tansr_sdk/executor/async_client.py",
@@ -436,9 +456,14 @@
       "sha256": "e332b95a82c9fa09a9f569342d7c667b1fc000d1a78f52bc5c15c4ef81a7f5f5"
     },
     {
+      "path": "src/tansr_sdk/executor/encrypted_journal.py",
+      "bytes": 12474,
+      "sha256": "03216499ef3ae71ab451e1c61a0b24aadbd125f9274ddfb6e7920020ee67c3db"
+    },
+    {
       "path": "src/tansr_sdk/executor/journal.py",
-      "bytes": 4760,
-      "sha256": "11499a93d4956864c7021eb3089b8c3f3850f9faafc185fe7703b904f8b32e43"
+      "bytes": 5319,
+      "sha256": "1b594ebf01faf2a59506136e289be7d4de25aa74caa4593daed7ace6388c4185"
     },
     {
       "path": "src/tansr_sdk/executor/output.py",
@@ -447,8 +472,8 @@
     },
     {
       "path": "src/tansr_sdk/executor/runner.py",
-      "bytes": 24431,
-      "sha256": "d9fefb0be8ed2a6dacda93056ac2f3184068bd7af4ced83638d02e569f053f45"
+      "bytes": 26476,
+      "sha256": "bd96c53d4584079d1f8181a03a06ab21861313d2b407e65a6c09b1f3dede6c92"
     },
     {
       "path": "src/tansr_sdk/executor/tool.py",
@@ -459,6 +484,21 @@
       "path": "src/tansr_sdk/lifecycle.py",
       "bytes": 8302,
       "sha256": "3024df5ecc35b29a71e43542ddaf6a32a16f2cdf8ea6431e63e2b0010d8e4396"
+    },
+    {
+      "path": "src/tansr_sdk/memory_publication/__init__.py",
+      "bytes": 284,
+      "sha256": "15ec86b843350abd8a0f4bc7a8a3bcb2dbf0d77e61047b8036dec7bd1081814b"
+    },
+    {
+      "path": "src/tansr_sdk/memory_publication/host.py",
+      "bytes": 3391,
+      "sha256": "576387c5c324f25cabbcbace52d38cf41752e3423a4612eab3be52431aa94061"
+    },
+    {
+      "path": "src/tansr_sdk/memory_publication/store.py",
+      "bytes": 16870,
+      "sha256": "d35e48a8ff2da1ad140fee058663d1dfe09a8d80e8459f685aa8e1a3d7f15042"
     },
     {
       "path": "src/tansr_sdk/py.typed",
@@ -517,18 +557,48 @@
     },
     {
       "path": "src/tansr_sdk/storage/encrypted_store.py",
-      "bytes": 11455,
-      "sha256": "efbcb9e943320084e6848a5f92e2df86e37de6701ede688d324f4f315ca18353"
+      "bytes": 14507,
+      "sha256": "d96e5097acb1f53e1d8aa45d7231d0ee66b55835ed8c840ec5915938557fdfb6"
     },
     {
       "path": "src/tansr_sdk/storage/private_directory.py",
-      "bytes": 18576,
-      "sha256": "284b62159e671365994d2e4ac9397dc26e63c44c712142112634ae98d3814c54"
+      "bytes": 19240,
+      "sha256": "0d876c7a7f6ba7642df86240a86773a8e25d8215bed04c3135dc4f223c3528ca"
     },
     {
       "path": "src/tansr_sdk/strict_json.py",
       "bytes": 10397,
       "sha256": "27bc5cf052542e3dd61f0334c38105ff85ae80d9649f15cc3359d819f498773c"
+    },
+    {
+      "path": "src/tansr_sdk/terminal_persistence/__init__.py",
+      "bytes": 269,
+      "sha256": "8ac185b5798f558848b782dd92757d438c25125c775d857d76112538eff06209"
+    },
+    {
+      "path": "src/tansr_sdk/terminal_persistence/_schema.py",
+      "bytes": 23035,
+      "sha256": "a1eecd6a1227a211b2fcc288a8d48f8cbe4ddad91ea9936c5e36387a88707b4a"
+    },
+    {
+      "path": "src/tansr_sdk/terminal_persistence/_state.py",
+      "bytes": 30473,
+      "sha256": "1c73e6a65bc0da292819bd889bfca374894aec4aa9d5435ad12503c8c82a7050"
+    },
+    {
+      "path": "src/tansr_sdk/terminal_persistence/_wire.py",
+      "bytes": 479,
+      "sha256": "2953a3e5b5a1a1f7caed392e7e856a044106ce5c08e4721c464c2767dbc4dcc9"
+    },
+    {
+      "path": "src/tansr_sdk/terminal_persistence/host.py",
+      "bytes": 3468,
+      "sha256": "0400db7c6470d165a3dd28326367c7ddb993bb111739e7e8b4a7a8d0f5546327"
+    },
+    {
+      "path": "src/tansr_sdk/terminal_persistence/store.py",
+      "bytes": 15027,
+      "sha256": "67e2502ce88bbbfd1e504aa93ca1e3af988920c1c2d8ac98473b909a859ec872"
     },
     {
       "path": "src/tansr_sdk/transport.py",
@@ -567,8 +637,8 @@
     },
     {
       "path": "tests/test_demo.py",
-      "bytes": 18572,
-      "sha256": "c0daa4f50de0024645e2b9950a5a97b1e8a83cce836bec091f76a12e2982a074"
+      "bytes": 22110,
+      "sha256": "2f4dba2f403435d4c1b85984cc4190021e8113ab2b6ab9df5139b6023acc0e53"
     },
     {
       "path": "tests/test_executor.py",
@@ -577,8 +647,8 @@
     },
     {
       "path": "tests/test_executor_adversarial.py",
-      "bytes": 19745,
-      "sha256": "28fa57d3babd990a002d50a4988112a79e6b4073ebb13af6fbdc7dd20439b6e2"
+      "bytes": 19829,
+      "sha256": "610109444f284de8728a461eebec27f1bc21fb8fc3e9f4f2b37747086e016340"
     },
     {
       "path": "tests/test_executor_node_vectors.py",
@@ -591,9 +661,24 @@
       "sha256": "a25f0b8f05a38624c7bd02c91e4aabc1999a184f095efc82d7f95426e13a8a06"
     },
     {
+      "path": "tests/test_memory_publication.py",
+      "bytes": 17019,
+      "sha256": "3c4e0db0982b2a5ef0cec8ecf475eea9300e6783d5b988af459474c4579fdc32"
+    },
+    {
       "path": "tests/test_public_api.py",
-      "bytes": 885,
-      "sha256": "7772fd3bb7d775a9ba78166796abfc60ef45f616e789c650bb1db62f0ea8db72"
+      "bytes": 917,
+      "sha256": "ba76f8118fb0cea56e2f8be59f64c194140d66d81acdbf2efb45fdc779391453"
+    },
+    {
+      "path": "tests/test_publication_encryption_matrix.py",
+      "bytes": 4031,
+      "sha256": "414908ed35095ca36c186e5e89c780cfefdd668f28a58e9247803103ed722184"
+    },
+    {
+      "path": "tests/test_publication_migration.py",
+      "bytes": 14735,
+      "sha256": "3f0c9b211b695b7cc8e9df5025b872807b8ecde1092c0d93b3bfb4f9c1208789"
     },
     {
       "path": "tests/test_session.py",
@@ -621,14 +706,29 @@
       "sha256": "7b541460f290015e5af5caf570e5196c390b6d820e462d53c45508ee7ef4c345"
     },
     {
+      "path": "tests/test_terminal_persistence.py",
+      "bytes": 13204,
+      "sha256": "ca12b2e5cd099a5810b30bf8995a1db844c3f14d50b4c0180aaa6c987825a282"
+    },
+    {
+      "path": "tests/test_terminal_persistence_copy.py",
+      "bytes": 10348,
+      "sha256": "29f0396672b712e67e3295f39a29012db9177b50b76238166a78e157e4fbfb27"
+    },
+    {
+      "path": "tests/test_terminal_persistence_physical_capacity.py",
+      "bytes": 3633,
+      "sha256": "58be4d97f9d502e717d3fa17b877fa7cf6389eba5c4e3df8065dc6e3f0d6174f"
+    },
+    {
       "path": "tests/test_transport.py",
       "bytes": 31087,
       "sha256": "cf614efdf5e5da13b0e900c04d8e8ff2c60213ada5cf3d33d1594abede357504"
     },
     {
       "path": "tools/check.py",
-      "bytes": 4856,
-      "sha256": "8c78c6af269274616d43bd5f260fb7bcbd303d1c93285b8c36a4e4ebd4dfc0dd"
+      "bytes": 4998,
+      "sha256": "629cb6617598f6375a8904b661b4a2147be95ebf49d9528ee5ad5cf448b10476"
     },
     {
       "path": "tools/contract_check.py",
@@ -647,13 +747,18 @@
     },
     {
       "path": "tools/export_source.py",
-      "bytes": 11758,
-      "sha256": "06d414c004de68823cbc3f5be925fb6209389e6b826f57751152d5efc5a12616"
+      "bytes": 12822,
+      "sha256": "1514571073dab2f8238bbe36ed137c73f77124edb2d44f2a4b8b0e179e066f86"
     },
     {
       "path": "tools/generate_api.py",
       "bytes": 5024,
       "sha256": "b724c0a686fad6f13bfabb73214d776ea78624801f0c3aefe483f0be1f435516"
+    },
+    {
+      "path": "tools/generate_terminal_persistence.py",
+      "bytes": 1526,
+      "sha256": "fa525622c25df5711cb6a7b43c313cc1ceca109233db6f505e3309a06177711c"
     },
     {
       "path": "tools/package_check.py",

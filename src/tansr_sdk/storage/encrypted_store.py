@@ -62,6 +62,41 @@ def _key(value, key_id):
         raise Error("invalid_argument", "invalid key identifier UTF-8") from exc
 
 
+def _separate_target(path, source_directory):
+    if not isinstance(path, str) or not os.path.isabs(path):
+        raise Error("invalid_argument", "snapshot copy requires an absolute target path")
+    target_directory = os.path.normcase(os.path.dirname(os.path.abspath(path)))
+    source_directory = os.path.normcase(source_directory)
+    try:
+        nested = os.path.commonpath((target_directory, source_directory)) == source_directory
+    except ValueError:  # 不同本地卷；各卷仍由 PrivateDirectory 校验。
+        nested = False
+    if nested:
+        raise Error("conflict", "snapshot copy requires a separate target directory outside the source")
+
+
+def _write_new_snapshot(path, state, key, key_id, max_bytes, check_access, hook=None):
+    """只在新路径提交一次完整快照；提交失证保留目标供显式重开，不删源或坏卷。"""
+    if not isinstance(path, str) or not os.path.isabs(path):
+        raise Error("invalid_argument", "snapshot copy requires an absolute target path")
+    filename = safe_name(os.path.basename(path))
+    _key(key, key_id)
+    strict_json.dumps(state, max_bytes=max_bytes)
+    check_access()
+    with PrivateDirectory(os.path.dirname(path), create=True, check_access=check_access,
+                          max_file_bytes=max_bytes + 8192, max_total_bytes=3 * (max_bytes + 8192)) as directory:
+        if directory.exists(filename):
+            raise Error("conflict", "snapshot copy target exists")
+        with EncryptedStore(directory, filename, key, key_id, max_bytes=max_bytes) as target:
+            if target.load() is not None:
+                raise Error("conflict", "snapshot copy target exists")
+            try:
+                target.save(state, replace=False, hook=hook)
+                check_access()
+            except BaseException:
+                raise Error("storage_unknown", "snapshot copy requires target reopen; source retained") from None
+
+
 class EncryptedStore:
     """持有 filename+'.lock'，close 只释放自身资源，保留借用目录。"""
     def __init__(self, directory: PrivateDirectory, filename: str, key: bytes,
@@ -171,6 +206,14 @@ class EncryptedStore:
         with self._operation(cancel, deadline_ms):
             return self._load(cancel, deadline_ms)
 
+    def _require_write_budget(self, writes, plaintext_bytes):
+        """新布局在受保护事务内预留原每钥预算；不修改容器上限或用量。"""
+        with self._operation():
+            if (type(writes) is not int or type(plaintext_bytes) is not int or writes < 0 or plaintext_bytes < 0 or
+                    writes > self.max_encryptions - self._uses or
+                    plaintext_bytes > self.max_encrypted_bytes - self._encrypted_bytes):
+                raise Error("capacity_exceeded", "encrypted storage key rotation required before begin")
+
     def _save(self, state, replace, cancel, deadline_ms, hook):
         assert self._cipher is not None
         if not isinstance(state, dict):
@@ -199,6 +242,16 @@ class EncryptedStore:
              deadline_ms: Optional[int] = None, hook=None) -> None:
         with self._operation(cancel, deadline_ms):
             self._save(state, replace, cancel, deadline_ms, hook)
+
+    def copy_to(self, path: str, key: bytes, key_id: str, *, hook=None) -> None:
+        """新路径保源复制/轮钥；密钥由宿主提供，已有目标绝不覆盖。"""
+        with self._operation():
+            _separate_target(path, self.directory.path)
+            state = self._load()
+            if state is None:
+                raise Error("integrity", "snapshot copy source missing")
+            _write_new_snapshot(path, state, key, key_id, self.max_bytes,
+                                self.directory.check_access, hook)
 
     def rotate_key(self, key: bytes, key_id: str, *, cancel=None,
                    deadline_ms=None, hook=None) -> None:

@@ -12,9 +12,10 @@ import uuid
 
 
 class Fixture:
-    def __init__(self, node, fixture, cli_root, work_dir, mode="session"):
+    def __init__(self, node, fixture, cli_root, work_dir, mode="session", data_directory=None):
         self.node, self.fixture, self.cli_root = str(node), Path(fixture), str(cli_root)
         self.work_dir, self.mode = Path(work_dir), mode
+        self.data_directory = Path(data_directory) if data_directory is not None else self.work_dir / "data"
         self.info = None
         self.process = None
         self.lines = queue.Queue(maxsize=128)
@@ -30,7 +31,7 @@ class Fixture:
         if self.process is not None:
             raise RuntimeError("fixture is already running")
         self.work_dir.mkdir(parents=True, exist_ok=self._generation > 0)
-        data = self.work_dir / "data"
+        data = self.data_directory
         data.mkdir(exist_ok=self._generation > 0)
         self._generation += 1
         log_name = "host.log" if self._generation == 1 else "host-%d.log" % self._generation

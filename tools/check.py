@@ -53,6 +53,7 @@ def main():
             "generated",
             [sys.executable, str(root / "tools/generate_api.py"), "--mode", args.contract_mode, "--check"],
         ),
+        ("persistence-generated", [sys.executable, str(root / "tools/generate_terminal_persistence.py"), "--check"]),
         ("tests", test_command),
     ]
     if args.quality_python:
@@ -61,7 +62,7 @@ def main():
             ("types", [args.quality_python, "-m", "mypy", "src/tansr_sdk"]),
         ]
     source = {}
-    for directory in ("src", "demo", "tests", "integration", "tools", "contract", "requirements"):
+    for directory in ("src", "demo", "tests", "integration", "tools", "contract", "contract-persistence", "requirements"):
         for path in sorted((root / directory).rglob("*")):
             if (
                 path.is_file()

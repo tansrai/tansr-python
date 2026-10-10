@@ -306,6 +306,20 @@ class PrivateDirectory:
             finally:
                 self._backend.close_file(handle)
 
+    def names(self) -> List[str]:
+        """有界枚举并核验所有叶子；内部锁/临时项仍计容量，但不返回给调用者。"""
+        with self._operation():
+            self._capacity(0, 0)
+            result = []
+            with contextlib.closing(self._backend.names()) as names:
+                for index, name in enumerate(names):
+                    if index >= self.max_files:
+                        raise Error("capacity", "private storage file count exceeded")
+                    if not name.lower().startswith(".tansr-"):
+                        result.append(safe_name(name))
+            self._verify()
+            return result
+
     def exists(self, name: str) -> bool:
         name = safe_name(name)
         with self._operation():

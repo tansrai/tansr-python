@@ -81,6 +81,7 @@ class ExecutorAdversarialTests(unittest.TestCase):
     def test_crash_after_claim_effect_or_receipt_never_repeats_effect(self):
         script = """import json,os,sys
 from tansr_sdk.executor import FileJournal,Runner,Tool,ExecutorClient,current_platform
+from tansr_sdk.storage import PrivateDirectory
 from test_executor import Peer,DECLARATION,SCOPE,result
 directory,mode,raw=sys.argv[1:]
 op=json.loads(raw)
@@ -97,9 +98,9 @@ journal=CrashJournal(directory)
 def handler(context,arguments):
  with FileJournal(directory) as observer:
   assert not observer.claim(op).claimed
- descriptor=os.open(os.path.join(directory,'effect.txt'),os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
- with os.fdopen(descriptor,'wb') as effect:
-  effect.write(b'one effect');effect.flush();os.fsync(effect.fileno())
+ # 私有目录中的副作用夹具也必须显式设置当前用户 owner；Windows 提升令牌的 os.open 默认 owner 是 Administrators。
+ with PrivateDirectory(directory) as effects:
+  effects.write('effect.txt',b'one effect',replace=False)
  if mode=='effect': os._exit(72)
  return result()
 tool=Tool(DECLARATION,handler)

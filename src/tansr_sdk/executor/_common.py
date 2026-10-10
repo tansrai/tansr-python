@@ -66,7 +66,15 @@ def validate_operation(operation: Dict[str, Any]) -> None:
         raise Error("conflict", "operation digest")
     request = operation["request"]
     if request["operation"] == "tool.invoke":
-        if request["args"]["name"] != operation["toolName"]:
+        from ..memory_publication.host import TOOL_NAME, valid_invocation
+        from ..terminal_persistence.host import TOOL_NAME as PERSISTENCE_NAME, valid_invocation as persistence_invocation
+        if request["args"]["name"] == PERSISTENCE_NAME:
+            if not persistence_invocation(operation):
+                raise Error("conflict", "reserved persistence profile")
+        elif request["args"]["name"] == TOOL_NAME:
+            if not valid_invocation(operation):
+                raise Error("conflict", "reserved publication profile")
+        elif request["args"]["name"] != operation["toolName"] or operation["toolName"] == "MemoryPublication":
             raise Error("conflict", "tool identity")
         parse_tool_arguments(request["args"]["argsJson"])
     elif request["operation"] == "process.exec":

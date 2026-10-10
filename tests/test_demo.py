@@ -377,5 +377,55 @@ class DemoTests(unittest.TestCase):
         client.binding.assert_not_called()
 
 
+    def test_publication_unknown_stops_and_exposes_original_keys_without_body(self):
+        publication = importlib.import_module("tansr_demo.publication")
+        from tansr_sdk.storage import PrivateDirectory
+        from test_memory_publication import IDENTITY, KEY, publication_operation, request
+        operation = publication_operation(request("commit", transferId="original-transfer"))
+        config = dict(identity=IDENTITY, sessionId=operation["sessionId"], binding=operation["binding"],
+                      connection=dict(executorId=operation["binding"]["target"]["executorId"]),
+                      workspace=dict(workspaceId="workspace", revision="1"))
+        for status, expected in (("unknown", "outcome_unknown"), ("completed", "cancelled")):
+            with self.subTest(status=status), tempfile.TemporaryDirectory() as temporary:
+                root = Path(temporary).resolve()
+                credentials = root / "credentials"
+                with PrivateDirectory(str(credentials), create=True) as private:
+                    private.write("token", b"synthetic-token")
+                    private.write("scope", strict_json.dumps(operation["scope"]))
+                    private.write("config", strict_json.dumps(config))
+                    private.write("key", KEY.hex().encode("ascii"))
+                    private.write("journal-key", (b"j" * 32).hex().encode("ascii"))
+                args = publication.build_parser().parse_args([
+                    "--token-file", str(credentials / "token"), "--scope-file", str(credentials / "scope"),
+                    "--config", str(credentials / "config"), "--file", str(root / "body" / "data.enc"),
+                    "--journal-file", str(root / "journal" / "data.enc"), "--key-file", str(credentials / "key"),
+                    "--journal-key-file", str(credentials / "journal-key"), "--key-id", "body",
+                    "--journal-key-id", "journal", "--mode", "create"])
+                states = []
+                class FakeRunner:
+                    def __init__(self, *unused, **options):
+                        self.callback = options["on_receipt"]
+                    def __enter__(self):
+                        return self
+                    def __exit__(self, *unused):
+                        states.append("closed")
+                    def run(self, *, cancel):
+                        self.callback(operation, types.SimpleNamespace(receipt=dict(status=status)))
+                        states.append(cancel.cancelled)
+                        raise sdk.Error("cancelled")
+                output = io.StringIO()
+                with mock.patch.object(publication, "Runner", FakeRunner), contextlib.redirect_stdout(output):
+                    with self.assertRaises(sdk.Error) as caught:
+                        publication.run(args)
+                self.assertEqual(caught.exception.code, expected)
+                self.assertEqual(states, [status == "unknown", "closed"])
+                rows = [strict_json.loads(line) for line in output.getvalue().splitlines() if line.startswith("{")]
+                self.assertEqual(rows, [dict(operationId=operation["operationId"], digest=operation["digest"],
+                    action="commit", transferId="original-transfer", status=status)])
+                self.assertNotIn("argsJson", output.getvalue())
+                with PrivateDirectory(str(root / "body")), PrivateDirectory(str(root / "journal")):
+                    pass  # 原 Demo 已释放两个介质的实际 owner 锁。
+
+
 if __name__ == "__main__":
     unittest.main()

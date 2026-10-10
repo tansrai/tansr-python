@@ -89,6 +89,14 @@ class FileJournal:
                 value["receipt"] = receipt
                 self._directory.write(name, canonical.encode(value))
 
+    def copy_to_encrypted(self, path: str, key: bytes, key_id: str, identity: dict,
+                          read_context, *, operations: list, max_records: int = 4096,
+                          max_bytes: int = 32 << 20, commit_hook=None) -> None:
+        """显式完整原 operation 清单迁移；旧文件无身份字段，不能从摘要猜身份。"""
+        from .encrypted_journal import copy_plaintext
+        copy_plaintext(self, path, key, key_id, identity, read_context,
+                       operations, max_records, max_bytes, commit_hook)
+
     def close(self) -> None:
         with self._mutex:
             if not self._closed:

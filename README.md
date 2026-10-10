@@ -95,3 +95,5 @@ python -m pytest
 ```
 
 公开源码检查使用显式 `public` 模式，并核验仓库中的公开合同清单；缺少或不匹配时检查失败。真实 Serve 验证使用合成身份、平台及模型，不代表已调用付费模型。源码测试、各系统环境、安装消费和正式发布分别记录，适用范围见发行说明。
+
+PST 本地候选另提供 `tansr_sdk.memory_publication.FileStore/Host` 与 `executor.EncryptedJournal`，保存专用记忆 publication 及其敏感执行回执。六种存储请求消费原冻结协议，记忆业务仍由 Serve 决定；不改变 Archive 或 Electron。该增量尚未发布到 PyPI 0.1.0，接线与恢复方式见[中文指南](doc/使用指南.md#专用记忆-publication-存储pst-候选)及[Demo](demo/README.md#专用-publication-hostpst-候选)。

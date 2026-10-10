@@ -87,7 +87,8 @@ class Runner:
                  authorize: Callable[[Dict[str, Any], CancellationToken], Any], *,
                  connection: Optional[Dict[str, Any]] = None, terminal: Any = None,
                  require_output: bool = False, poll_interval: float = 0.1,
-                 on_receipt: Optional[Callable[..., Any]] = None) -> None:
+                 on_receipt: Optional[Callable[..., Any]] = None,
+                 memory_publication: Any = None, terminal_persistence: Any = None) -> None:
         registration = snapshot(registration)
         validate_registration(registration)
         if (not callable(authorize) or journal is None or poll_interval < 0.01 or
@@ -98,10 +99,26 @@ class Runner:
         expected = {item["name"]: item["definitionDigest"] for item in registration.get("tools", [])}
         actual = {name: tool.definition_digest for name, tool in self.tools.items()
                   if isinstance(tool, Tool) and name == tool.name}
-        if expected != actual or len(actual) != len(self.tools):
+        business_count = len(actual)
+        self.memory_publication = memory_publication
+        if memory_publication is not None:
+            from ..memory_publication import Host, TOOL_NAME, DEFINITION_DIGEST
+            if not isinstance(memory_publication, Host) or TOOL_NAME in actual or "MemoryPublication" in actual:
+                raise Error("conflict", "reserved publication host")
+            memory_publication.check_journal(journal)
+            actual[TOOL_NAME] = DEFINITION_DIGEST
+        self.terminal_persistence = terminal_persistence
+        if terminal_persistence is not None:
+            from ..terminal_persistence import Host as PersistenceHost, TOOL_NAME as PERSISTENCE_NAME, DEFINITION_DIGEST as PERSISTENCE_DIGEST
+            if not isinstance(terminal_persistence, PersistenceHost) or PERSISTENCE_NAME in actual or memory_publication is not None:
+                raise Error("conflict", "one explicit publication profile per runner")
+            terminal_persistence.check_journal(journal)
+            actual[PERSISTENCE_NAME] = PERSISTENCE_DIGEST
+        if expected != actual or business_count != len(self.tools):
             raise Error("conflict", "runner tools differ from registration")
-        if "TansrTerminalShellSandbox" in actual:
-            raise Error("unsupported", "the business runner has no shell-sandbox adapter")
+        if ("TansrTerminalShellSandbox" in actual or "MemoryPublication" in self.tools or
+                "TansrTerminalMemoryPublication" in self.tools or "TansrTerminalPersistenceV1" in self.tools):
+            raise Error("unsupported", "reserved profiles require their explicit adapter")
         # 保存 handler 与声明，不让调用方之后改 Tool 对象换掉执行函数或摘要。
         self._handlers = {name: (tool.definition_digest, tool.handler) for name, tool in self.tools.items()}
         self.journal, self.authorize = journal, authorize
@@ -211,7 +228,7 @@ class Runner:
         return value
 
     def _output_state(self, operation: Dict[str, Any], token: CancellationToken) -> Any:
-        if self.terminal is None:
+        if self.terminal is None or operation["toolName"] == "MemoryPublication":
             return None
         deadline = min(expiry(operation["expiresAt"]), live(self._current()),
                        self.client.api.default_deadline_ms())
@@ -252,6 +269,14 @@ class Runner:
         operation = snapshot(operation)
         validate_operation(operation)
         tool = self._handlers.get(operation["toolName"])
+        if operation["toolName"] == "MemoryPublication" and self.terminal_persistence is not None:
+            from ..terminal_persistence import DEFINITION_DIGEST as PERSISTENCE_DIGEST
+            host = self.terminal_persistence
+            tool = (PERSISTENCE_DIGEST, lambda context, arguments: host.execute(operation, context, arguments))
+        elif operation["toolName"] == "MemoryPublication" and self.memory_publication is not None:
+            from ..memory_publication import DEFINITION_DIGEST
+            host = self.memory_publication
+            tool = (DEFINITION_DIGEST, lambda context, arguments: host.execute(operation, context, arguments))
         if (operation["request"]["operation"] != "tool.invoke" or tool is None or
                 tool[0] != operation["request"]["args"]["definitionDigest"]):
             raise Error("unsupported", "tool is not explicitly installed")
@@ -278,7 +303,7 @@ class Runner:
                 raise Error("outcome_unknown", "remote operation is not pending")
             state = self._output_state(operation, token)
             if (self.require_output and remote["status"] == "pending" and
-                    state["state"] in ("unavailable", "gap")):
+                    state is not None and state["state"] in ("unavailable", "gap")):
                 raise Error("output_unavailable")
             claim = self.journal.claim(snapshot(operation), cancel=token)
             if claim.receipt is not None:

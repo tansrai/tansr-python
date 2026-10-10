@@ -9,7 +9,7 @@ import pytest
 
 @pytest.mark.parametrize(
     "name",
-    ["tansr_sdk", "tansr_sdk.api", "tansr_sdk.session", "tansr_sdk.executor", "tansr_sdk.archive", "tansr_sdk.storage"],
+    ["tansr_sdk", "tansr_sdk.api", "tansr_sdk.session", "tansr_sdk.executor", "tansr_sdk.archive", "tansr_sdk.storage", "tansr_sdk.memory_publication"],
 )
 def test_public_annotations_resolve(name):
     module = importlib.import_module(name)
